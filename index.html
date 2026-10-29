@@ -330,6 +330,20 @@ details.pano img{width:100%;border-radius:10px;margin-top:8px;border:1px solid v
 .ucell img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:#F4F6F5}
 .ucell select{padding:5px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.8rem}
 
+.seg.dragging{pointer-events:none}
+.seg.leaving{opacity:.3}
+.seg.ghost.bad{background:rgba(179,51,51,.18);border-color:#B33}
+.segdel{display:none;position:absolute;top:2px;right:12px;z-index:4;width:20px;height:20px;border-radius:50%;border:none;
+  background:rgba(0,0,0,.55);color:#fff;font-size:.72rem;line-height:20px;padding:0;cursor:pointer}
+.seg.sel .segdel{display:block}
+.segdel:hover{background:#B33}
+
+tr.grp td{cursor:pointer;user-select:none}
+tr.grp:hover td{background:#D5E8E3}
+tr.grp .caret{display:inline-block;width:16px;transition:transform .15s}
+tr.grp.closed .caret{transform:rotate(-90deg)}
+tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-left:10px;font-size:.78rem}
+#groupBy{padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);font-family:inherit;background:var(--card);font-size:.9rem}
 footer.note{
   max-width:1080px;margin:10px auto 0;padding:0 14px;font-size:.74rem;color:var(--ink-soft);
 }
@@ -363,6 +377,12 @@ footer.note{
       <option value="low">低庫存(≦10)</option>
       <option value="noloc">尚未指定位置</option>
     </select>
+    <select id="groupBy" title="分區方式">
+      <option value="cat">依類別分區</option>
+      <option value="zone">依存放區塊分區</option>
+    </select>
+    <button class="btn" id="expandAll" title="全部展開">⊞ 全部展開</button>
+    <button class="btn" id="collapseAll" title="全部收合">⊟ 全部收合</button>
     <button class="btn" id="editToggle">✏️ 編輯模式</button>
     <button class="btn primary" id="addItem">＋ 新增品項</button>
   </div>
@@ -878,48 +898,81 @@ function passFilter(it, f, q){
   }
   return true;
 }
+/* 分區收合狀態（存在瀏覽器，下次打開維持） */
+const groupByEl = document.getElementById('groupBy');
+let collapsedGroups = new Set();
+try{ collapsedGroups = new Set(JSON.parse(localStorage.getItem('rc-inv-collapsed')||'[]'));
+     groupByEl.value = localStorage.getItem('rc-inv-groupby') || 'cat'; }catch(_){}
+const saveCollapse = () => { try{ localStorage.setItem('rc-inv-collapsed', JSON.stringify([...collapsedGroups]));
+                                  localStorage.setItem('rc-inv-groupby', groupByEl.value); }catch(_){} };
+function rowHtml(it, cols){
+  const r = roomQty(it), w = whQty(it), t = r+w;
+  const qcellR = (editMode && !it.sizes)
+    ? `<input class="qedit" type="number" min="0" value="${r}" data-id="${it.id}" data-f="room">` : `<span class="${qtyCls(r)}">${r}</span>`;
+  const qcellW = (editMode && !it.sizes)
+    ? `<input class="qedit" type="number" min="0" value="${w}" data-id="${it.id}" data-f="wh">` : `<span class="${qtyCls(w)}">${w}</span>`;
+  let h = `<tr>
+    <td><div class="itemcell">${thumbHtml(it)}<div>
+      <span class="itemname">${esc(it.name)}</span>
+      ${it.note?`<div class="itemnote">${esc(it.note)}</div>`:''}
+      ${it.sizes?`<button class="sizebtn" data-sz="${it.id}">${expanded.has(it.id)?'▴ 收合尺寸':'▾ 各尺寸明細'}</button>`:''}
+    </div></div></td>
+    <td class="num">${it.price?('$'+it.price):'—'}</td>
+    <td class="num">${qcellR}</td>
+    <td class="num">${qcellW}</td>
+    <td class="num"><b class="${qtyCls(t)}" data-tot="${it.id}">${t}</b></td>
+    <td><div class="loctags">${locTags(it)}</div></td>
+    ${editMode?`<td><button class="rowdel" data-del="${it.id}" title="刪除">✕</button></td>`:''}
+  </tr>`;
+  if(it.sizes && expanded.has(it.id)){
+    h += `<tr class="sizes-row"><td colspan="${cols}"><div class="size-grid">` +
+      it.sizes.map((sz,idx)=>`
+        <div class="size-cell"><b>${esc(sz.s)}</b>
+          資 ${editMode?`<input class="qedit" style="width:48px" type="number" min="0" value="${sz.room}" data-id="${it.id}" data-szi="${idx}" data-f="room">`:sz.room}
+          ／倉 ${editMode?`<input class="qedit" style="width:48px" type="number" min="0" value="${sz.wh}" data-id="${it.id}" data-szi="${idx}" data-f="wh">`:sz.wh}
+        </div>`).join('') + `</div></td></tr>`;
+  }
+  return h;
+}
+function currentGroups(){
+  const f = locFilterEl.value, q = qInput.value.trim().toLowerCase();
+  const mode = groupByEl.value, groups = new Map();
+  const add = (key,label,it) => { if(!groups.has(key)) groups.set(key,{label,items:[]}); groups.get(key).items.push(it); };
+  if(mode==='zone'){
+    ZONES.forEach(z=>groups.set('zone:'+z.id,{label:(z.map==='q'?'Q棟倉庫・':'悅讀書房・')+z.name, items:[]}));
+    groups.set('zone:none',{label:'尚未指定位置', items:[]});
+  }
+  for(const it of items){
+    if(!passFilter(it,f,q)) continue;
+    if(mode==='zone'){ const locs = (it.loc&&it.loc.length) ? it.loc : ['none'];
+      locs.forEach(z=>add('zone:'+z, z==='none'?'尚未指定位置':zoneName(z), it)); }
+    else add('cat:'+it.cat, it.cat, it);
+  }
+  return [...groups].filter(([,g])=>g.items.length);
+}
 function renderTable(){
   document.getElementById('delHead').style.display = editMode?'':'none';
   const cols = editMode?7:6;
-  const f = locFilterEl.value, q = qInput.value.trim().toLowerCase();
-  const out = [];
-  let lastCat = null;
-  for(const it of items){
-    if(!passFilter(it,f,q)) continue;
-    if(it.cat!==lastCat){ out.push(`<tr class="cat-row"><td colspan="${cols}">${esc(it.cat)}</td></tr>`); lastCat = it.cat; }
-    const r = roomQty(it), w = whQty(it), t = r+w;
-    const qcellR = (editMode && !it.sizes)
-      ? `<input class="qedit" type="number" min="0" value="${r}" data-id="${it.id}" data-f="room">` : `<span class="${qtyCls(r)}">${r}</span>`;
-    const qcellW = (editMode && !it.sizes)
-      ? `<input class="qedit" type="number" min="0" value="${w}" data-id="${it.id}" data-f="wh">` : `<span class="${qtyCls(w)}">${w}</span>`;
-    out.push(`<tr>
-      <td><div class="itemcell">${thumbHtml(it)}<div>
-        <span class="itemname">${esc(it.name)}</span>
-        ${it.note?`<div class="itemnote">${esc(it.note)}</div>`:''}
-        ${it.sizes?`<button class="sizebtn" data-sz="${it.id}">${expanded.has(it.id)?'▴ 收合尺寸':'▾ 各尺寸明細'}</button>`:''}
-      </div></div></td>
-      <td class="num">${it.price?('$'+it.price):'—'}</td>
-      <td class="num">${qcellR}</td>
-      <td class="num">${qcellW}</td>
-      <td class="num"><b class="${qtyCls(t)}" data-tot="${it.id}">${t}</b></td>
-      <td><div class="loctags">${locTags(it)}</div></td>
-      ${editMode?`<td><button class="rowdel" data-del="${it.id}" title="刪除">✕</button></td>`:''}
-    </tr>`);
-    if(it.sizes && expanded.has(it.id)){
-      out.push(`<tr class="sizes-row"><td colspan="${cols}"><div class="size-grid">` +
-        it.sizes.map((sz,idx)=>`
-          <div class="size-cell"><b>${esc(sz.s)}</b>
-            資 ${editMode?`<input class="qedit" style="width:48px" type="number" min="0" value="${sz.room}" data-id="${it.id}" data-szi="${idx}" data-f="room">`:sz.room}
-            ／倉 ${editMode?`<input class="qedit" style="width:48px" type="number" min="0" value="${sz.wh}" data-id="${it.id}" data-szi="${idx}" data-f="wh">`:sz.wh}
-          </div>`).join('') + `</div></td></tr>`);
-    }
+  const out = [], searching = qInput.value.trim() !== '';
+  for(const [key, g] of currentGroups()){
+    const closed = collapsedGroups.has(key) && !searching;   // 搜尋時自動展開
+    const total = g.items.reduce((a,it)=>a+totQty(it),0);
+    out.push(`<tr class="cat-row grp ${closed?'closed':''}" data-grp="${esc(key)}"><td colspan="${cols}">
+      <span class="caret">▾</span>${esc(g.label)}<span class="grpmeta">${g.items.length} 項・共 ${total.toLocaleString()} 件</span></td></tr>`);
+    if(!closed) for(const it of g.items) out.push(rowHtml(it, cols));
   }
   invBody.innerHTML = out.length ? out.join('')
     : `<tr><td colspan="${cols}" style="text-align:center;color:var(--ink-soft);padding:24px">沒有符合條件的品項</td></tr>`;
 }
+groupByEl.addEventListener('change', ()=>{ saveCollapse(); renderTable(); dirty.table=false; });
+document.getElementById('expandAll').onclick = ()=>{ collapsedGroups.clear(); saveCollapse(); renderTable(); dirty.table=false; };
+document.getElementById('collapseAll').onclick = ()=>{ currentGroups().forEach(([k])=>collapsedGroups.add(k)); saveCollapse(); renderTable(); dirty.table=false; };
 // 表格事件：委派到 tbody，只綁一次
 invBody.addEventListener('click', e=>{
   const t = e.target;
+  const grp = t.closest('tr.grp');
+  if(grp){ const k = grp.dataset.grp; collapsedGroups.has(k)?collapsedGroups.delete(k):collapsedGroups.add(k);
+    saveCollapse(); renderTable(); dirty.table=false; return; }
   const sz = t.closest('[data-sz]');
   if(sz){ const id=+sz.dataset.sz; expanded.has(id)?expanded.delete(id):expanded.add(id); renderTable(); return; }
   const zt = t.closest('[data-zone]'); if(zt){ gotoZone(zt.dataset.zone); return; }
@@ -941,8 +994,7 @@ invBody.addEventListener('change', e=>{
   if(inp.dataset.szi!==undefined) it.sizes[+inp.dataset.szi][inp.dataset.f]=v;
   else it[inp.dataset.f]=v;
   // 只更新該列合計，不重繪整張表（保留輸入焦點）
-  const tot = invBody.querySelector(`[data-tot="${it.id}"]`);
-  if(tot){ const n=totQty(it); tot.textContent=n; tot.className=qtyCls(n); }
+  invBody.querySelectorAll(`[data-tot="${it.id}"]`).forEach(tot=>{ const n=totQty(it); tot.textContent=n; tot.className=qtyCls(n); });
   scheduleSave();
   dirty.stats=true; dirty.maps=true; dirty.take=true; flush();
 });
@@ -1385,7 +1437,7 @@ function segClass(seg,c,s,i){
 function segHtml(seg,c,s,i){
   return `<div class="${segClass(seg,c,s,i)}" data-c="${c}" data-s="${s}" data-i="${i}"
       style="left:${seg.x}%;width:${seg.w}%;${seg.batch?`background:${batchColor(seg.batch)}`:''}">
-    <span class="grip l"></span><b>${seg.batch?esc(seg.batch):'?'}</b>${seg.books.length?`<span class="n">${seg.books.length}本</span>`:''}<span class="grip r"></span></div>`;
+    <span class="grip l"></span><button class="segdel" data-segdel title="刪除這格">✕</button><b>${seg.batch?esc(seg.batch):'?'}</b>${seg.books.length?`<span class="n">${seg.books.length}本</span>`:''}<span class="grip r"></span></div>`;
 }
 function renderLibMap(){
   libCabs.innerHTML = lib.cabinets.map((cab,c)=>`<div class="cab"><h3>${esc(cab.name)}</h3>` +
@@ -1425,6 +1477,8 @@ let drag = null;
 const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
 const snap = v => Math.round(v*2)/2;
 libCabs.addEventListener('pointerdown', e=>{
+  const del = e.target.closest('[data-segdel]');
+  if(del){ e.preventDefault(); e.stopPropagation(); const sg = del.closest('.seg'); deleteSeg(+sg.dataset.c, +sg.dataset.s, +sg.dataset.i); return; }
   const bar = e.target.closest('.shelfbar'); if(!bar) return;
   if(e.button!==undefined && e.button!==0) return;
   e.preventDefault();
@@ -1449,14 +1503,21 @@ libCabs.addEventListener('pointerdown', e=>{
     bar.appendChild(el);
     const hint = bar.querySelector('.drawhint'); if(hint) hint.remove();
   }
-  drag = {mode,c,s,i,segs,bar,el,pct,p0,x0:e.clientX,lo,hi,orig,moved:false,nx:0,nw:0};
+  drag = {mode,c,s,i,segs,bar,el,pct,p0,x0:e.clientX,y0:e.clientY,lo,hi,orig,moved:false,nx:0,nw:0,target:null,ghost:null};
   bar.setPointerCapture(e.pointerId);
   if(segEl) segEl.classList.add('dragging');
 });
 libCabs.addEventListener('pointermove', e=>{
   if(!drag) return;
-  if(Math.abs(e.clientX-drag.x0)>4) drag.moved = true;
+  if(Math.abs(e.clientX-drag.x0)>4 || Math.abs(e.clientY-drag.y0)>4) drag.moved = true;
   if(!drag.moved) return;
+  // 拖到別層 / 別座書櫃：在目標層顯示預覽框
+  if(drag.mode==='move'){
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const tb = under && under.closest('.shelfbar');
+    if(tb && tb!==drag.bar){ crossShelfPreview(tb, e.clientX); return; }
+    clearCross();
+  }
   const p = drag.pct(e.clientX), d = p - drag.p0, {lo,hi,orig} = drag;
   let x, w;
   if(drag.mode==='new'){ const a = clamp(drag.p0,lo,hi), b = clamp(p,lo,hi); x = Math.min(a,b); w = Math.abs(b-a); }
@@ -1466,9 +1527,49 @@ libCabs.addEventListener('pointermove', e=>{
   drag.nx = snap(x); drag.nw = snap(w);
   drag.el.style.left = drag.nx+'%'; drag.el.style.width = drag.nw+'%';
 });
+function clearCross(){
+  if(!drag) return;
+  if(drag.ghost){ drag.ghost.remove(); drag.ghost = null; }
+  drag.target = null; drag.el.classList.remove('leaving');
+}
+function crossShelfPreview(tb, clientX){
+  const tc = +tb.dataset.c, ts = +tb.dataset.s, tsegs = lib.cabinets[tc].shelves[ts].segs;
+  const r = tb.getBoundingClientRect(), p = (clientX-r.left)/r.width*100;
+  const want = drag.orig.w, grab = drag.p0 - drag.orig.x;
+  // 找出指標所在的空白區間
+  let lo = 0, hi = 100, inside = false;
+  for(const x of tsegs){
+    if(p >= x.x && p <= x.x+x.w){ inside = true; break; }
+    if(x.x+x.w <= p) lo = Math.max(lo, x.x+x.w); else if(x.x >= p) hi = Math.min(hi, x.x);
+  }
+  const room = hi - lo, ok = !inside && room >= SEG_MIN;
+  const w = ok ? Math.min(want, room) : want;
+  const x = ok ? clamp(p - grab*(w/want), lo, hi - w) : clamp(p - grab, 0, 100 - w);
+  if(!drag.ghost || drag.ghost.parentElement!==tb){
+    if(drag.ghost) drag.ghost.remove();
+    drag.ghost = document.createElement('div'); tb.appendChild(drag.ghost);
+  }
+  drag.ghost.className = 'seg ghost' + (ok ? '' : ' bad');
+  drag.ghost.style.left = snap(x)+'%'; drag.ghost.style.width = snap(w)+'%';
+  drag.target = {c:tc, s:ts, x:snap(x), w:snap(w), ok};
+  drag.el.classList.add('leaving');
+  drag.el.style.left = drag.orig.x+'%'; drag.el.style.width = drag.orig.w+'%';
+}
 function endDrag(){
   if(!drag) return;
   const g = drag; drag = null;
+  if(g.target){
+    if(g.ghost) g.ghost.remove();
+    g.el.classList.remove('dragging','leaving');
+    if(!g.target.ok){ toast('那一層這個位置沒有空間，請放在空白處'); return; }
+    const seg = g.segs.splice(g.i,1)[0];
+    seg.x = g.target.x; seg.w = g.target.w;
+    const tsegs = lib.cabinets[g.target.c].shelves[g.target.s].segs;
+    tsegs.push(seg); tsegs.sort((a,b)=>a.x-b.x);
+    libSel = {type:'seg', c:g.target.c, s:g.target.s, i:tsegs.indexOf(seg)};
+    libChanged(); toast(`已移到 ${whereTxt(libSel.c, libSel.s, libSel.i)}`);
+    return;
+  }
   if(g.mode==='new'){
     g.el.remove();
     if(!g.moved || g.nw < SEG_MIN){ if(!g.segs.length) renderLibMap(); return; }
@@ -1487,6 +1588,25 @@ function endDrag(){
 libCabs.addEventListener('pointerup', endDrag);
 libCabs.addEventListener('pointercancel', endDrag);
 
+// 刪除格子：空格直接刪；有書時先確認，書移到同層相鄰格子
+function deleteSeg(c,s,i){
+  const segs = lib.cabinets[c].shelves[s].segs, seg = segs[i]; if(!seg) return;
+  const nb = segs[i-1] || segs[i+1];
+  if(seg.books.length){
+    const msg = nb ? `這格有 ${seg.books.length} 本書，會移到同一層相鄰的格子。確定刪除這格？`
+                   : `這格有 ${seg.books.length} 本書，這層沒有其他格子，書單會一起刪除。確定嗎？`;
+    if(!confirm(msg)) return;
+    if(nb){ if(segs[i-1]) nb.books.push(...seg.books); else nb.books.unshift(...seg.books); }
+  }
+  segs.splice(i,1); libSel = null;
+  libChanged(); toast('已刪除格子');
+}
+document.addEventListener('keydown', e=>{
+  if((e.key==='Delete'||e.key==='Backspace') && currentTab==='lib' && libSel && libSel.type==='seg'
+     && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && !overlay.classList.contains('show')){
+    e.preventDefault(); deleteSeg(libSel.c, libSel.s, libSel.i);
+  }
+});
 function selectSeg(c,s,i, scroll=true){
   libSel = {type:'seg', c, s, i};
   refreshSegClasses(); renderLibBatches(); renderLibDetail();
@@ -1619,7 +1739,8 @@ function renderLibDetail(){
   if(!libSel){
     libDetail.innerHTML = `<h2>使用方式</h2><div class="hint" style="margin:0">
       ・在層板<b>空白處按住拖曳</b>，就能自己畫出一個格子。先點上方批次再畫，新格子會直接屬於那一份。<br>
-      ・拖格子的<b>左右邊緣</b>可調整範圍，拖<b>格子本體</b>可沿層板移動。<br>
+      ・拖格子的<b>左右邊緣</b>可調整範圍；拖<b>格子本體</b>可沿層板移動，也能<b>拖到別層或別座書櫃</b>（書單一起搬）。<br>
+      ・選取格子後，按格子右上角的 <b>✕</b> 或鍵盤 Delete 即可刪除。<br>
       ・<b>點一格</b>可看這格的書單，也能改它屬於哪一份、加書、搬書、分割或合併格子。<br>
       ・<b>點上方批次</b>（101、102…）會標出那一份放在哪些位置，並列出全部書名。<br>
       ・在上方「書在哪裡？」搜尋書名或分類號，會列出取書路線並在圖上標出位置。<br>
@@ -1701,17 +1822,7 @@ libDetail.addEventListener('click', e=>{
     const r = segs[i+1]; seg.w = r.x + r.w - seg.x; seg.books.push(...r.books); segs.splice(i+1,1);
     libChanged(); return;
   }
-  if(t.id==='ls-del'){
-    const nb = segs[i-1] || segs[i+1];
-    if(seg.books.length){
-      const msg = nb ? `這格有 ${seg.books.length} 本書，會移到同一層相鄰的格子。確定刪除這格？`
-                     : `這格有 ${seg.books.length} 本書，這層沒有其他格子，書單會一起刪除。確定嗎？`;
-      if(!confirm(msg)) return;
-      if(nb){ if(segs[i-1]) nb.books.push(...seg.books); else nb.books.unshift(...seg.books); }
-    }
-    segs.splice(i,1); libSel = null;
-    libChanged(); return;
-  }
+  if(t.id==='ls-del'){ deleteSeg(c,s,i); return; }
   const rm = t.closest('[data-rm]');
   if(rm){ seg.books.splice(+rm.dataset.rm,1); libChanged(); return; }
   if(t.id==='ls-move'){
