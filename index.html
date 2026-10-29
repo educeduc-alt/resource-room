@@ -344,6 +344,12 @@ tr.grp .caret{display:inline-block;width:16px;transition:transform .15s}
 tr.grp.closed .caret{transform:rotate(-90deg)}
 tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-left:10px;font-size:.78rem}
 #groupBy{padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);font-family:inherit;background:var(--card);font-size:.9rem}
+.bgrip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;margin-right:4px;flex:0 0 auto;
+  color:var(--ink-soft);cursor:grab;touch-action:none;border-radius:5px;font-size:1rem;user-select:none;-webkit-user-select:none}
+.bgrip:hover{background:var(--primary-soft);color:var(--primary)}
+.bookcard .bgrip{vertical-align:-6px}
+.bookfly{position:fixed;left:0;top:0;z-index:300;pointer-events:none;background:var(--primary);color:#fff;padding:6px 12px;
+  border-radius:999px;font-size:.85rem;box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap;max-width:70vw;overflow:hidden;text-overflow:ellipsis}
 footer.note{
   max-width:1080px;margin:10px auto 0;padding:0 14px;font-size:.74rem;color:var(--ink-soft);
 }
@@ -1631,8 +1637,8 @@ function renderLibResults(){
   libResults.innerHTML = list.length
     ? `<div class="hint" style="margin:0 0 6px">找到 ${list.length} 本${list.length>shown.length?`（先顯示前 ${shown.length} 本）`:''}，點卡片可在書櫃圖上標出位置。</div>
        <div class="bookcards">` + shown.map(x=>`
-        <div class="bookcard" style="border-left-color:${x.b?batchColor(x.b):'#C9D0CD'}" data-go="${x.c}-${x.s}-${x.i}" draggable="true" data-drag="${x.c}-${x.s}-${x.i}-${x.k}">
-          <div class="bt">${esc(x.bk.t)}</div>
+        <div class="bookcard" style="border-left-color:${x.b?batchColor(x.b):'#C9D0CD'}" data-go="${x.c}-${x.s}-${x.i}">
+          <div class="bt"><span class="bgrip" data-bgrip="${x.c}-${x.s}-${x.i}-${x.k}" title="按住拖到書櫃圖上的格子">⠿</span>${esc(x.bk.t)}</div>
           <div class="bc">${x.bk.call?`分類號 ${esc(x.bk.call)}`:'分類號未填'}</div>
           <div class="br"><span class="bdot" style="background:${x.b?batchColor(x.b):'#C9D0CD'}"></span>${x.b?`第 ${esc(x.b)} 份`:'未分配'}</div>
           <div class="route">📍 ${esc(routeTxt(x.c,x.s,x.i))}</div>
@@ -1698,6 +1704,63 @@ libCabs.addEventListener('drop', e=>{
   moveBook(c,s,i,k, +seg.dataset.c, +seg.dataset.s, +seg.dataset.i);
 });
 
+/* ---------- 拖書（滑鼠、手指都可以）：按住書名前的 ⠿ 拖到書櫃圖上的格子 ---------- */
+let bookDrag = null, suppressClick = false;
+// 拖完放開時不要觸發「點書卡→選格子」
+document.addEventListener('click', e=>{ if(suppressClick || e.target.closest('[data-bgrip]')){ e.stopPropagation(); e.preventDefault(); } }, true);
+document.addEventListener('pointerdown', e=>{
+  const g = e.target.closest('[data-bgrip]'); if(!g) return;
+  e.preventDefault(); e.stopPropagation();
+  const [c,s,i,k] = g.dataset.bgrip.split('-').map(Number);
+  const bk = segAt(c,s,i).books[k]; if(!bk) return;
+  const fly = document.createElement('div'); fly.className = 'bookfly'; fly.textContent = '📖 ' + bk.t;
+  document.body.appendChild(fly);
+  bookDrag = {from:[c,s,i,k], fly, x:e.clientX, y:e.clientY, over:null, raf:0};
+  g.setPointerCapture(e.pointerId);
+  libCabs.classList.add('dropping');
+  placeFly();
+  bookDrag.raf = requestAnimationFrame(autoScroll);
+}, true);
+function placeFly(){
+  const d = bookDrag; if(!d) return;
+  d.fly.style.transform = `translate(${d.x+12}px, ${d.y-18}px)`;
+  const under = document.elementFromPoint(d.x, d.y);
+  const seg = under && under.closest('#libCabs .seg:not(.ghost)');
+  if(seg !== d.over){
+    if(d.over) d.over.classList.remove('droptarget');
+    d.over = seg; if(seg) seg.classList.add('droptarget');
+  }
+}
+// 拖到畫面上下邊緣時自動捲動（書單在下方、書櫃圖在上方）
+function autoScroll(){
+  const d = bookDrag; if(!d) return;
+  const edge = 70, H = window.innerHeight;
+  let dy = 0;
+  if(d.y < edge) dy = -Math.ceil((edge-d.y)/4);
+  else if(d.y > H-edge) dy = Math.ceil((d.y-(H-edge))/4);
+  if(dy){ window.scrollBy(0, dy); placeFly(); }
+  const wrap = libCabs.parentElement, r = wrap.getBoundingClientRect();
+  if(d.y > r.top && d.y < r.bottom){
+    if(d.x < r.left+40) wrap.scrollLeft -= 8; else if(d.x > r.right-40) wrap.scrollLeft += 8;
+  }
+  d.raf = requestAnimationFrame(autoScroll);
+}
+document.addEventListener('pointermove', e=>{
+  if(!bookDrag) return;
+  bookDrag.x = e.clientX; bookDrag.y = e.clientY; placeFly();
+});
+function endBookDrag(cancel){
+  const d = bookDrag; if(!d) return; bookDrag = null;
+  suppressClick = true; setTimeout(()=>suppressClick=false, 50);
+  cancelAnimationFrame(d.raf); d.fly.remove(); libCabs.classList.remove('dropping');
+  if(d.over) d.over.classList.remove('droptarget');
+  if(cancel || !d.over){ return; }
+  const [c,s,i,k] = d.from;
+  moveBook(c,s,i,k, +d.over.dataset.c, +d.over.dataset.s, +d.over.dataset.i);
+}
+document.addEventListener('pointerup', ()=>endBookDrag(false));
+document.addEventListener('pointercancel', ()=>endBookDrag(true));
+
 /* ---------- 編輯書目（彈出視窗） ---------- */
 function segOptions(sel){
   const out = [];
@@ -1730,7 +1793,7 @@ function openBookEditor(c,s,i,k){
 /* ---------- 下方明細 ---------- */
 function bookRows(list){
   return list.length ? `<ul class="booklist">` + list.map(x=>
-    `<li class="go" data-go="${x.c}-${x.s}-${x.i}" draggable="true" data-drag="${x.c}-${x.s}-${x.i}-${x.k}"><span class="bdot" style="background:${x.b?batchColor(x.b):'#C9D0CD'}"></span>${esc(x.bk.t)}
+    `<li class="go" data-go="${x.c}-${x.s}-${x.i}"><span class="bgrip" data-bgrip="${x.c}-${x.s}-${x.i}-${x.k}" title="按住拖到書櫃圖上的格子">⠿</span><span class="bdot" style="background:${x.b?batchColor(x.b):'#C9D0CD'}"></span>${esc(x.bk.t)}
      ${x.bk.call?`<span class="call">${esc(x.bk.call)}</span>`:''}
      <span class="where">${esc(whereTxt(x.c,x.s,x.i))}</span><button class="rowedit" data-bk="${x.c}-${x.s}-${x.i}-${x.k}" title="編輯">✎</button></li>`).join('') + `</ul>`
     : `<p class="hint">沒有符合的書。</p>`;
@@ -1744,7 +1807,7 @@ function renderLibDetail(){
       ・<b>點一格</b>可看這格的書單，也能改它屬於哪一份、加書、搬書、分割或合併格子。<br>
       ・<b>點上方批次</b>（101、102…）會標出那一份放在哪些位置，並列出全部書名。<br>
       ・在上方「書在哪裡？」搜尋書名或分類號，會列出取書路線並在圖上標出位置。<br>
-      ・電腦上可把書卡或書單裡的書<b>拖到書櫃圖的格子</b>上搬家；手機請按 ✎ 改「目前位置」。</div>`;
+      ・按住書名前的 <b>⠿</b>，把書<b>拖到書櫃圖上的任一格</b>就能搬家（電腦、手機都可以）；也可以按 ✎ 改「目前位置」。</div>`;
     return;
   }
   if(libSel.type==='search'){
@@ -1779,7 +1842,7 @@ function renderLibDetail(){
     </div>
     <div class="hint" style="margin:0 0 4px">📍 取書路線：${esc(routeTxt(c,s,i))}</div>
     <b style="font-size:.9rem">書單（${seg.books.length} 本）</b>
-    ${seg.books.length?`<ul class="booklist">${seg.books.map((bk,k)=>`<li draggable="true" data-drag="${c}-${s}-${i}-${k}"><input type="checkbox" data-k="${k}"> ${esc(bk.t)}
+    ${seg.books.length?`<ul class="booklist">${seg.books.map((bk,k)=>`<li><span class="bgrip" data-bgrip="${c}-${s}-${i}-${k}" title="按住拖到書櫃圖上的格子">⠿</span><input type="checkbox" data-k="${k}"> ${esc(bk.t)}
         ${bk.call?`<span class="call">${esc(bk.call)}</span>`:''}
         <button class="rowedit" data-bk="${c}-${s}-${i}-${k}" title="編輯" style="margin-left:auto">✎</button>
         <button class="rowdel" data-rm="${k}" title="移除">✕</button></li>`).join('')}</ul>
