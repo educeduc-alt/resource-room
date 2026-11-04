@@ -284,13 +284,13 @@ V.apply={
   shell(){
     const a=local.get('applicant')||{};
     return `<div class="apply-head"><div><h1>線上預借申請</h1>
-<p class="lede">一般性器材、休閒性器材與空間須於使用日 <b>3 天前</b>提出申請，經資源教室老師審核通過後，使用當日攜帶學生證或教職員證到資源教室領取。結果會顯示在「學生/職員申請」。</p></div>
+<p class="lede">送出申請後，經資源教室老師審核通過，使用當日攜帶學生證或教職員證到資源教室領取。結果會顯示在「學生/職員申請」。</p></div>
 <aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
 <fieldset><legend>申請人</legend><div class="grid">
 <label class="f">身分<select id="a-role"><option>學生</option><option ${a.role==='教職員'?'selected':''}>教職員</option></select></label>
-<label class="f">學號／員工編號<input id="a-no" autocomplete="off" value="${h(a.no)}" inputmode="latin"></label>
+<label class="f" id="a-no-wrap">學號<input id="a-no" autocomplete="off" value="${h(a.no)}" inputmode="latin"></label>
 <label class="f">姓名<input id="a-name" autocomplete="name" value="${h(a.name)}"></label>
 <label class="f">系級／單位<input id="a-dept" value="${h(a.dept)}" placeholder="例：幼保系二甲"></label>
 <label class="f">聯絡電話<input id="a-phone" type="tel" autocomplete="tel" value="${h(a.phone)}"></label>
@@ -307,6 +307,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
 </form>`;
   },
   bind(){
+    const roleSync=()=>{const staff=$('#a-role').value==='教職員';$('#a-no-wrap').hidden=staff};$('#a-role').addEventListener('change',roleSync);roleSync();
     if(S.preselect){const it=item(S.preselect);if(it){const t=it.cat==='leisure'?'leisure':it.cat==='space'?'space':'item';$('#a-type-'+t).checked=true}}
     $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true)});
     $('#apply-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
@@ -321,7 +322,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
   detail(reset){
     const box=$('#a-detail');if(!box)return;
     const keep={};if(!reset)box.querySelectorAll('input,select,textarea').forEach(el=>{keep[el.id||el.name+':'+el.value]=el.type==='checkbox'||el.type==='radio'?el.checked:el.value});
-    const t=this.type(),min=addDays(today(),3);
+    const t=this.type(),min=today();
     const pre=S.preselect;
     let html='';
     if(!S.catalog.length){html=`<fieldset><legend>品項</legend><p class="note">器材清單載入中…</p></fieldset>`}
@@ -331,7 +332,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
       html=`<fieldset><legend>選擇器材（可複選）</legend><div class="stack">
 <h3>當天歸還</h3><div class="choices">${grp('general').map(opt).join('')}</div>
 <h3>3 天內歸還</h3><div class="choices">${grp('general3').map(opt).join('')}</div></div></fieldset>
-<fieldset><legend>使用日期</legend><div class="grid"><label class="f">使用日期 <small>最早可選 ${fmtDate(min)}</small><input type="date" id="a-date" min="${min}"></label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+<fieldset><legend>使用日期</legend><div class="grid"><label class="f">使用日期 <input type="date" id="a-date" min="${min}"></label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='leisure'){
       const list=S.catalog.filter(x=>x.cat==='leisure');
       let dateField;
@@ -345,7 +346,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
       const list=S.catalog.filter(x=>x.cat==='space');
       const tsel=(id,def)=>`<select id="${id}">${TIMES.map(x=>`<option ${x===def?'selected':''}>${x}</option>`).join('')}</select>`;
       html=`<fieldset><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><small>${h(x.note||'')}</small></span></label>`).join('')}</div></fieldset>
-<fieldset><legend>日期與時間</legend><div class="grid"><label class="f">使用日期 <small>最早可選 ${fmtDate(min)}，限週一至週五</small><input type="date" id="a-date" min="${min}"></label><label class="f">開始時間${tsel('a-start','13:00')}</label><label class="f">結束時間${tsel('a-end','15:00')}</label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+<fieldset><legend>日期與時間</legend><div class="grid"><label class="f">使用日期 <small>限週一至週五</small><input type="date" id="a-date" min="${min}"></label><label class="f">開始時間${tsel('a-start','13:00')}</label><label class="f">結束時間${tsel('a-end','15:00')}</label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='long'){
       const list=S.catalog.filter(x=>x.longOk);
       html=`<fieldset><legend>長期借用（學習輔具）</legend><p class="note" style="margin-top:0">是否核准長期借用，會依當下借用數量評估。核准後於資源教室填寫『長期借用申請單』並領取。</p><div class="grid">
@@ -376,20 +377,22 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
   async submit(){
     const err=$('#a-err');err.textContent='';
     const t=this.type(),v=id=>(($('#'+id)||{}).value||'').trim();
-    const ap={role:v('a-role'),no:v('a-no').toUpperCase(),name:v('a-name'),dept:v('a-dept'),phone:v('a-phone')};
+    const staffRole=v('a-role')==='教職員';
+    const ap={role:v('a-role'),no:staffRole?'':v('a-no').toUpperCase(),name:v('a-name'),dept:v('a-dept'),phone:v('a-phone')};
     const fail=m=>{err.textContent=m;return false};
-    if(S.gas&&ap.no&&ap.phone){const before=S.uid;await setIdentity(ap.no,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
-    if(!S.db||!S.uid)return fail(S.gas?'請先填寫學號／員工編號與聯絡電話。':'目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
+    const idKey=staffRole?ap.name:ap.no;
+    if(S.gas&&idKey&&ap.phone){const before=S.uid;await setIdentity(idKey,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
+    if(!S.db||!S.uid)return fail(S.gas?(staffRole?'請先填寫姓名與聯絡電話。':'請先填寫學號與聯絡電話。'):'目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
     if(S.myReq.some(needSurvey))return fail('你有已歸還的借用尚未填寫滿意度問卷，請先到「學生/職員申請」填寫後再送出新的申請。');
-    if(!ap.no||!ap.name||!ap.dept||!ap.phone)return fail('請填寫申請人的學號／員工編號、姓名、系級／單位與聯絡電話。');
-    const purpose=v('a-purpose'),min=addDays(today(),3);
+    if((!staffRole&&!ap.no)||!ap.name||!ap.dept||!ap.phone)return fail(staffRole?'請填寫申請人的姓名、單位與聯絡電話。':'請填寫申請人的學號、姓名、系級與聯絡電話。');
+    const purpose=v('a-purpose'),min=today();
     const base={...ap,type:t,purpose,createdAt:nowStr(),status:'pending'};
     let reqs=[];
     if(t==='item'){
       const codes=$$('input[name=a-code]:checked').map(x=>x.value),date=v('a-date');
       if(!codes.length)return fail('請至少勾選一項器材。');
       if(!date)return fail('請選擇使用日期。');
-      if(date<min)return fail(`使用日期須在 3 天後（${fmtDate(min)} 以後）。`);
+      if(date<min)return fail('使用日期不能早於今天。');
       if(dow(date)===0||dow(date)===6)return fail('使用日期須為週一至週五。');
       if(eventOn(date))return fail('這天是資源教室活動日，不開放借用，請改選其他日期。');
       reqs=codes.map(c=>({...base,id:newId(),code:c,itemName:item(c)?.name||c,date}));
@@ -397,7 +400,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
       const code=($('input[name=a-code]:checked')||{}).value,date=v('a-date');
       if(!code)return fail(t==='space'?'請選擇空間。':'請選擇器材。');
       if(!date)return fail('請選擇使用日期。');
-      if(date<min)return fail(`使用日期須在 3 天後（${fmtDate(min)} 以後）。`);
+      if(date<min)return fail('使用日期不能早於今天。');
       if(dow(date)===0||dow(date)===6)return fail('使用日期須為週一至週五。');
       if(eventOn(date))return fail('這天是資源教室活動日，不開放借用，請改選其他日期。');
       let start,end;
@@ -443,10 +446,10 @@ V.mine={
     const id=local.get('rr-id');
     if(S.gas&&(!S.uid||!id||id.uid!==S.uid)){
       $('#m-gate').innerHTML=gateNotice();
-      $('#m-list').innerHTML=`<form id="m-find" class="card" style="max-width:520px" novalidate><h3>查詢我的申請</h3><p class="meta" style="margin:0">請輸入申請時填寫的學號／員工編號與聯絡電話。</p><div class="grid"><label class="f">學號／員工編號<input id="mf-no" autocomplete="off"></label><label class="f">聯絡電話<input id="mf-phone" type="tel"></label></div><p class="err" id="mf-err"></p><button class="primary" type="submit">查詢</button></form>`;
-      $('#m-find').onsubmit=async e=>{e.preventDefault();const no=$('#mf-no').value.trim(),ph=$('#mf-phone').value.trim();if(!no||!digits(ph)){$('#mf-err').textContent='請填寫學號與電話。';return}await setIdentity(no,ph);this.paint()};
+      $('#m-list').innerHTML=`<form id="m-find" class="card" style="max-width:520px" novalidate><h3>查詢我的申請</h3><p class="meta" style="margin:0">學生請輸入學號，教職員請輸入姓名，再加上申請時填寫的聯絡電話。</p><div class="grid"><label class="f">學號（教職員填姓名）<input id="mf-no" autocomplete="off"></label><label class="f">聯絡電話<input id="mf-phone" type="tel"></label></div><p class="err" id="mf-err"></p><button class="primary" type="submit">查詢</button></form>`;
+      $('#m-find').onsubmit=async e=>{e.preventDefault();const no=$('#mf-no').value.trim(),ph=$('#mf-phone').value.trim();if(!no||!digits(ph)){$('#mf-err').textContent='請填寫學號（或教職員姓名）與電話。';return}await setIdentity(no,ph);this.paint()};
       return}
-    $('#m-gate').innerHTML=gateNotice()+(S.gas?`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> <span class="mono">${h(id.no)}</span></span><button class="small" id="m-switch">不是你？切換身分</button></div>`:'')+pendingSurveyNote();
+    $('#m-gate').innerHTML=gateNotice()+(S.gas?`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> ${id.no!==id.name?`<span class="mono">${h(id.no)}</span>`:''}</span><button class="small" id="m-switch">不是你？切換身分</button></div>`:'')+pendingSurveyNote();
     if(S.gas)$('#m-switch').onclick=()=>clearIdentity();
     const list=[...S.myReq].sort((a,b)=>needSurvey(a)!==needSurvey(b)?(needSurvey(a)?-1:1):(a.createdAt<b.createdAt?1:-1));
     if(!S.got.myReq&&S.uid){$('#m-list').innerHTML='<p class="note">載入中…</p>';return}
@@ -543,7 +546,6 @@ function reqFlags(r,all){
     if(!S.roster.length)f.push(['尚未匯入借用名單','']);
     else{const m=rm[r.no];if(!m)f.push(['學號不在借用名單','bad']);else f.push([m.name&&m.name!==r.name?`名單姓名為 ${m.name}`:'名單內',m.name&&m.name!==r.name?'warn':'ok'])}
   }else f.push(['教職員業務需求','']);
-  if(['item','leisure','space'].includes(r.type)&&r.date<addDays(r.createdAt.slice(0,10),3))f.push(['未於 3 天前申請','warn']);
   const ev=eventOn(r.date);if(ev)f.push([`活動日：${ev.label}`,'bad']);
   if(r.type==='leisure'&&leisureSlot(r.date)===false)f.push(['不在開放週次','warn']);
   if(r.type==='space'||r.type==='leisure'){const c=S.calendar.find(c=>c.id!==r.id&&c.code===r.code&&c.date===r.date&&overlap(r.start,r.end,c.start,c.end));if(c)f.push([`時段衝突 ${c.start}–${c.end}`,'bad'])}
@@ -653,14 +655,14 @@ ${l.type==='space'?'':`<div><b style="font-size:.9rem">歸還時狀況檢查</b>
 function walkIn(){
   const staff=local.get('staff')||'';
   openModal(`<h2 style="margin:0">現場登記借出</h2><p class="meta" style="margin:0">未線上申請、直接到資源教室借用時使用。</p>
-<div class="grid"><label class="f">身分<select id="wk-role"><option>學生</option><option>教職員</option></select></label><label class="f">學號／員工編號<input id="wk-no"></label><label class="f">姓名<input id="wk-name"></label><label class="f">系級／單位<input id="wk-dept"></label><label class="f">聯絡電話<input id="wk-phone" type="tel"></label>
+<div class="grid"><label class="f">身分<select id="wk-role"><option>學生</option><option>教職員</option></select></label><label class="f">學號 <small>教職員免填</small><input id="wk-no"></label><label class="f">姓名<input id="wk-name"></label><label class="f">系級／單位<input id="wk-dept"></label><label class="f">聯絡電話<input id="wk-phone" type="tel"></label>
 <label class="f">品項<select id="wk-code">${Object.entries(CATS).map(([c,t])=>`<optgroup label="${t}">${S.catalog.filter(x=>x.cat===c).map(x=>`<option value="${h(x.code)}">${h(x.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
 <label class="f">財產／物品編號<input id="wk-asset" class="mono"></label><label class="f">經手人<input id="wk-staff" value="${h(staff)}"></label><label class="f">抵押證件<select id="wk-id"><option>學生證</option><option>教職員證</option><option>其他證件</option></select></label><label class="f">應歸還日期<input type="date" id="wk-due" value="${today()}"></label></div>
 <div><b style="font-size:.9rem">出借時狀況檢查</b>${checkFields('wk')}</div>
 <p class="err" id="wk-err"></p><div class="row"><button class="primary" id="wk-ok">登記借出</button><button data-close>取消</button></div>`,m=>{
   const setDue=()=>{const it=item($('#wk-code').value);$('#wk-due').value=it&&it.cat==='general3'?addDays(today(),3):today()};$('#wk-code').onchange=setDue;
   m.querySelector('#wk-ok').onclick=async()=>{
-    const g=id=>$('#'+id).value.trim();if(!g('wk-no')||!g('wk-name')||!g('wk-staff')){$('#wk-err').textContent='請填寫學號、姓名與經手人。';return}
+    const g=id=>$('#'+id).value.trim();if((g('wk-role')==='學生'&&!g('wk-no'))||!g('wk-name')||!g('wk-staff')){$('#wk-err').textContent=g('wk-role')==='學生'?'請填寫學號、姓名與經手人。':'請填寫姓名與經手人。';return}
     local.set('staff',g('wk-staff'));const code=g('wk-code'),it=item(code),id=newId();
     const rec={id,source:'walkin',type:it&&it.cat==='space'?'space':'item',code,item:it?.name||code,applyDate:today(),date:today(),name:g('wk-name'),no:g('wk-no').toUpperCase(),dept:g('wk-dept'),role:g('wk-role'),phone:g('wk-phone'),
       assetNo:g('wk-asset'),handler:g('wk-staff'),idHeld:g('wk-id'),checkOut:readChecks('wk'),outAt:nowStr(),due:g('wk-due'),status:'out'};
