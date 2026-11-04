@@ -10,7 +10,7 @@
   --accent:#176b63; --accent-fg:#ffffff; --accent-soft:#dff1ed;
   --blue:#396b9f; --blue-soft:#e6f0f8; --action:#c56a2d; --action-soft:#fff0df;
   --ok:#1f7a4d; --ok-soft:#dff1e6; --warn:#9a5b00; --warn-soft:#fbecd3; --bad:#b0302a; --bad-soft:#f8e0de; --info:#24578f; --info-soft:#dde8f5;
-  --qr-bg:#ffffff; --qr-fg:#111111;
+  --qr-bg:#ffffff; --qr-fg:#111111; --alt:#faf6dc;
   --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   --r:10px;
@@ -18,13 +18,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121815; --surface:#1a221e; --sunk:#222b27; --line:#33403a; --fg:#e6ece8; --muted:#9aa9a1;
   --accent:#6cc2a3; --accent-fg:#0d1a15; --accent-soft:#1f3a31;
-  --blue:#8db8ec; --blue-soft:#1c2c40; --action:#f0b65a; --action-soft:#3a2c13;
+  --alt:#26261b; --blue:#8db8ec; --blue-soft:#1c2c40; --action:#f0b65a; --action-soft:#3a2c13;
   --ok:#6fd39c; --ok-soft:#1b3427; --warn:#f0b65a; --warn-soft:#3a2c13; --bad:#f08b84; --bad-soft:#3d1f1d; --info:#8db8ec; --info-soft:#1c2c40;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121815; --surface:#1a221e; --sunk:#222b27; --line:#33403a; --fg:#e6ece8; --muted:#9aa9a1;
   --accent:#6cc2a3; --accent-fg:#0d1a15; --accent-soft:#1f3a31;
-  --blue:#8db8ec; --blue-soft:#1c2c40; --action:#f0b65a; --action-soft:#3a2c13;
+  --alt:#26261b; --blue:#8db8ec; --blue-soft:#1c2c40; --action:#f0b65a; --action-soft:#3a2c13;
   --ok:#6fd39c; --ok-soft:#1b3427; --warn:#f0b65a; --warn-soft:#3a2c13; --bad:#f08b84; --bad-soft:#3d1f1d; --info:#8db8ec; --info-soft:#1c2c40;
   color-scheme:dark}
 *{box-sizing:border-box}
@@ -157,6 +157,27 @@ details.inv summary{cursor:pointer;font-weight:700;color:var(--accent)}
 .survey-state.done{background:var(--ok-soft);color:var(--ok);flex-direction:row;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
 .survey-state.todo{background:var(--warn-soft);border:1px solid var(--warn)}
 .survey-state.todo b{color:var(--warn)}
+.sgrid table{font-size:.82rem;min-width:520px}
+.sgrid th,.sgrid td{text-align:center;padding:0;border:1px solid var(--line);white-space:nowrap}
+.sgrid th{padding:6px 4px;position:static}
+.sgrid th.day.hol{color:var(--bad)}
+.sgrid th.pcol{text-align:left;padding:4px 8px;background:var(--sunk);min-width:92px}
+.sgrid th.pcol b{display:inline-block;min-width:2.2em;color:var(--fg)}
+.sgrid th.pcol span{font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
+.sgrid td{height:34px;min-width:64px;font-size:.78rem;padding:2px 4px}
+.sgrid td.s1{background:var(--alt)}
+.sgrid td.d0{border-left:2px solid var(--muted)}
+.sgrid td.busy{background:var(--accent-soft);color:var(--fg);font-weight:500}
+.sgrid td.pend{background:var(--warn-soft);color:var(--warn)}
+.sgrid td.hol{background:var(--sunk);color:var(--bad);font-size:.72rem}
+.sgrid td.past{background:var(--sunk)}
+.sgrid td.on{background:var(--accent)}
+.sgrid .cell{width:100%;height:100%;min-height:32px;border:0;border-radius:0;background:transparent;color:var(--accent-fg);font-weight:700;padding:0}
+.sgrid .cell:hover{background:var(--accent-soft)}
+.sgrid td.on .cell:hover{background:var(--accent)}
+.qlabel{display:block;margin-bottom:6px;font-size:.92rem}
+.choices.tight{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.scale.agree label b{font-size:.9rem}
 footer a{color:var(--accent)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padding-block:16px 28px}
 @media (max-width:520px){.bar{grid-template-columns:1fr 52px}.bar .track{grid-column:1/-1;grid-row:2}}
@@ -213,6 +234,26 @@ const Q=[['q1','空間環境整潔、舒適'],['q2','器材設備狀況良好'],
 const SCALE=['非常不滿意','不滿意','普通','滿意','非常滿意'];
 const SCALE_COLORS=['var(--bad)','var(--warn)','var(--line)','var(--info)','var(--ok)'];
 const SURVEY_TARGETS=['悅讀書房','課輔室','資源教室器材借用','休閒性器材','資源教室整體服務'];
+/* 課輔二／悅讀書房借用登記表的節次 */
+const PERIODS=[['1','08:10','09:00'],['2','09:10','10:00'],['3','10:10','11:00'],['4','11:05','11:55'],['午','11:55','12:50'],['5','12:50','13:40'],['6','13:45','14:35'],['7','14:40','15:30'],['8','15:35','16:25'],['9','16:35','17:25'],['10','17:30','18:15'],['A','18:20','19:05'],['B','19:10','19:55']];
+const pLabel=p=>p==='午'?'午休':`第 ${p} 節`;
+const pIdx=p=>PERIODS.findIndex(x=>x[0]===p);
+const pSort=(a,b)=>pIdx(a)-pIdx(b);
+const perText=r=>r.periods&&r.periods.length?`${r.periods.map(pLabel).join('、')}（${r.start}–${r.end}）`:(r.start?`${r.start}–${r.end}`:'');
+function calHit(c,p){const P=PERIODS[pIdx(p)];if(!P)return false;return c.periods&&c.periods.length?c.periods.includes(p):overlap(P[1],P[2],c.start,c.end)}
+const reqHit=(r,p)=>{const P=PERIODS[pIdx(p)];return r.periods&&r.periods.length?r.periods.includes(p):!!(P&&r.start&&overlap(P[1],P[2],r.start,r.end))};
+const spaceBusy=(code,date,p,except)=>S.calendar.find(c=>c.id!==except&&c.code===code&&c.date===date&&calHit(c,p));
+const weekMon=d=>addDays(d,-((dow(d)+6)%7));
+const thisWeek=()=>{const t=today();return weekMon([0,6].includes(dow(t))?addDays(t,2):t)};
+const spaceNames=()=>{const n=S.catalog.filter(x=>x.cat==='space').map(x=>x.name);return n.length?n:['悅讀書房','課輔室']};
+const surveyTargets=()=>[...spaceNames(),'資源教室器材借用','休閒性器材','資源教室整體服務'];
+const isSpaceTarget=t=>spaceNames().includes(t)||t==='悅讀書房'||t==='課輔室';
+/* 資源教室悅讀書房問卷（FM-10540-023） */
+const RS_Q=[['s1','我覺得悅讀書房／課輔室的使用規則簡單容易'],['s2','悅讀書房／課輔室的空間大小適切'],['s3','我滿意悅讀書房／課輔室的設備規劃'],['s4','使用悅讀書房／課輔室，讓我較不受外界干擾'],['s5','在悅讀書房／課輔室學習或討論時，比較能提高效率'],['s6','整體而言，我滿意悅讀書房／課輔室的規劃']];
+const AGREE=['非常同意','同意','普通','不同意','非常不同意'];
+const agreeText=v=>AGREE[5-v]||'';
+const RS_BASIC=[['gender','性別',['男','女']],['program','學制',['五專','四技','二技','碩士']],['college','學院',['醫護學院','人文社會學院','民生學院','管理學院','工學院','其他']],['grade','年級',['一年級','二年級','三年級','四年級','五年級','延修']],['rc','資源教室學生',['是','否']]];
+const RS_PURPOSE=['團體課業討論','自習自修','課業輔導','諮商晤談','借閱課外讀物','影音賞析','其他'];
 
 /* ---------- state ---------- */
 const S={db:null,user:null,uid:null,admin:false,ready:false,noDb:false,
@@ -230,11 +271,11 @@ const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id}))
 /* ---------- views ---------- */
 const STUDENT_TABS=[['rules','① 借用說明'],['apply','② 我要借／使用設備'],['mine','③ 查詢我的申請']];
 const ADMIN_TABS=[['review','審核與點交'],['records','設備紀錄'],['stats','滿意度統計'],['setup','設定']];
-const ADMIN_VIEWS=['review','records','ledger','usagelog','stats','setup'];
+const ADMIN_VIEWS=['review','records','ledger','usagelog','spaceweek','stats','roomstats','setup'];
 const isAdminView=v=>ADMIN_VIEWS.includes(v);
 let curView=null,curParam=null;
 function navHtml(){
-  const r=['borrow','usage','items','item'].includes(curView)?'apply':curView==='survey'?'mine':['ledger','usagelog'].includes(curView)?'records':curView;
+  const r=['borrow','usage','items','item'].includes(curView)?'apply':curView==='survey'?'mine':['ledger','usagelog','spaceweek'].includes(curView)?'records':curView==='roomstats'?'stats':curView;
   let s=STUDENT_TABS.map(([k,t])=>`<a href="#${k}" ${r===k?'aria-current="page"':''}>${t}</a>`).join('');
   if(S.admin)s+=`<span class="sep"></span><span class="grp">資源教室</span>`+ADMIN_TABS.map(([k,t])=>`<a href="#${k}" ${r===k?'aria-current="page"':''}>${t}</a>`).join('')+`<a href="#logout">登出</a>`;
   else s+=`<span class="sep"></span><a href="#login" ${r==='login'?'aria-current="page"':''}>資源教室登入</a>`;
@@ -305,6 +346,26 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 <div class="row" style="margin-top:24px"><a class="btn primary" href="#apply">我已了解，前往申請借用</a><a class="btn" href="#items">查看器材一覽</a></div></article>`}
 };
 
+/* ===== 空間週表（同紙本「課輔二／悅讀書房借用登記表」） ===== */
+function spaceGrid({codes,mon,sel,who}){
+  const days=[0,1,2,3,4].map(i=>addDays(mon,i)),sp=codes.map(item).filter(Boolean),t=today();
+  let hd=`<tr><th rowspan="${sp.length>1?2:1}" class="pcol">時段</th>${days.map(d=>`<th colspan="${sp.length}" class="day ${eventOn(d)?'hol':''}">${d.slice(5).replace('-','/')}（${WD[dow(d)]}）</th>`).join('')}</tr>`;
+  if(sp.length>1)hd+=`<tr>${days.map(()=>sp.map((x,i)=>`<th class="sp s${i}">${h(x.name)}</th>`).join('')).join('')}</tr>`;
+  const body=PERIODS.map(([p,a,b])=>`<tr><th class="pcol"><b>${p==='午'?'午休':p}</b><span>${a}–${b}</span></th>${days.map(d=>{const ev=eventOn(d);return sp.map((x,i)=>{
+    const k=`s${i}${i===0?' d0':''}`;
+    if(ev)return `<td class="${k} hol">${p==='1'?h(ev.label):''}</td>`;
+    const c=spaceBusy(x.code,d,p);
+    if(who){if(c)return `<td class="${k} busy">${h(who(c,x.code,d,p))}</td>`;const w=who(null,x.code,d,p);return `<td class="${k} ${w?'pend':''}">${h(w)}</td>`}
+    if(c)return `<td class="${k} busy">已預約</td>`;
+    if(d<t)return `<td class="${k} past"></td>`;
+    const on=sel&&sel.code===x.code&&sel.date===d&&sel.periods.has(p);
+    return `<td class="${k} ${on?'on':''}"><button type="button" class="cell" data-c="${h(x.code)}" data-d="${d}" data-p="${p}" aria-pressed="${on}" aria-label="${fmtDate(d)} ${h(x.name)} ${pLabel(p)}">${on?'✓':''}</button></td>`}).join('')}).join('')}</tr>`).join('');
+  return `<div class="tablewrap sgrid"><table><thead>${hd}</thead><tbody>${body}</tbody></table></div>`;
+}
+function cellWho(c,code,d,p){const all=allRequests();
+  if(c){const r=all.find(x=>x.id===c.id);return r?r.name+(r.status==='out'?'（使用中）':''):'已預約'}
+  const r=all.find(x=>x.status==='pending'&&x.type==='space'&&x.code===code&&x.date===d&&reqHit(x,p));return r?`（待審）${r.name}`:''}
+
 /* ===== 申請借用 ===== */
 function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
@@ -350,9 +411,20 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     if(S.preselect){const it=item(S.preselect);if(it){const t=it.cat==='leisure'?'leisure':it.cat==='space'?'space':'item';$('#a-type-'+t).checked=true}}
     $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true)});
     $('#apply-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
-    $('#a-detail').addEventListener('change',e=>{if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
+    $('#a-detail').addEventListener('change',e=>{if(this.type()==='space'&&e.target.name==='a-code'){if(S.spSel&&S.spSel.code!==e.target.value)S.spSel=null;this.spPaint()}if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
+    $('#a-detail').addEventListener('click',e=>{const b=e.target.closest('.cell');
+      if(b){const {c,d,p}=b.dataset;let sl=S.spSel;if(!sl||sl.code!==c||sl.date!==d)sl=S.spSel={code:c,date:d,periods:new Set()};sl.periods.has(p)?sl.periods.delete(p):sl.periods.add(p);
+        const r=document.querySelector(`input[name=a-code][value="${c}"]`);if(r)r.checked=true;this.spPaint();this.slots();return}
+      if(e.target.id==='sp-prev'){S.spWeek=addDays(S.spWeek,-7);this.spPaint()}
+      if(e.target.id==='sp-next'){S.spWeek=addDays(S.spWeek,7);this.spPaint()}});
   },
   paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.detail(false)},
+  spPaint(){const g=$('#sp-grid');if(!g)return;if(!S.spWeek)S.spWeek=thisWeek();
+    const sel=($('input[name=a-code]:checked')||{}).value;const codes=S.catalog.filter(x=>x.cat==='space').map(x=>x.code).filter(c=>!sel||c===sel);
+    $('#sp-wk').textContent=`${fmtDate(S.spWeek)} – ${fmtDate(addDays(S.spWeek,4))}`;$('#sp-prev').disabled=S.spWeek<=thisWeek();
+    g.innerHTML=spaceGrid({codes,mon:S.spWeek,sel:S.spSel});
+    const sl=S.spSel,has=sl&&sl.periods.size;$('#a-date').value=has?sl.date:'';
+    $('#sp-sum').innerHTML=has?`<div class="note ok">已選：<b>${h(item(sl.code)?.name||'')}</b>・${fmtDate(sl.date)}・${[...sl.periods].sort(pSort).map(pLabel).join('、')}</div>`:'<p class="meta" style="margin:0">點選空白格子選擇節次，可以選多節，再點一次取消。灰色「已預約」表示已被借用。</p>'},
   qr(){const box=$('#a-qr');if(!box)return;const u=(S.config.url||'').replace(/#.*$/,'');
     if(!u){box.hidden=true;return}box.hidden=false;const url=u;if(box.dataset.url===url)return;box.dataset.url=url;
     if(!window.qrcode){loadQR().then(()=>{box.dataset.url='';this.qr()}).catch(()=>{});box.hidden=true;return}
@@ -384,9 +456,9 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
 <fieldset><legend>使用時段</legend><div class="grid">${dateField}</div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='space'){
       const list=S.catalog.filter(x=>x.cat==='space');
-      const tsel=(id,def)=>`<select id="${id}">${TIMES.map(x=>`<option ${x===def?'selected':''}>${x}</option>`).join('')}</select>`;
-      html=`<fieldset><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
-<fieldset><legend>日期與時間</legend><div class="grid"><label class="f">使用日期<input type="date" id="a-date" min="${min}"></label><label class="f">開始時間${tsel('a-start','13:00')}</label><label class="f">結束時間${tsel('a-end','15:00')}</label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+      html=`<fieldset><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code||(S.spSel&&S.spSel.code===x.code)?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
+<fieldset><legend>點選日期與節次</legend><div class="spread" style="margin-bottom:8px"><button type="button" class="small" id="sp-prev">‹ 上一週</button><b id="sp-wk"></b><button type="button" class="small" id="sp-next">下一週 ›</button></div>
+<div id="sp-grid"></div><div id="sp-sum" style="margin-top:10px"></div><input type="hidden" id="a-date"><div id="a-slots"></div></fieldset>`;
     }else if(t==='long'){
       const list=S.catalog.filter(x=>x.longOk);
       html=`<fieldset><legend>長期借用（學習輔具）</legend><p class="note" style="margin-top:0">是否核准長期借用，會依當下借用數量評估。核准後於資源教室填寫『長期借用申請單』並領取。</p><div class="grid">
@@ -398,6 +470,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     if(!reset)box.querySelectorAll('input,select,textarea').forEach(el=>{const k=el.id||el.name+':'+el.value;if(k in keep){if(el.type==='checkbox'||el.type==='radio')el.checked=keep[k];else el.value=keep[k]}});
     {const ph=$('#a-purpose');if(ph)ph.placeholder=t==='long'?'必填：說明需要長期使用的原因':'例如：課堂報告、讀書會'}
     this.slots();
+    if(t==='space')this.spPaint();
   },
   slots(){
     const box=$('#a-slots');if(!box)return;
@@ -407,7 +480,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     if(date){
       if(dow(date)===0||dow(date)===6)out.push(`<div class="note bad">${fmtDate(date)} 是週末，資源教室不受理借用。</div>`);
       const ev=eventOn(date);if(ev)out.push(`<div class="note bad">${fmtDate(date)} 為資源教室活動日（${h(ev.label)}），不開放借用。</div>`);
-      if(code){
+      if(code&&t!=='space'){
         const booked=S.calendar.filter(c=>c.code===code&&c.date===date).sort((a,b)=>a.start<b.start?-1:1);
         out.push(booked.length?`<div class="note info">這天已被預約的時段：${booked.map(b=>`<span class="mono">${b.start}–${b.end}</span>`).join('、')}</div>`:`<div class="note ok">這天目前沒有人預約。</div>`);
       }
@@ -436,9 +509,18 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
       if(dow(date)===0||dow(date)===6)return fail('使用日期須為週一至週五。');
       if(eventOn(date))return fail('這天是資源教室活動日，不開放借用，請改選其他日期。');
       reqs=codes.map(c=>({...base,id:newId(),code:c,itemName:item(c)?.name||c,date}));
-    }else if(t==='leisure'||t==='space'){
+    }else if(t==='space'){
+      const sl=S.spSel;if(!sl||!sl.periods.size)return fail('請在表格中點選要借用的節次。');
+      const code=sl.code,date=sl.date;
+      if(date<min)return fail('使用日期不能早於今天。');
+      if(dow(date)===0||dow(date)===6)return fail('使用日期須為週一至週五。');
+      if(eventOn(date))return fail('這天是資源教室活動日，不開放借用，請改選其他日期。');
+      const ps=[...sl.periods].sort(pSort),busy=ps.find(p=>spaceBusy(code,date,p));
+      if(busy)return fail(`${pLabel(busy)} 已被預約，請改選其他節次。`);
+      reqs=[{...base,id:newId(),code,itemName:item(code)?.name||code,date,start:PERIODS[pIdx(ps[0])][1],end:PERIODS[pIdx(ps[ps.length-1])][2],periods:ps}];
+    }else if(t==='leisure'){
       const code=($('input[name=a-code]:checked')||{}).value,date=v('a-date');
-      if(!code)return fail(t==='space'?'請選擇空間。':'請選擇器材。');
+      if(!code)return fail('請選擇器材。');
       if(!date)return fail('請選擇使用日期。');
       if(date<min)return fail('使用日期不能早於今天。');
       if(dow(date)===0||dow(date)===6)return fail('使用日期須為週一至週五。');
@@ -465,7 +547,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
         list.push(...reqs);
         await ref.set({list,updatedAt:nowStr()});
       });
-      local.set('applicant',ap);S.preselect=null;
+      local.set('applicant',ap);S.preselect=null;S.spSel=null;
       toast(`已送出 ${reqs.length} 筆申請，請等候老師審核`);
       location.hash='mine';
     }catch(e){
@@ -477,7 +559,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
 
 /* ===== 學生/職員申請 ===== */
 const needSurvey=r=>r.status==='returned'&&r.role!=='教職員'&&!r.surveyed;
-const surveyTarget=r=>r.code==='s01'?'悅讀書房':r.code==='s02'?'課輔室':r.type==='leisure'?'休閒性器材':'資源教室器材借用';
+const surveyTarget=r=>r.type==='space'?(item(r.code)?.name||'悅讀書房'):r.type==='leisure'?'休閒性器材':'資源教室器材借用';
 function pendingSurveyNote(){const n=S.myReq.filter(needSurvey).length;return n?`<div class="note warn"><b>你有 ${n} 筆借用已歸還、尚未填寫滿意度問卷。</b>${curView==='mine'?'請在下方對應的借用紀錄填寫':'請到<a href="#mine">學生/職員申請</a>填寫'}，填完後才能送出新的申請。</div>`:''}
 V.mine={
   deps:['myReq','catalog'],
@@ -497,7 +579,7 @@ V.mine={
     const sp=r=>r.type==='space';
     $('#m-list').innerHTML=list.map(r=>`<article class="card">
 <div class="spread"><h3>${h(r.itemName)} <span class="chip">${h(TYPES[r.type]||r.type)}</span></h3><span class="row" style="gap:6px">${chipFor(r.status)}${r.status==='returned'&&r.role!=='教職員'?(r.surveyed?'<span class="chip ok">問卷已填</span>':'<span class="chip warn">問卷未填</span>'):''}</span></div>
-<div class="meta"><span>使用日期 ${fmtDate(r.date)}${r.start?` <span class="mono">${r.start}–${r.end}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}</span><span>申請於 <span class="mono">${h(r.createdAt)}</span></span></div>
+<div class="meta"><span>使用日期 ${fmtDate(r.date)}${perText(r)?` <span class="mono">${perText(r)}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}</span><span>申請於 <span class="mono">${h(r.createdAt)}</span></span></div>
 ${r.reviewNote?`<div class="note ${r.status==='rejected'?'bad':''}">老師備註：${h(r.reviewNote)}</div>`:''}
 ${r.status==='approved'?`<div class="note ok">請於 ${fmtDate(r.date)} 攜帶${r.role==='教職員'?'教職員證':'學生證'}到資源教室${sp(r)?'，由工讀生或老師協助開門':'領取'}。</div>`:''}
 ${r.status==='out'?`<div class="note info">${sp(r)?'開門時間':'領取時間'} <span class="mono">${h(r.outAt||'')}</span>${r.due?`・請於 <b>${fmtDate(r.due)}</b> 前${sp(r)?'使用完畢':'歸還'}`:''}${r.assetNo?`・編號 <span class="mono">${h(r.assetNo)}</span>`:''}</div>`:''}
@@ -505,7 +587,7 @@ ${r.status==='returning'?`<div class="note info">你已於 <span class="mono">${
 ${r.status==='returned'?`<div class="note ${r.abnormal?'warn':'ok'}">歸還完成：<span class="mono">${h(r.returnedAt||'')}</span>${r.receiver?`・簽收人 ${h(r.receiver)}`:''}・狀況${r.abnormal?'異常':'正常'}${r.returnNote?`（${h(r.returnNote)}）`:''}</div>`:''}
 ${r.status==='returned'&&r.role!=='教職員'?(r.surveyed?`<div class="survey-state done"><b>✓ 滿意度問卷已填寫</b><span class="mono">${h(r.surveyedAt||'')}</span></div>`
   :`<div class="survey-state todo"><div class="spread"><b>滿意度問卷尚未填寫</b>${S.openSurvey===r.id?'':`<button class="primary small" data-survey="${h(r.id)}">填寫問卷（約 1 分鐘）</button>`}</div>
-${S.openSurvey===r.id?`<form class="sv-form" data-for="${h(r.id)}" novalidate>${surveyBlock('sv')}<div class="row"><button class="primary" type="submit">送出問卷</button><button type="button" data-survey-close>收起</button></div></form>`:''}</div>`):''}
+${S.openSurvey===r.id?`<form class="sv-form" data-for="${h(r.id)}" novalidate>${surveyFormFor(r,'sv')}<div class="row"><button class="primary" type="submit">送出問卷</button><button type="button" data-survey-close>收起</button></div></form>`:''}</div>`):''}
 <div class="row">${['pending','approved'].includes(r.status)?`<button class="small danger" data-cancel="${h(r.id)}">取消申請</button>`:''}${r.status==='out'?`<button class="primary" data-ret="${h(r.id)}">${sp(r)?'確認使用完畢':'確認歸還'}</button>`:''}</div>
 </article>`).join('');
     $('#m-list').onclick=e=>{const d=e.target.dataset;
@@ -524,17 +606,32 @@ ${S.openSurvey===r.id?`<form class="sv-form" data-for="${h(r.id)}" novalidate>${
 };
 
 /* ===== 設備紀錄（借用＋使用合併入口，老師端） ===== */
-function recSeg(cur){return `<nav class="seg" aria-label="紀錄類型"><a href="#ledger" ${cur==='ledger'?'aria-current="page"':''}>設備借用紀錄</a><a href="#usagelog" ${cur==='usagelog'?'aria-current="page"':''}>設備使用紀錄</a></nav>`}
+function recSeg(cur){return `<nav class="seg" aria-label="紀錄類型"><a href="#ledger" ${cur==='ledger'?'aria-current="page"':''}>設備借用紀錄</a><a href="#usagelog" ${cur==='usagelog'?'aria-current="page"':''}>設備使用紀錄</a><a href="#spaceweek" ${cur==='spaceweek'?'aria-current="page"':''}>空間借用週表</a></nav>`}
 V.records={
-  deps:['loans','usage'],
+  deps:['loans','usage','calendar'],
   shell(){return `<div class="apply-head"><div><p class="eyebrow">資源教室</p><h1>要查看哪一種紀錄？</h1></div></div><div class="pick" id="rc-pick"></div>`},
   paint(){const t=today(),m=t.slice(0,7);
     const out=(S.loans||[]).filter(l=>l.status==='out'),over=out.filter(l=>l.due&&l.due<t).length,thisMonth=(S.usage||[]).filter(e=>(e.date||'').startsWith(m)).length;
     const n=(k,v)=>S.got[k]?v:'…';
     $('#rc-pick').innerHTML=`<a class="pickcard" href="#ledger"><span class="eyebrow">帶離教室的器材與空間</span><b>設備借用紀錄</b><span>借出中 ${n('loans',out.length)} 件${over?`・<b style="color:var(--bad)">逾期 ${over} 件</b>`:''}・全部 ${n('loans',(S.loans||[]).length)} 筆</span><span class="go">查看借用紀錄 →</span></a>
-<a class="pickcard" href="#usagelog"><span class="eyebrow">教室內電腦、列印、影印、掃描</span><b>設備使用紀錄</b><span>本月 ${n('usage',thisMonth)} 人次・全部 ${n('usage',(S.usage||[]).length)} 筆</span><span class="go">查看使用紀錄 →</span></a>`}
+<a class="pickcard" href="#usagelog"><span class="eyebrow">教室內電腦、列印、影印、掃描</span><b>設備使用紀錄</b><span>本月 ${n('usage',thisMonth)} 人次・全部 ${n('usage',(S.usage||[]).length)} 筆</span><span class="go">查看使用紀錄 →</span></a>
+<a class="pickcard" href="#spaceweek"><span class="eyebrow">悅讀書房・課輔二</span><b>空間借用週表</b><span>本週已預約 ${S.calendar.filter(c=>c.date>=thisWeek()&&c.date<=addDays(thisWeek(),4)&&S.catalog.some(x=>x.cat==='space'&&x.code===c.code)).length} 筆</span><span class="go">查看週表 →</span></a>`}
 };
 
+V.spaceweek={
+  deps:['calendar','allReq','catalog','config'],
+  shell(){if(!S.swWeek)S.swWeek=thisWeek();return `${recSeg('spaceweek')}<div class="spread"><h1>空間借用週表</h1><button id="sw-export">匯出 Excel</button></div>
+<p class="lede">取代紙本「課輔二／悅讀書房借用登記表」。已核准的預約顯示借用人姓名，待審核的申請以淡色標示。</p>
+<div class="spread" style="margin-bottom:10px"><button class="small" id="sw-prev">‹ 上一週</button><b id="sw-wk"></b><button class="small" id="sw-next">下一週 ›</button></div>
+<div class="legend" style="margin-bottom:8px"><span><i style="background:var(--accent-soft)"></i>已核准</span><span><i style="background:var(--warn-soft)"></i>待審核</span><span><i style="background:var(--sunk)"></i>活動日／休假</span></div><div id="sw-grid"></div>`},
+  bind(){$('#sw-prev').onclick=()=>{S.swWeek=addDays(S.swWeek,-7);this.paint()};$('#sw-next').onclick=()=>{S.swWeek=addDays(S.swWeek,7);this.paint()};
+    $('#sw-export').onclick=()=>{const mon=S.swWeek,days=[0,1,2,3,4].map(i=>addDays(mon,i)),sp=S.catalog.filter(x=>x.cat==='space');
+      const aoa=[[`課輔二／悅讀書房借用登記表（${mon}～${days[4]}）`],['時段',...days.flatMap(d=>sp.map(x=>`${d.slice(5).replace('-','/')}（${WD[dow(d)]}）${x.name}`))],
+        ...PERIODS.map(([p,a,b])=>[`${p==='午'?'午休':p} ${a}-${b}`,...days.flatMap(d=>sp.map(x=>{const ev=eventOn(d);if(ev)return ev.label;return cellWho(spaceBusy(x.code,d,p)||null,x.code,d,p)}))])];
+      saveFile(`空間借用週表_${mon}.xlsx`,xlsxBlob([['週表',aoa,[16,...days.flatMap(()=>sp.map(()=>14))]]]))}},
+  paint(){$('#sw-wk').textContent=`${fmtDate(S.swWeek)} – ${fmtDate(addDays(S.swWeek,4))}`;
+    $('#sw-grid').innerHTML=S.catalog.length?spaceGrid({codes:S.catalog.filter(x=>x.cat==='space').map(x=>x.code),mon:S.swWeek,who:cellWho}):'<p class="note">載入中…</p>'}
+};
 /* ===== 設備使用登記（取代紙本「資源教室設備借用登記簿」） ===== */
 const PCS=['01','02','03','04'];
 const devText=e=>[e.pc?`電腦 ${e.pc}`:'',e.print?'印表機（彩色）':'',e.copy?'影印機（黑白）':'',e.scan?'掃描資料':'',e.paper?`紙張 ${e.paper} 張`:''].filter(Boolean).join('、');
@@ -640,10 +737,36 @@ async function saveSurvey(resp,fr){
 function surveyBlock(px){return `${Q.map(([k,t])=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${t}</p><div class="scale">${SCALE.map((sc,i)=>`<label><input type="radio" name="${px}${k}" value="${i+1}"><b>${i+1}</b>${sc}</label>`).join('')}</div></div>`).join('')}
 <label class="f" style="margin-top:10px">建議或想說的話（選填）<textarea id="${px}-comment"></textarea></label>
 <p class="err" id="${px}-err" role="alert"></p>`}
+function spaceSurveyHtml(px,useDate){return `
+<fieldset><legend>一、基本資料</legend><div class="stack">
+${RS_BASIC.map(([k,t,opts])=>`<div role="radiogroup" aria-label="${t}"><b class="qlabel">${t}</b><div class="choices tight">${opts.map(o=>`<label class="choice"><input type="radio" name="${px}${k}" value="${o}"><span><b>${o}</b></span></label>`).join('')}</div>${k==='college'?`<input id="${px}-college-other" placeholder="請填寫學院" hidden style="margin-top:8px">`:''}</div>`).join('')}
+<label class="f" style="max-width:240px">使用日期<input type="date" id="${px}-date" value="${h(useDate||today())}"></label>
+<div><b class="qlabel">本次使用悅讀書房／課輔室的主要目的（可複選）</b><div class="choices tight">${RS_PURPOSE.map(o=>`<label class="choice"><input type="checkbox" name="${px}purpose" value="${o}"><span><b>${o}</b></span></label>`).join('')}</div><input id="${px}-purpose-other" placeholder="請填寫其他目的" hidden style="margin-top:8px"></div>
+</div></fieldset>
+<fieldset><legend>二、關於悅讀書房／課輔室學習輔導協助</legend>${RS_Q.map(([k,t],i)=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${i+1}. ${t}</p><div class="scale agree">${AGREE.map((a,j)=>`<label><input type="radio" name="${px}${k}" value="${5-j}"><b>${a}</b></label>`).join('')}</div></div>`).join('')}</fieldset>
+<label class="f">其他建議（選填）<textarea id="${px}-comment"></textarea></label>
+<p class="err" id="${px}-err" role="alert"></p>`}
+document.addEventListener('change',e=>{const n=e.target.name||'';
+  if(n.endsWith('college')){const o=document.getElementById(n.slice(0,-7)+'-college-other');if(o)o.hidden=e.target.value!=='其他'}
+  if(n.endsWith('purpose')&&e.target.value==='其他'){const o=document.getElementById(n.slice(0,-7)+'-purpose-other');if(o)o.hidden=!e.target.checked}});
+function collectSurvey(root,px,space){
+  const g=n=>(root.querySelector(`input[name="${px}${n}"]:checked`)||{}).value;
+  if(space){const o={kind:'space'};
+    for(const [k,t] of RS_BASIC){o[k]=g(k);if(!o[k])return{err:`請選擇「${t}」。`}}
+    if(o.college==='其他')o.collegeOther=(root.querySelector('#'+px+'-college-other').value||'').trim();
+    o.useDate=root.querySelector('#'+px+'-date').value;if(!o.useDate)return{err:'請填寫使用日期。'};
+    o.purposes=[...root.querySelectorAll(`input[name="${px}purpose"]:checked`)].map(x=>x.value);if(!o.purposes.length)return{err:'請勾選本次使用的主要目的。'};
+    if(o.purposes.includes('其他'))o.purposeOther=(root.querySelector('#'+px+'-purpose-other').value||'').trim();
+    for(const [k] of RS_Q){const v=g(k);if(!v)return{err:'第二部分每一題都要勾選。'};o[k]=+v}
+    o.comment=root.querySelector('#'+px+'-comment').value.trim();return{data:o}}
+  const o={};for(const [k] of Q){const v=g(k);if(!v)return{err:'請為每個項目選擇分數。'};o[k]=+v}
+  o.comment=root.querySelector('#'+px+'-comment').value.trim();return{data:o};
+}
+const surveyFormFor=(r,px)=>r&&r.type==='space'?spaceSurveyHtml(px,r.date):surveyBlock(px);
 async function submitSurveyBlock(root,r,px){
   const err=root.querySelector('#'+px+'-err');err.textContent='';
-  const ans={};for(const [k] of Q){const c=root.querySelector(`input[name=${px}${k}]:checked`);if(!c){err.textContent='請為每個項目選擇分數。';return false}ans[k]=+c.value}
-  try{await saveSurvey({id:newId(),target:surveyTarget(r),...ans,comment:root.querySelector('#'+px+'-comment').value.trim(),at:nowStr(),reqId:r.id,itemName:r.itemName},r);return true}
+  const res=collectSurvey(root,px,r.type==='space');if(res.err){err.textContent=res.err;return false}
+  try{await saveSurvey({id:newId(),target:surveyTarget(r),...res.data,at:nowStr(),reqId:r.id,itemName:r.itemName},r);return true}
   catch(x){err.textContent='送出失敗，請稍後再試。';return false}
 }
 /* 借用完成（老師點收）後自動跳出問卷 */
@@ -651,37 +774,35 @@ const popShown={};
 function maybeSurveyPopup(){
   if(!S.ready||curView==='survey'||curView==='mine'||curView==='login'||isAdminView(curView)||!$('#modal').hidden)return;
   const r=S.myReq.find(x=>needSurvey(x)&&!popShown[x.id]);if(!r)return;popShown[r.id]=true;
-  openModal(`<div><p class="eyebrow">借用完成</p><h2 style="margin:4px 0 0">謝謝使用！請填寫滿意度問卷</h2><p class="meta" style="margin:6px 0 0">${h(r.itemName)}・${fmtDate(r.date)}・歸還於 <span class="mono">${h(r.returnedAt||'')}</span>。大約 1 分鐘，只有資源教室老師看得到。</p></div>
-<form id="pp-form" novalidate>${surveyBlock('pp')}<div class="row"><button class="primary" type="submit" id="pp-ok">送出問卷</button><button type="button" data-close>稍後再填</button></div></form>`,m=>{
+  openModal(`<div><p class="eyebrow">借用完成</p><h2 style="margin:4px 0 0">謝謝使用！請填寫${r.type==='space'?'悅讀書房問卷':'滿意度問卷'}</h2><p class="meta" style="margin:6px 0 0">${h(r.itemName)}・${fmtDate(r.date)}・歸還於 <span class="mono">${h(r.returnedAt||'')}</span>。大約 1 分鐘，只有資源教室老師看得到。</p></div>
+<form id="pp-form" novalidate>${surveyFormFor(r,'pp')}<div class="row"><button class="primary" type="submit" id="pp-ok">送出問卷</button><button type="button" data-close>稍後再填</button></div></form>`,m=>{
     m.querySelector('#pp-form').onsubmit=async e=>{e.preventDefault();$('#pp-ok').disabled=true;if(await submitSurveyBlock(m,r,'pp')){closeModal();toast('已收到問卷，謝謝你的回饋！')}else $('#pp-ok').disabled=false};
   });
 }
 V.survey={
-  deps:['config'],
-  shell(){const fr=S.surveyFor&&S.myReq.find(r=>r.id===S.surveyFor);const tg=fr?surveyTarget(fr):SURVEY_TARGETS[0];
-    return `<h1>使用滿意度問卷</h1><p class="lede">感謝你使用資源教室的空間與器材。問卷大約 1 分鐘，結果只有資源教室老師看得到，用來改善服務。</p><div id="s-gate"></div>
+  deps:['config','catalog'],
+  shell(){this._sp=null;const fr=S.surveyFor&&S.myReq.find(r=>r.id===S.surveyFor);const tg=fr?surveyTarget(fr):surveyTargets()[0];
+    return `<h1>使用滿意度問卷</h1><p class="lede">感謝你使用資源教室的空間與器材，結果只有資源教室老師看得到，用來改善服務。</p><div id="s-gate"></div>
 ${fr?`<div class="note info" style="margin-bottom:16px">這份問卷對應你借用的 <b>${h(fr.itemName)}</b>（${fmtDate(fr.date)}，歸還於 <span class="mono">${h(fr.returnedAt||'')}</span>）。</div>`:''}
 <form id="s-form" novalidate>
-<fieldset><legend>這次使用的是</legend><div class="choices">${SURVEY_TARGETS.map((x,i)=>`<label class="choice"><input type="radio" name="s-target" id="s-t${i}" value="${x}" ${x===tg?'checked':''}><span><b>${x}</b></span></label>`).join('')}</div></fieldset>
-<fieldset><legend>請為下列項目評分</legend>${Q.map(([k,t])=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${t}</p><div class="scale">${SCALE.map((s,i)=>`<label><input type="radio" name="${k}" id="${k}-${i+1}" value="${i+1}"><b>${i+1}</b>${s}</label>`).join('')}</div></div>`).join('')}</fieldset>
-<fieldset><legend>建議或想說的話（選填）</legend><textarea id="s-comment" aria-label="建議"></textarea></fieldset>
-<p class="err" id="s-err" role="alert"></p><button class="primary" type="submit" id="s-submit">送出問卷</button></form><div id="s-done" hidden></div>`},
-  bind(){$('#s-form').addEventListener('submit',e=>{e.preventDefault();this.submit()})},
+<fieldset><legend>這次使用的是</legend><div class="choices" id="s-targets">${surveyTargets().map((x,i)=>`<label class="choice"><input type="radio" name="s-target" id="s-t${i}" value="${h(x)}" ${x===tg?'checked':''}><span><b>${h(x)}</b></span></label>`).join('')}</div></fieldset>
+<div id="s-body"></div><button class="primary" type="submit" id="s-submit">送出問卷</button></form><div id="s-done" hidden></div>`},
+  bind(){$('#s-targets').addEventListener('change',()=>this.body());$('#s-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});this.body()},
+  body(){const t=($('input[name=s-target]:checked')||{}).value,sp=isSpaceTarget(t);if(this._sp===sp)return;this._sp=sp;const fr=S.surveyFor&&S.myReq.find(r=>r.id===S.surveyFor);
+    $('#s-body').innerHTML=sp?`<p class="note info" style="margin:0 0 14px">資源教室悅讀書房問卷：了解你使用悅讀書房及課輔室的滿意度，以提供更適當的服務。請依使用狀況勾選最適當的選項。</p>${spaceSurveyHtml('s',fr&&fr.date)}`:`<fieldset><legend>請為下列項目評分</legend>${surveyBlock('s')}</fieldset>`},
   paint(){$('#s-gate').innerHTML=gateNotice()},
   async submit(){
-    const err=$('#s-err');err.textContent='';
-    const ans={};for(const [k] of Q){const c=$(`input[name=${k}]:checked`);if(!c){err.textContent='請為每個項目選擇分數。';return}ans[k]=+c.value}
+    const target=($('input[name=s-target]:checked')||{}).value,res=collectSurvey($('#s-form'),'s',isSpaceTarget(target)),err=$('#s-err');err.textContent='';
+    if(res.err){err.textContent=res.err;return}
     if(S.gas&&!S.uid)S.uid=anonUid();
-    if(!S.db||!S.uid){err.textContent='目前無法送出：請登入後從資源教室提供的連結開啟此頁。';return}
-    const forId=S.surveyFor,fr=forId&&S.myReq.find(r=>r.id===forId);
-    const resp={id:newId(),target:$('input[name=s-target]:checked').value,...ans,comment:$('#s-comment').value.trim(),at:nowStr(),...(fr?{reqId:fr.id,itemName:fr.itemName}:{})};
+    if(!S.db||!S.uid){err.textContent='目前無法送出：請從資源教室提供的連結開啟此頁。';return}
+    const fr=S.surveyFor&&S.myReq.find(r=>r.id===S.surveyFor);
+    const resp={id:newId(),target,...res.data,at:nowStr(),...(fr?{reqId:fr.id,itemName:fr.itemName}:{})};
     $('#s-submit').disabled=true;
-    try{
-      await saveSurvey(resp,fr);
-      S.surveyFor=null;$('#s-form').hidden=true;$('#s-done').hidden=false;
-      $('#s-done').innerHTML=`<div class="note ok" style="padding:20px"><b>已收到你的回饋，謝謝！</b><br>若你在悅讀書房，請記得到資源教室告知使用完畢並領回證件。</div><p class="row"><a href="#mine">回到學生/職員申請</a><button id="s-again">再填一份</button></p>`;
+    try{await saveSurvey(resp,fr);S.surveyFor=null;$('#s-form').hidden=true;$('#s-done').hidden=false;
+      $('#s-done').innerHTML=`<div class="note ok" style="padding:20px"><b>已收到你的回饋，謝謝！</b><br>若你在悅讀書房，請記得到資源教室告知使用完畢並領回證件。</div><p class="row"><a href="#mine">查詢我的申請</a><button id="s-again">再填一份</button></p>`;
       $('#s-again').onclick=()=>route();
-    }catch(e){$('#s-submit').disabled=false;err.textContent=e&&e.code==='invalid_argument'?'你目前的權限無法送出問卷，請向資源教室老師確認分享權限。':'送出失敗，請稍後再試。'}
+    }catch(e){$('#s-submit').disabled=false;err.textContent='送出失敗，請稍後再試。'}
   }
 };
 
@@ -693,7 +814,7 @@ function reqFlags(r,all){
   }else f.push(['教職員業務需求','']);
   const ev=eventOn(r.date);if(ev)f.push([`活動日：${ev.label}`,'bad']);
   if(r.type==='leisure'&&leisureSlot(r.date)===false)f.push(['不在開放週次','warn']);
-  if(r.type==='space'||r.type==='leisure'){const c=S.calendar.find(c=>c.id!==r.id&&c.code===r.code&&c.date===r.date&&overlap(r.start,r.end,c.start,c.end));if(c)f.push([`時段衝突 ${c.start}–${c.end}`,'bad'])}
+  if(r.type==='space'||r.type==='leisure'){const c=S.calendar.find(c=>c.id!==r.id&&c.code===r.code&&c.date===r.date&&(r.periods&&r.periods.length?r.periods.some(p=>calHit(c,p)):overlap(r.start,r.end,c.start,c.end)));if(c)f.push([`時段衝突 ${c.start}–${c.end}`,'bad'])}
   if(r.type==='item'||r.type==='long'){
     const it=item(r.code);if(it){const end=dueFor(r);const busy=all.filter(o=>o.id!==r.id&&o.code===r.code&&['approved','out'].includes(o.status)&&o.date<=end&&dueFor(o)>=r.date).length;
     if(busy>=(it.qty||0))f.push([`同期間已借出／核准 ${busy} 件，庫存 ${it.qty||0}`,'bad']);else f.push([`同期間占用 ${busy}／${it.qty||0}`,''])}
@@ -719,7 +840,7 @@ V.review={
     const over=out.filter(l=>l.due&&l.due<t);
     const release=all.filter(r=>['cancelled','rejected'].includes(r.status)&&S.calendar.some(c=>c.id===r.id));
     const person=r=>`${h(r.name)}　<span class="mono">${h(r.no)}</span>　${h(r.dept)}　<span class="mono">${h(r.phone)}</span>`;
-    const when=r=>`${fmtDate(r.date)}${r.start?` <span class="mono">${r.start}–${r.end}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}`;
+    const when=r=>`${fmtDate(r.date)}${perText(r)?` <span class="mono">${perText(r)}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}`;
     $('#rv-body').innerHTML=`<div class="tally"><div><b>${pend.length}</b><span>待審核</span></div><div><b>${appr.length}</b><span>已核准・待領取</span></div><div><b>${out.length}</b><span>借出中</span></div><div><b style="color:${over.length?'var(--bad)':'inherit'}">${over.length}</b><span>逾期未還</span></div></div>
 <h2>待審核</h2>${pend.length?`<div class="list">${pend.map(r=>`<article class="card">
 <div class="spread"><h3>${h(r.itemName)} <span class="chip">${h(TYPES[r.type])}</span></h3><span class="meta">申請於 <span class="mono">${h(r.createdAt)}</span></span></div>
@@ -740,7 +861,7 @@ ${release.length?`<h2>已取消但仍占用時段</h2><div class="list">${releas
   async decide(r,status){
     try{
       await editReq(r.uid,r.id,{status,reviewNote:S.notes[r.id]||'',reviewedAt:nowStr()});
-      if(status==='approved'&&(r.type==='space'||r.type==='leisure'))await S.db.doc('calendar/'+r.id).set({id:r.id,code:r.code,date:r.date,start:r.start,end:r.end});
+      if(status==='approved'&&(r.type==='space'||r.type==='leisure'))await S.db.doc('calendar/'+r.id).set({id:r.id,code:r.code,date:r.date,start:r.start,end:r.end,periods:r.periods||null});
       if(status!=='approved'&&S.calendar.some(c=>c.id===r.id))await S.db.doc('calendar/'+r.id).delete();
       delete S.notes[r.id];toast(status==='approved'?'已同意，申請人會在「學生/職員申請」看到結果':status==='rejected'?'已標記為不同意':'已取消');
     }catch(e){toast('更新失敗，請重試')}
@@ -771,7 +892,7 @@ ${r.type==='space'?'':`<div><b style="font-size:.9rem">出借時狀況檢查（�
   m.querySelector('#co-ok').onclick=async()=>{
     const staff=$('#co-staff').value.trim();if(!staff){$('#co-err').textContent='請填寫經手人。';return}
     local.set('staff',staff);
-    const id=newId(),rec={id,source:'online',reqUid:r.uid,reqId:r.id,type:r.type,code:r.code,item:r.itemName,applyDate:r.createdAt.slice(0,10),date:r.date,time:r.start?`${r.start}–${r.end}`:'',
+    const id=newId(),rec={id,source:'online',reqUid:r.uid,reqId:r.id,type:r.type,code:r.code,item:r.itemName,applyDate:r.createdAt.slice(0,10),date:r.date,time:perText(r),
       name:r.name,no:r.no,dept:r.dept,role:r.role,phone:r.phone,assetNo:($('#co-asset')||{}).value?.trim()||'',handler:staff,idHeld:$('#co-id').value,
       checkOut:r.type==='space'?[]:readChecks('co'),outAt:nowStr(),due:$('#co-due').value,note:$('#co-note').value.trim(),status:'out'};
     $('#co-ok').disabled=true;
@@ -951,19 +1072,42 @@ function catalogDialog(x){
 }
 
 /* ===== 滿意度統計 (admin) ===== */
+function statSeg(cur){return `<nav class="seg" aria-label="問卷類型"><a href="#stats" ${cur==='stats'?'aria-current="page"':''}>器材借用滿意度</a><a href="#roomstats" ${cur==='roomstats'?'aria-current="page"':''}>悅讀書房問卷</a></nav>`}
+const AGREE_COLORS=['var(--ok)','var(--info)','var(--line)','var(--warn)','var(--bad)'];
+V.roomstats={
+  deps:['surveys'],
+  shell(){return `${statSeg('roomstats')}<div class="spread"><h1>悅讀書房問卷</h1><button id="rs-export">匯出 Excel</button></div><p class="lede">取代紙本「資源教室悅讀書房問卷」（FM-10540-023，保存期限十年）。</p>
+<div class="row" style="margin-bottom:14px"><input type="month" id="rs-m" style="max-width:180px" aria-label="月份"></div><div id="rs-body"></div>`},
+  bind(){$('#rs-m').addEventListener('input',()=>this.paint());$('#rs-export').onclick=()=>{const r=this.rows();
+    saveFile(`悅讀書房問卷_${today()}.xlsx`,xlsxBlob([['悅讀書房問卷',[['填寫時間','使用日期','使用空間','性別','學制','學院','年級','資源教室學生','主要目的',...RS_Q.map((q,i)=>`${i+1}. ${q[1]}`),'其他建議'],
+      ...r.map(x=>[x.at,x.useDate,x.target,x.gender,x.program,x.college==='其他'?`其他：${x.collegeOther||''}`:x.college,x.grade,x.rc,(x.purposes||[]).map(p=>p==='其他'?`其他：${x.purposeOther||''}`:p).join('、'),...RS_Q.map(q=>agreeText(x[q[0]])),x.comment||''])],[16,11,10,6,6,12,8,8,24,14,14,14,14,14,14,30]]]))}},
+  rows(){const m=$('#rs-m').value;return S.surveys.filter(x=>x.kind==='space'&&(!m||(x.useDate||x.at||'').startsWith(m))).sort((a,b)=>a.at<b.at?1:-1)},
+  paint(){
+    if(!S.got.surveys){$('#rs-body').innerHTML='<p class="note">載入中…</p>';return}
+    const r=this.rows();
+    if(!r.length){$('#rs-body').innerHTML=`<div class="empty">${S.surveys.some(x=>x.kind==='space')?'這個月份沒有回覆。':'還沒有悅讀書房問卷回覆。借用悅讀書房或課輔室的人歸還後會自動填寫；也可以在問卷頁選「悅讀書房」填寫。'}</div>`;return}
+    const avg=k=>r.reduce((a,x)=>a+(x[k]||0),0)/r.length;
+    const tallyOf=(k,opts)=>opts.map(o=>[o,r.filter(x=>k==='purposes'?(x.purposes||[]).includes(o):x[k]===o).length]).filter(x=>x[1]);
+    $('#rs-body').innerHTML=`<div class="tally"><div><b>${r.length}</b><span>回覆份數</span></div><div><b>${avg('s6').toFixed(2)}</b><span>整體滿意平均（5 = 非常同意）</span></div><div><b>${Math.round(r.filter(x=>x.s6>=4).length/r.length*100)}%</b><span>整體「同意」以上</span></div><div><b>${r.filter(x=>x.rc==='是').length}</b><span>資源教室學生</span></div></div>
+<h2>二、學習輔導協助</h2><div class="legend">${AGREE.map((a,i)=>`<span><i style="background:${AGREE_COLORS[i]}"></i>${a}</span>`).join('')}</div>
+<div class="card" style="margin-top:8px">${RS_Q.map(([k,t],qi)=>{const cnt=[5,4,3,2,1].map(v=>r.filter(x=>x[k]===v).length);return `<div class="bar"><span>${qi+1}. ${t}</span><div class="track" role="img" aria-label="${t}：${cnt.map((c,i)=>`${AGREE[i]} ${c} 份`).join('，')}">${cnt.map((c,i)=>c?`<i style="width:${c/r.length*100}%;background:${AGREE_COLORS[i]}" title="${AGREE[i]}：${c} 份"></i>`:'').join('')}</div><b>${avg(k).toFixed(2)}</b></div>`}).join('')}</div>
+<h2>一、基本資料</h2><div class="stack">${[...RS_BASIC.map(([k,t,o])=>[t,tallyOf(k,o)]),['主要目的',tallyOf('purposes',RS_PURPOSE)]].map(([t,l])=>`<div class="row" style="gap:6px"><b style="min-width:7em">${t}</b>${l.map(([o,n])=>`<span class="chip">${o} ${n}</span>`).join('')||'<span class="meta">—</span>'}</div>`).join('')}</div>
+<h2>其他建議</h2>${r.filter(x=>x.comment).length?`<div class="list">${r.filter(x=>x.comment).slice(0,40).map(x=>`<div class="card"><div class="meta"><span class="mono">${h(x.at)}</span><span>${h(x.target)}</span></div><div>${h(x.comment)}</div></div>`).join('')}</div>`:'<p class="empty">沒有文字建議。</p>'}`;
+  }
+};
 V.stats={
   deps:['surveys'],
-  shell(){return `<div class="spread"><h1>滿意度統計</h1><button id="st-export">匯出 Excel</button></div><p class="lede">取代紙本「悅讀書房滿意度調查表」。分數為 1（非常不滿意）至 5（非常滿意）。</p>
-<div class="row" style="margin-bottom:14px"><select id="st-t" style="max-width:240px" aria-label="使用項目"><option value="">全部項目</option>${SURVEY_TARGETS.map(x=>`<option>${x}</option>`).join('')}</select><input type="month" id="st-m" style="max-width:180px" aria-label="月份"></div><div id="st-body"></div>`},
+  shell(){return `${statSeg('stats')}<div class="spread"><h1>器材借用滿意度</h1><button id="st-export">匯出 Excel</button></div><p class="lede">器材借用與資源教室服務的滿意度。分數為 1（非常不滿意）至 5（非常滿意）。</p>
+<div class="row" style="margin-bottom:14px"><select id="st-t" style="max-width:240px" aria-label="使用項目"><option value="">全部項目</option>${surveyTargets().filter(x=>!isSpaceTarget(x)).map(x=>`<option>${h(x)}</option>`).join('')}</select><input type="month" id="st-m" style="max-width:180px" aria-label="月份"></div><div id="st-body"></div>`},
   bind(){['st-t','st-m'].forEach(id=>$('#'+id).addEventListener('input',()=>this.paint()));$('#st-export').onclick=()=>{const r=this.rows();
     saveFile(`資源教室滿意度_${today()}.xlsx`,xlsxBlob([['問卷回覆',[['填寫時間','使用項目',...Q.map(q=>q[1]),'建議'],...r.map(x=>[x.at,x.target,...Q.map(q=>x[q[0]]),x.comment])],[16,16,14,14,14,14,12,40]]]))}},
-  rows(){const t=$('#st-t').value,m=$('#st-m').value;return S.surveys.filter(x=>(!t||x.target===t)&&(!m||(x.at||'').startsWith(m))).sort((a,b)=>a.at<b.at?1:-1)},
+  rows(){const t=$('#st-t').value,m=$('#st-m').value;return S.surveys.filter(x=>x.kind!=='space'&&(!t||x.target===t)&&(!m||(x.at||'').startsWith(m))).sort((a,b)=>a.at<b.at?1:-1)},
   paint(){
     if(!S.got.surveys){$('#st-body').innerHTML='<p class="note">載入中…</p>';return}
     const r=this.rows();
-    if(!r.length){$('#st-body').innerHTML=`<div class="empty">${S.surveys.length?'這個篩選條件下沒有回覆。':'還沒有問卷回覆。到「設定」下載問卷 QR code，貼在悅讀書房與資源教室門口。'}</div>`;return}
+    if(!r.length){$('#st-body').innerHTML=`<div class="empty">${S.surveys.some(x=>x.kind!=='space')?'這個篩選條件下沒有回覆。':'還沒有問卷回覆。到「設定」下載問卷 QR code，貼在悅讀書房與資源教室門口。'}</div>`;return}
     const avg=k=>r.reduce((s,x)=>s+(x[k]||0),0)/r.length;
-    const byT=SURVEY_TARGETS.map(t=>[t,S.surveys.filter(x=>x.target===t).length]).filter(x=>x[1]);
+    const byT=surveyTargets().map(t=>[t,S.surveys.filter(x=>x.kind!=='space'&&x.target===t).length]).filter(x=>x[1]);
     $('#st-body').innerHTML=`<div class="tally"><div><b>${r.length}</b><span>回覆份數</span></div><div><b>${avg('q5').toFixed(2)}</b><span>整體滿意度平均</span></div><div><b>${Math.round(r.filter(x=>x.q5>=4).length/r.length*100)}%</b><span>整體「滿意」以上</span></div><div><b>${r.filter(x=>x.comment).length}</b><span>文字建議</span></div></div>
 <h2>各題分數分布</h2><div class="legend">${SCALE.map((s,i)=>`<span><i style="background:${SCALE_COLORS[i]}"></i>${i+1} ${s}</span>`).join('')}</div>
 <div class="card" style="margin-top:8px">${Q.map(([k,t])=>{const cnt=[1,2,3,4,5].map(v=>r.filter(x=>x[k]===v).length);return `<div class="bar"><span>${t}</span><div class="track" role="img" aria-label="${t}分布：${cnt.map((c,i)=>`${i+1}分 ${c} 份`).join('，')}">${cnt.map((c,i)=>c?`<i style="width:${c/r.length*100}%;background:${SCALE_COLORS[i]}" title="${i+1} 分：${c} 份"></i>`:'').join('')}</div><b>${avg(k).toFixed(2)}</b></div>`}).join('')}</div>

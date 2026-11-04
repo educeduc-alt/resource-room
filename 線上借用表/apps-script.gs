@@ -163,7 +163,7 @@ function rebuild(st, root) {
     name = '申請紀錄';
     head = ['申請時間', '狀態', '類別', '品項', '使用日期', '時段', '預計歸還', '身分', '學號／員工編號', '姓名', '系級／單位', '電話', '用途', '老師備註', '確認歸還時間', '歸還日期', '滿意度問卷'];
     rows = [];
-    docs('requests').forEach(d => (d.list || []).forEach(r => rows.push([r.createdAt, STATUS[r.status] || r.status, TYPES[r.type] || r.type, r.itemName, r.date, r.start ? r.start + '–' + r.end : '', r.due || r.endDate || '', r.role, r.no, r.name, r.dept, r.phone, r.purpose, r.reviewNote || '', r.returnRequestedAt || '', r.returnedAt || '', r.role === '教職員' ? '不需' : r.surveyed ? '已填' : r.status === 'returned' ? '未填' : ''])));
+    docs('requests').forEach(d => (d.list || []).forEach(r => rows.push([r.createdAt, STATUS[r.status] || r.status, TYPES[r.type] || r.type, r.itemName, r.date, (r.periods && r.periods.length ? r.periods.map(p => p === '午' ? '午休' : '第' + p + '節').join('、') + ' ' : '') + (r.start ? r.start + '–' + r.end : ''), r.due || r.endDate || '', r.role, r.no, r.name, r.dept, r.phone, r.purpose, r.reviewNote || '', r.returnRequestedAt || '', r.returnedAt || '', r.role === '教職員' ? '不需' : r.surveyed ? '已填' : r.status === 'returned' ? '未填' : ''])));
     rows.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
   } else if (root === 'loans') {
     name = '設備借用紀錄';
@@ -174,7 +174,15 @@ function rebuild(st, root) {
     name = '滿意度問卷';
     head = ['填寫時間', '使用項目', '借用品項', '空間環境', '器材設備', '借用流程', '協助態度', '整體滿意度', '建議'];
     rows = [];
-    docs('surveys').forEach(d => (d.responses || []).forEach(x => rows.push([x.at, x.target, x.itemName || '', x.q1, x.q2, x.q3, x.q4, x.q5, x.comment || ''])));
+    const room = [], AG = ['', '非常不同意', '不同意', '普通', '同意', '非常同意'];
+    docs('surveys').forEach(d => (d.responses || []).forEach(x => {
+      if (x.kind === 'space') room.push([x.at, x.useDate, x.target, x.gender, x.program, x.college === '其他' ? '其他：' + (x.collegeOther || '') : x.college, x.grade, x.rc,
+        (x.purposes || []).map(p => p === '其他' ? '其他：' + (x.purposeOther || '') : p).join('、'), AG[x.s1] || '', AG[x.s2] || '', AG[x.s3] || '', AG[x.s4] || '', AG[x.s5] || '', AG[x.s6] || '', x.comment || '']);
+      else rows.push([x.at, x.target, x.itemName || '', x.q1, x.q2, x.q3, x.q4, x.q5, x.comment || '']);
+    }));
+    room.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+    writeSheet('悅讀書房問卷', ['填寫時間', '使用日期', '使用空間', '性別', '學制', '學院', '年級', '資源教室學生', '主要目的',
+      '1.使用規則簡單容易', '2.空間大小適切', '3.滿意設備規劃', '4.較不受外界干擾', '5.比較能提高效率', '6.整體滿意規劃', '其他建議'], room);
     rows.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
   } else if (root === 'usage') {
     name = '設備使用登記簿';
@@ -195,6 +203,9 @@ function rebuild(st, root) {
     const C = { general: '一般性・當天', general3: '一般性・3 天內', leisure: '休閒性', space: '空間' };
     rows = docs('catalog').sort((a, b) => (a.sort || 0) - (b.sort || 0)).map(c => [c.code, c.name, C[c.cat] || c.cat, c.qty, c.out, c.longOk ? '可' : '', c.note]);
   } else return;
+  writeSheet(name, head, rows);
+}
+function writeSheet(name, head, rows) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName(name) || ss.insertSheet(name);
   sh.clearContents();
