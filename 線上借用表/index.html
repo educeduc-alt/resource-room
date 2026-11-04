@@ -6,8 +6,9 @@
 <style>
 /* Layout: sticky header + tab rail, single working column (max 1080px); forms in fieldsets, records as rows. */
 :root{
-  --bg:#f4f6f3; --surface:#ffffff; --sunk:#e9ede8; --line:#d3dbd3; --fg:#1b2420; --muted:#5c6a63;
-  --accent:#1e5d4b; --accent-fg:#ffffff; --accent-soft:#dcebe4;
+  --bg:#f5f8f7; --surface:#ffffff; --sunk:#edf3f2; --line:#cddbd8; --fg:#17312f; --muted:#5c6f6c;
+  --accent:#176b63; --accent-fg:#ffffff; --accent-soft:#dff1ed;
+  --blue:#396b9f; --blue-soft:#e6f0f8; --action:#c56a2d; --action-soft:#fff0df;
   --ok:#1f7a4d; --ok-soft:#dff1e6; --warn:#9a5b00; --warn-soft:#fbecd3; --bad:#b0302a; --bad-soft:#f8e0de; --info:#24578f; --info-soft:#dde8f5;
   --qr-bg:#ffffff; --qr-fg:#111111;
   --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
@@ -17,27 +18,31 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121815; --surface:#1a221e; --sunk:#222b27; --line:#33403a; --fg:#e6ece8; --muted:#9aa9a1;
   --accent:#6cc2a3; --accent-fg:#0d1a15; --accent-soft:#1f3a31;
+  --blue:#8db8ec; --blue-soft:#1c2c40; --action:#f0b65a; --action-soft:#3a2c13;
   --ok:#6fd39c; --ok-soft:#1b3427; --warn:#f0b65a; --warn-soft:#3a2c13; --bad:#f08b84; --bad-soft:#3d1f1d; --info:#8db8ec; --info-soft:#1c2c40;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121815; --surface:#1a221e; --sunk:#222b27; --line:#33403a; --fg:#e6ece8; --muted:#9aa9a1;
   --accent:#6cc2a3; --accent-fg:#0d1a15; --accent-soft:#1f3a31;
+  --blue:#8db8ec; --blue-soft:#1c2c40; --action:#f0b65a; --action-soft:#3a2c13;
   --ok:#6fd39c; --ok-soft:#1b3427; --warn:#f0b65a; --warn-soft:#3a2c13; --bad:#f08b84; --bad-soft:#3d1f1d; --info:#8db8ec; --info-soft:#1c2c40;
   color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.6}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 .wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(255,255,255,.96);border-top:5px solid var(--accent);border-bottom:1px solid var(--line);box-shadow:0 4px 18px rgba(23,49,47,.07);backdrop-filter:blur(10px)}
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-block:14px 6px}
 .brand b{font-size:1.15rem;letter-spacing:.02em}
 .brand span{color:var(--muted);font-size:.85rem}
 nav.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:0;scrollbar-width:thin}
-nav.tabs a{flex:none;padding:10px 14px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;font-weight:500;white-space:nowrap}
+nav.tabs a{flex:none;padding:10px 14px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;font-weight:700;white-space:nowrap;border-radius:8px 8px 0 0}
 nav.tabs a[aria-current="page"]{color:var(--accent);border-color:var(--accent)}
+nav.tabs a:nth-child(2){color:var(--action)}
+nav.tabs a:nth-child(3){color:var(--blue)}
 nav.tabs .sep{flex:none;align-self:center;width:1px;height:20px;background:var(--line);margin:0 6px}
 nav.tabs .grp{flex:none;align-self:center;font-size:.72rem;letter-spacing:.08em;color:var(--muted);padding:0 4px}
-main{padding-block:24px 48px}
+main{padding-block:28px 48px}
 h1{font-size:1.5rem;margin:0 0 6px;text-wrap:balance}
 h2{font-size:1.15rem;margin:28px 0 10px;text-wrap:balance}
 h3{font-size:1rem;margin:0}
@@ -56,8 +61,8 @@ input[type=checkbox],input[type=radio]{width:20px;height:20px;min-height:0;accen
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible,.choice:focus-within{outline:3px solid var(--accent);outline-offset:2px}
 button{font:inherit;font-weight:500;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 16px;min-height:44px}
 button:hover{background:var(--sunk)}
-button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
-button.primary:hover{filter:brightness(1.08);background:var(--accent)}
+button.primary{background:var(--action);color:#fff;border-color:var(--action);box-shadow:0 5px 14px rgba(197,106,45,.2)}
+button.primary:hover{filter:brightness(1.08);background:var(--action)}
 button.danger{color:var(--bad);border-color:var(--bad)}
 button.small{min-height:36px;padding:5px 12px;font-size:.88rem}
 button:disabled{opacity:.5;cursor:not-allowed}
@@ -130,18 +135,22 @@ ol.cn>li::before{content:counter(cn,cjk-ideographic) "、";color:var(--accent);f
 .mark{display:inline-block;margin-top:6px;padding:6px 10px;border-radius:6px;background:var(--warn-soft);color:var(--fg);font-size:.92rem}
 .rtable td{vertical-align:middle}
 a.btn{display:inline-flex;align-items:center;min-height:44px;padding:9px 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;font-weight:500}
-a.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+a.btn.primary{background:var(--action);border-color:var(--action);color:#fff;box-shadow:0 5px 14px rgba(197,106,45,.2)}
 .demo-bar{background:var(--warn-soft);border-bottom:1px solid var(--line);font-size:.88rem}
 .demo-bar .wrap{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:8px}
 .seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);margin-bottom:14px}
 .seg a{padding:7px 16px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500}
 .seg a[aria-current]{background:var(--accent);color:var(--accent-fg)}
-.pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
-.pickcard{display:flex;flex-direction:column;gap:8px;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg);text-decoration:none;min-width:0}
-.pickcard:hover{border-color:var(--accent);background:var(--accent-soft)}
+.pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:10px}
+.pickcard{display:flex;flex-direction:column;gap:10px;padding:26px;border:1px solid var(--line);border-top:6px solid var(--action);border-radius:16px;background:var(--action-soft);color:var(--fg);text-decoration:none;min-width:0;box-shadow:0 8px 24px rgba(23,49,47,.08);transition:transform .18s ease,box-shadow .18s ease}
+.pickcard:nth-child(2){border-top-color:var(--blue);background:var(--blue-soft)}
+.pickcard:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 12px 28px rgba(23,49,47,.12)}
 .pickcard b{font-size:1.3rem}
 .pickcard span{color:var(--muted)}
-.pickcard .go{color:var(--accent);font-weight:700;margin-top:auto}
+.pickcard .go{color:var(--action);font-weight:700;margin-top:auto;font-size:1.05rem}
+.pickcard:nth-child(2) .go{color:var(--blue)}
+.pickcard .eyebrow{color:var(--action)}
+.pickcard:nth-child(2) .eyebrow{color:var(--blue)}
 details.inv{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:12px 16px;margin:0 0 16px}
 details.inv summary{cursor:pointer;font-weight:700;color:var(--accent)}
 .survey-state{border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
@@ -156,7 +165,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padd
 
 <header class="top">
   <div class="wrap">
-    <div class="brand"><b>資源教室借用系統</b><span>弘光科技大學・空間器材線上預借、登記與滿意度</span></div>
+    <div class="brand"><b>資源教室設備服務</b><span>借設備・現場使用登記・查詢進度</span></div>
     <nav class="tabs" id="nav" aria-label="主要功能"></nav>
   </div>
 </header>
@@ -219,7 +228,7 @@ function dueFor(r){const it=item(r.code);if(r.type==='long')return r.endDate||r.
 const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id})));
 
 /* ---------- views ---------- */
-const STUDENT_TABS=[['rules','借用規定'],['apply','申請借用'],['mine','學生/職員申請']];
+const STUDENT_TABS=[['rules','① 借用說明'],['apply','② 我要借／使用設備'],['mine','③ 查詢我的申請']];
 const ADMIN_TABS=[['review','審核與點交'],['ledger','設備借用紀錄'],['usagelog','設備使用紀錄'],['stats','滿意度統計'],['setup','設定']];
 let curView=null,curParam=null;
 function navHtml(){
@@ -230,7 +239,7 @@ function navHtml(){
   return s;
 }
 function route(){
-  let r=(location.hash||'#rules').slice(1)||'rules',p=null;
+  let r=(location.hash||'#apply').slice(1)||'apply',p=null;
   if(r.startsWith('item-')){p=r.slice(5);r='item'}
   if(r==='logout'){logout();return}
   if(!V[r])r='apply';
@@ -298,12 +307,12 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
   deps:['config','myReq'],
-  shell(){return `<div class="apply-head"><div><h1>申請借用</h1><p class="lede">請選擇你要做的事。</p></div>
+  shell(){return `<div class="apply-head"><div><p class="eyebrow">先選擇你的需求</p><h1>今天要借設備，還是登記使用？</h1><p class="lede">需要帶離資源教室，選「申請借用設備」；只在教室內使用，選「設備使用登記」。</p></div>
 <aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
 <div id="a-gate"></div>
 <div class="pick">
-<a class="pickcard" href="#borrow"><span class="eyebrow">需老師審核</span><b>申請借用設備</b><span>借筆電、投影機、錄音筆等器材，或預約悅讀書房、課輔室。表單內附器材一覽表與目前可借數量。</span><span class="go">開始申請 →</span></a>
-<a class="pickcard" href="#usage"><span class="eyebrow">免審核</span><b>設備使用登記</b><span>在資源教室使用電腦、印表機、影印機或掃描機時登記。</span><span class="go">開始登記 →</span></a>
+<a class="pickcard" href="#borrow"><span class="eyebrow">帶離教室・需老師審核</span><b>申請借用設備</b><span>筆電、投影機、錄音筆等器材，或預約悅讀書房、課輔室。</span><span class="go">我要借設備 →</span></a>
+<a class="pickcard" href="#usage"><span class="eyebrow">教室內使用・免審核</span><b>設備使用登記</b><span>使用資源教室的電腦、印表機、影印機或掃描機。</span><span class="go">我要登記使用 →</span></a>
 </div>`},
   paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();V.borrow.qr()}
 };
