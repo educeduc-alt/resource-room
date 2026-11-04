@@ -254,7 +254,7 @@ const V={};
 /* ===== 借用規定 ===== */
 V.rules={
   shell(){
-    const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li>${x}</li>`).join('')}</ol></section>`;
+    const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li><div>${x}</div></li>`).join('')}</ol></section>`;
     return `<article class="rules-doc"><p class="eyebrow">弘光科技大學</p><h1>資源教室空間器材借用辦法</h1>
 <p class="lede">申請借用前請詳閱以下規定。提出借用即表示願意接受並遵守本辦法。</p>
 ${sec('壹、借用對象',['以本校領有鑑輔會證明之學生為優先。','本校教職員因業務需求方面需使用空間器材者。'])}
