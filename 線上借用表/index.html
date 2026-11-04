@@ -257,7 +257,6 @@ V.rules={
     const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li>${x}</li>`).join('')}</ol></section>`;
     return `<article class="rules-doc"><p class="eyebrow">弘光科技大學</p><h1>資源教室空間器材借用辦法</h1>
 <p class="lede">申請借用前請詳閱以下規定。提出借用即表示願意接受並遵守本辦法。</p>
-<div class="row" style="margin-bottom:8px"><a class="btn primary" href="#apply">我已了解，前往申請借用</a><a class="btn" href="#items">查看器材一覽</a></div>
 ${sec('壹、借用對象',['以本校領有鑑輔會證明之學生為優先。','本校教職員因業務需求方面需使用空間器材者。'])}
 ${sec('貳、借用項目',['一般性器材借用：除直接於資源教室使用電腦（提供四台電腦）、印表機、影印機及掃描機外，請至資源教室填寫物品借用登記本（預借空間器材亦同，於使用日前三天登記），並攜帶證件（教職員證或學生證）領取。',
 '休閒性器材借用：需依照使用開放時間才可進行借用申請，於使用日前三天完成申請表填寫，經資源教室老師審核通過後，當日請借用人攜帶證件（教職員證或學生證）領取。<br><span class="mark">※一般性器材、休閒性器材皆須經過紙本登記與審核，未於規定時間內完成申請則不得借用。</span>',
@@ -276,7 +275,7 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 <tr><td class="wrap">電子翻譯機、延長線、8 吋小電風扇、鍵盤、耳機、彩色筆、麥克筆、熱熔膠槍</td><td>3 天內</td></tr>
 <tr><td><b>休閒性器材借用</b></td><td class="wrap">1. 牌卡<br>2. 桌遊<br>3. 手眼協調訓練機（須配合家銘學長時間，以利協助架設器材）<br>4. 投影設備（限觀賞、遊戲借用）</td><td class="wrap">期中考：第 10、11 週 <span class="mono">18:00–20:00</span><br>期末考：第 19 週 <span class="mono">10:00–15:00</span></td><td>當天</td></tr>
 </tbody></table></div></section>
-<div class="row" style="margin-top:24px"><a class="btn primary" href="#apply">我已了解，前往申請借用</a></div></article>`}
+<div class="row" style="margin-top:24px"><a class="btn primary" href="#apply">我已了解，前往申請借用</a><a class="btn" href="#items">查看器材一覽</a></div></article>`}
 };
 
 /* ===== 申請借用 ===== */
@@ -300,15 +299,8 @@ V.apply={
 ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 天內歸還'],['leisure','休閒性器材','牌卡、桌遊等，限期中、期末考週開放時段'],['space','空間借用','悅讀書房、課輔室'],['long','長期借用','學習輔具：錄音筆、翻譯機、耳機']].map(([k,t,d],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b><small>${d}</small></span></label>`).join('')}
 </div></fieldset>
 <div id="a-detail"></div>
-<fieldset><legend>用途與同意事項</legend><div class="stack">
+<fieldset><legend>用途說明</legend><div class="stack">
 <label class="f">用途說明 <small id="a-purpose-hint">簡述用途，例如：課堂報告、讀書會</small><textarea id="a-purpose"></textarea></label>
-<details class="rules"><summary>借用規定重點（送出前請閱讀）</summary><ol>
-<li>領取與歸還時，借用人與老師依申請單逐項清點並檢查狀況；借出後器材問題由借用人負責。</li>
-<li>出借期間因人為疏失造成損壞或遺失，借用人負擔維修費用 70%–100%，或自行購買相同規格器材歸還（非人為因素除外）。使用時發現異常請立即通知老師，隱匿不報視同損壞。</li>
-<li>核准後若因故不借用，請到「學生/職員申請」取消，讓其他同學可以借用。</li>
-<li>申請日與資源教室活動日衝突者不予核准；審核以活動安全為優先。</li>
-<li>在資源教室內使用休閒性器材時，遇有訪客或老師接聽電話請注意音量。</li></ol></details>
-<label class="choice" style="max-width:520px"><input type="checkbox" id="a-agree"><span><b>我已閱讀並同意遵守資源教室空間器材借用規定</b></span></label>
 </div></fieldset>
 <p class="err" id="a-err" role="alert"></p>
 <div class="row"><button type="submit" class="primary" id="a-submit">送出申請</button><span class="mono" style="color:var(--muted)" id="a-count"></span></div>
@@ -422,7 +414,6 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
       if(!purpose)return fail('長期借用請在用途說明填寫需要的原因。');
       reqs=[{...base,id:newId(),code,itemName:item(code)?.name||code,date,endDate}];
     }
-    if(!$('#a-agree').checked)return fail('請勾選同意遵守借用規定。');
     const btn=$('#a-submit');btn.disabled=true;btn.textContent='送出中…';
     try{
       await serial('req',async()=>{
