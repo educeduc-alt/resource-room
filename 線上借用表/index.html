@@ -133,6 +133,21 @@ a.btn{display:inline-flex;align-items:center;min-height:44px;padding:9px 18px;bo
 a.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .demo-bar{background:var(--warn-soft);border-bottom:1px solid var(--line);font-size:.88rem}
 .demo-bar .wrap{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:8px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);margin-bottom:14px}
+.seg a{padding:7px 16px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500}
+.seg a[aria-current]{background:var(--accent);color:var(--accent-fg)}
+.pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
+.pickcard{display:flex;flex-direction:column;gap:8px;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg);text-decoration:none;min-width:0}
+.pickcard:hover{border-color:var(--accent);background:var(--accent-soft)}
+.pickcard b{font-size:1.3rem}
+.pickcard span{color:var(--muted)}
+.pickcard .go{color:var(--accent);font-weight:700;margin-top:auto}
+details.inv{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:12px 16px;margin:0 0 16px}
+details.inv summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.survey-state{border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.survey-state.done{background:var(--ok-soft);color:var(--ok);flex-direction:row;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.survey-state.todo{background:var(--warn-soft);border:1px solid var(--warn)}
+.survey-state.todo b{color:var(--warn)}
 footer a{color:var(--accent)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padding-block:16px 28px}
 @media (max-width:520px){.bar{grid-template-columns:1fr 52px}.bar .track{grid-column:1/-1;grid-row:2}}
@@ -204,11 +219,11 @@ function dueFor(r){const it=item(r.code);if(r.type==='long')return r.endDate||r.
 const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id})));
 
 /* ---------- views ---------- */
-const STUDENT_TABS=[['rules','借用規定'],['apply','申請借用'],['mine','學生/職員申請'],['usage','設備使用登記'],['items','器材一覽'],['survey','滿意度問卷']];
+const STUDENT_TABS=[['rules','借用規定'],['apply','申請借用'],['mine','學生/職員申請']];
 const ADMIN_TABS=[['review','審核與點交'],['ledger','借用登記冊'],['roster','借用名單'],['usagelog','設備使用紀錄'],['stats','滿意度統計'],['setup','設定']];
 let curView=null,curParam=null;
 function navHtml(){
-  const r=curView==='item'?'items':curView;
+  const r=['borrow','usage','items','item'].includes(curView)?'apply':curView==='survey'?'mine':curView;
   let s=STUDENT_TABS.map(([k,t])=>`<a href="#${k}" ${r===k?'aria-current="page"':''}>${t}</a>`).join('');
   if(S.admin)s+=`<span class="sep"></span><span class="grp">資源教室</span>`+ADMIN_TABS.map(([k,t])=>`<a href="#${k}" ${r===k?'aria-current="page"':''}>${t}</a>`).join('')+`<a href="#logout">登出</a>`;
   else s+=`<span class="sep"></span><a href="#login" ${r==='login'?'aria-current="page"':''}>資源教室登入</a>`;
@@ -280,13 +295,24 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 };
 
 /* ===== 申請借用 ===== */
+function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
+  deps:['config','myReq'],
+  shell(){return `<div class="apply-head"><div><h1>申請借用</h1><p class="lede">請選擇你要做的事。</p></div>
+<aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
+<div id="a-gate"></div>
+<div class="pick">
+<a class="pickcard" href="#borrow"><span class="eyebrow">需老師審核</span><b>申請借用設備</b><span>借筆電、投影機、錄音筆等器材，或預約悅讀書房、課輔室。表單內附器材一覽表與目前可借數量。</span><span class="go">開始申請 →</span></a>
+<a class="pickcard" href="#usage"><span class="eyebrow">免審核</span><b>設備使用登記</b><span>在資源教室使用電腦、印表機、影印機或掃描機時登記。</span><span class="go">開始登記 →</span></a>
+</div>`},
+  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();V.borrow.qr()}
+};
+V.borrow={
   deps:['catalog','config','calendar'],
   shell(){
     const a=local.get('applicant')||{};
-    return `<div class="apply-head"><div><h1>線上預借申請</h1>
-<p class="lede">送出申請後，經資源教室老師審核通過，使用當日攜帶學生證或教職員證到資源教室領取。結果會顯示在「學生/職員申請」。</p></div>
-<aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
+    return `${segNav('borrow')}<h1>申請借用設備</h1>
+<p class="lede">送出申請後，經資源教室老師審核通過，使用當日攜帶學生證或教職員證到資源教室領取。結果會顯示在「學生/職員申請」。</p>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
 <fieldset><legend>申請人</legend><div class="grid">
@@ -299,6 +325,7 @@ V.apply={
 <fieldset><legend>借用類別</legend><div class="choices" id="a-types">
 ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 天內歸還'],['leisure','休閒性器材','牌卡、桌遊等，限期中、期末考週開放時段'],['space','空間借用','悅讀書房、課輔室'],['long','長期借用','學習輔具：錄音筆、翻譯機、耳機']].map(([k,t,d],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b><small>${d}</small></span></label>`).join('')}
 </div></fieldset>
+<details class="inv" id="b-inv-box" ${S.openInv?'open':''}><summary>器材一覽表：目前可借數量與借用期限</summary><div id="b-inv"></div></details>
 <div id="a-detail"></div>
 <fieldset><legend>用途說明</legend><div class="stack">
 <label class="f">用途說明 <small id="a-purpose-hint">簡述用途，例如：課堂報告、讀書會</small><textarea id="a-purpose"></textarea></label>
@@ -314,7 +341,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
     $('#apply-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
     $('#a-detail').addEventListener('change',e=>{if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
   },
-  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.qr();this.detail(false)},
+  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();const iv=$('#b-inv');if(iv)iv.innerHTML=invHtml();if(S.openInv){S.openInv=false;const d=$('#b-inv-box');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),50)}}this.detail(false)},
   qr(){const box=$('#a-qr');if(!box)return;const u=(S.config.url||'').replace(/#.*$/,'');
     if(!u){box.hidden=true;return}box.hidden=false;const url=u;if(box.dataset.url===url)return;box.dataset.url=url;
     if(!window.qrcode){loadQR().then(()=>{box.dataset.url='';this.qr()}).catch(()=>{});box.hidden=true;return}
@@ -440,7 +467,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
 /* ===== 學生/職員申請 ===== */
 const needSurvey=r=>r.status==='returned'&&r.role!=='教職員'&&!r.surveyed;
 const surveyTarget=r=>r.code==='s01'?'悅讀書房':r.code==='s02'?'課輔室':r.type==='leisure'?'休閒性器材':'資源教室器材借用';
-function pendingSurveyNote(){const n=S.myReq.filter(needSurvey).length;return n?`<div class="note warn"><b>你有 ${n} 筆借用已歸還、尚未填寫滿意度問卷。</b>請到<a href="#mine">學生/職員申請</a>填寫，填完後才能送出新的申請。</div>`:''}
+function pendingSurveyNote(){const n=S.myReq.filter(needSurvey).length;return n?`<div class="note warn"><b>你有 ${n} 筆借用已歸還、尚未填寫滿意度問卷。</b>${curView==='mine'?'請在下方對應的借用紀錄填寫':'請到<a href="#mine">學生/職員申請</a>填寫'}，填完後才能送出新的申請。</div>`:''}
 V.mine={
   deps:['myReq','catalog'],
   shell(){return `<h1>學生/職員申請</h1><p class="lede">這頁只顯示<b>你自己</b>送出的申請，其他人看不到。審核結果、借出與歸還紀錄都在這裡。器材用完後按「確認歸還」，並把器材帶回資源教室由老師點收。學生在歸還完成後請填寫滿意度問卷（教職員不需填寫）。</p><div id="m-gate"></div><div id="m-list" class="list"></div>`},
@@ -458,20 +485,25 @@ V.mine={
     if(!list.length){$('#m-list').innerHTML=`<div class="empty">你還沒有送出任何申請。<br><a href="#apply">前往申請借用</a></div>`;return}
     const sp=r=>r.type==='space';
     $('#m-list').innerHTML=list.map(r=>`<article class="card">
-<div class="spread"><h3>${h(r.itemName)} <span class="chip">${h(TYPES[r.type]||r.type)}</span></h3>${chipFor(r.status)}</div>
+<div class="spread"><h3>${h(r.itemName)} <span class="chip">${h(TYPES[r.type]||r.type)}</span></h3><span class="row" style="gap:6px">${chipFor(r.status)}${r.status==='returned'&&r.role!=='教職員'?(r.surveyed?'<span class="chip ok">問卷已填</span>':'<span class="chip warn">問卷未填</span>'):''}</span></div>
 <div class="meta"><span>使用日期 ${fmtDate(r.date)}${r.start?` <span class="mono">${r.start}–${r.end}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}</span><span>申請於 <span class="mono">${h(r.createdAt)}</span></span></div>
 ${r.reviewNote?`<div class="note ${r.status==='rejected'?'bad':''}">老師備註：${h(r.reviewNote)}</div>`:''}
 ${r.status==='approved'?`<div class="note ok">請於 ${fmtDate(r.date)} 攜帶${r.role==='教職員'?'教職員證':'學生證'}到資源教室${sp(r)?'，由工讀生或老師協助開門':'領取'}。</div>`:''}
 ${r.status==='out'?`<div class="note info">${sp(r)?'開門時間':'領取時間'} <span class="mono">${h(r.outAt||'')}</span>${r.due?`・請於 <b>${fmtDate(r.due)}</b> 前${sp(r)?'使用完畢':'歸還'}`:''}${r.assetNo?`・編號 <span class="mono">${h(r.assetNo)}</span>`:''}</div>`:''}
 ${r.status==='returning'?`<div class="note info">你已於 <span class="mono">${h(r.returnRequestedAt||'')}</span> 確認${sp(r)?'使用完畢':'歸還'}。請${sp(r)?'到資源教室告知並領回證件':'把器材（含配件）帶回資源教室'}，由老師點收後完成。</div>`:''}
 ${r.status==='returned'?`<div class="note ${r.abnormal?'warn':'ok'}">歸還完成：<span class="mono">${h(r.returnedAt||'')}</span>${r.receiver?`・簽收人 ${h(r.receiver)}`:''}・狀況${r.abnormal?'異常':'正常'}${r.returnNote?`（${h(r.returnNote)}）`:''}</div>`:''}
-${needSurvey(r)?`<div class="note warn">請填寫這次使用的滿意度問卷，大約 1 分鐘。</div>`:''}
-<div class="row">${['pending','approved'].includes(r.status)?`<button class="small danger" data-cancel="${h(r.id)}">取消申請</button>`:''}${r.status==='out'?`<button class="primary" data-ret="${h(r.id)}">${sp(r)?'確認使用完畢':'確認歸還'}</button>`:''}${needSurvey(r)?`<button class="primary" data-survey="${h(r.id)}">填寫滿意度問卷</button>`:''}${r.status==='returned'&&r.surveyed?'<span class="chip ok">問卷已填寫</span>':''}</div>
+${r.status==='returned'&&r.role!=='教職員'?(r.surveyed?`<div class="survey-state done"><b>✓ 滿意度問卷已填寫</b><span class="mono">${h(r.surveyedAt||'')}</span></div>`
+  :`<div class="survey-state todo"><div class="spread"><b>滿意度問卷尚未填寫</b>${S.openSurvey===r.id?'':`<button class="primary small" data-survey="${h(r.id)}">填寫問卷（約 1 分鐘）</button>`}</div>
+${S.openSurvey===r.id?`<form class="sv-form" data-for="${h(r.id)}" novalidate>${surveyBlock('sv')}<div class="row"><button class="primary" type="submit">送出問卷</button><button type="button" data-survey-close>收起</button></div></form>`:''}</div>`):''}
+<div class="row">${['pending','approved'].includes(r.status)?`<button class="small danger" data-cancel="${h(r.id)}">取消申請</button>`:''}${r.status==='out'?`<button class="primary" data-ret="${h(r.id)}">${sp(r)?'確認使用完畢':'確認歸還'}</button>`:''}</div>
 </article>`).join('');
     $('#m-list').onclick=e=>{const d=e.target.dataset;
       if(d.cancel)confirmBox('取消這筆申請？','取消後，這個時段或器材會開放給其他人借用。','取消申請',()=>this.setStatus(d.cancel,{status:'cancelled',cancelledAt:nowStr()},'已取消申請'));
       if(d.ret)confirmBox('確認歸還？','送出後請把器材（含配件）帶回資源教室，老師會和你一起清點狀況，點收後才算完成歸還。','確認歸還',()=>this.setStatus(d.ret,{status:'returning',returnRequestedAt:nowStr()},'已確認歸還，請帶回資源教室點收'));
-      if(d.survey){S.surveyFor=d.survey;location.hash='survey'}};
+      if(d.survey){S.openSurvey=d.survey;this.paint();const f=$(`.sv-form[data-for="${d.survey}"]`);f&&f.scrollIntoView({block:'nearest'})}
+      if(e.target.dataset.surveyClose!==undefined){S.openSurvey=null;this.paint()}};
+    $('#m-list').onsubmit=async e=>{e.preventDefault();const f=e.target.closest('.sv-form');if(!f)return;const r=S.myReq.find(x=>x.id===f.dataset.for);if(!r)return;
+      const b=f.querySelector('button[type=submit]');b.disabled=true;if(await submitSurveyBlock(f,r,'sv')){S.openSurvey=null;toast('已收到問卷，謝謝你的回饋！')}else b.disabled=false};
   },
   async setStatus(id,patch,msg){
     try{await serial('req',async()=>{const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();if(!snap.exists)return;
@@ -487,7 +519,7 @@ const reasonText=e=>e.reason==='其他'?`其他：${e.reasonNote||''}`:e.reason;
 V.usage={
   deps:['config'],
   shell(){const me=local.get('usage-me')||{},ap=local.get('applicant')||{};const dept=me.dept||ap.dept||'',name=me.name||ap.name||'';
-    return `<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
+    return `${segNav('usage')}<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
 <form id="u-form" novalidate>
 <fieldset><legend>使用人</legend><div class="grid">
 <label class="f">學制<select id="u-shift"><option>日間部</option><option ${me.shift==='夜間部'?'selected':''}>夜間部</option></select></label>
@@ -550,15 +582,13 @@ ${r.map((e,i)=>`<tr><td class="mono">${i+1}</td><td class="mono">${h(e.at)}</td>
 };
 
 /* ===== 器材一覽 ===== */
-V.items={
-  deps:['catalog'],
-  shell(){return `<h1>器材與空間一覽</h1><p class="lede">數量為資源教室目前可借出的件數。</p><div id="i-list"></div>`},
-  paint(){
-    if(!S.catalog.length){$('#i-list').innerHTML='<div class="empty">器材清單尚未建立。</div>';return}
-    $('#i-list').innerHTML=Object.entries(CATS).map(([c,t])=>{const l=S.catalog.filter(x=>x.cat===c);if(!l.length)return '';
-      return `<h2>${t}</h2><div class="tablewrap"><table><thead><tr><th>名稱</th><th>代碼</th><th>${c==='space'?'狀態':'可借'}</th><th>說明</th></tr></thead><tbody>${l.map(x=>{const left=(x.qty||0)-(x.out||0);return `<tr><td><a href="#item-${h(x.code)}">${h(x.name)}</a></td><td class="mono">${h(x.code)}</td><td>${c==='space'?(x.out>0?'<span class="chip info">使用中</span>':'<span class="chip ok">可預約</span>'):`<span class="mono">${left}</span> / <span class="mono">${x.qty||0}</span>`}</td><td class="wrap">${h(x.note||'')}${x.longOk?' <span class="chip">可長期借用</span>':''}</td></tr>`}).join('')}</tbody></table></div>`}).join('');
-  }
-};
+function invHtml(){
+  if(!S.catalog.length)return '<p class="meta">器材清單載入中…</p>';
+  return Object.entries(CATS).map(([c,t])=>{const l=S.catalog.filter(x=>x.cat===c);if(!l.length)return '';
+      return `<h3 style="margin:14px 0 6px">${t}</h3><div class="tablewrap"><table><thead><tr><th>名稱</th><th>代碼</th><th>${c==='space'?'狀態':'可借'}</th><th>說明</th></tr></thead><tbody>${l.map(x=>{const left=(x.qty||0)-(x.out||0);return `<tr><td><a href="#item-${h(x.code)}">${h(x.name)}</a></td><td class="mono">${h(x.code)}</td><td>${c==='space'?(x.out>0?'<span class="chip info">使用中</span>':'<span class="chip ok">可預約</span>'):`<span class="mono">${left}</span> / <span class="mono">${x.qty||0}</span>`}</td><td class="wrap">${h(x.note||'')}${x.longOk?' <span class="chip">可長期借用</span>':''}</td></tr>`}).join('')}</tbody></table></div>`}).join('');
+}
+/* 舊的「器材一覽」連結：轉到申請借用設備並展開一覽表 */
+V.items={shell(){return '<p class="note">載入中…</p>'},bind(){S.openInv=true;location.replace('#borrow')}};
 
 /* ===== 單一器材（QR 落地頁） ===== */
 V.item={
@@ -566,7 +596,7 @@ V.item={
   shell(){return `<div id="it-box"><p class="note">載入中…</p></div>`},
   paint(code){
     const x=item(code);
-    if(!x){$('#it-box').innerHTML=S.got.catalog?`<div class="empty">找不到代碼 <span class="mono">${h(code)}</span> 的器材。<br><a href="#items">查看全部器材</a></div>`:'<p class="note">載入中…</p>';return}
+    if(!x){$('#it-box').innerHTML=S.got.catalog?`<div class="empty">找不到代碼 <span class="mono">${h(code)}</span> 的器材。<br><a href="#items">查看器材一覽表</a></div>`:'<p class="note">載入中…</p>';return}
     const left=(x.qty||0)-(x.out||0);
     const upcoming=S.calendar.filter(c=>c.code===x.code&&c.date>=today()).sort((a,b)=>(a.date+a.start)<(b.date+b.start)?-1:1).slice(0,10);
     const rule=x.cat==='general'?'當天歸還':x.cat==='general3'?'3 天內歸還':x.cat==='leisure'?'當天歸還，限期中考第 10、11 週 18:00–20:00、期末考第 19 週 10:00–15:00':'週一至週五 08:00–20:00，該空間無人使用時才可借用';
@@ -575,7 +605,7 @@ V.item={
 ${x.note?`<p class="note">${h(x.note)}</p>`:''}
 ${x.cat==='space'||x.cat==='leisure'?`<h2>近期已預約時段</h2>${upcoming.length?`<div class="list">${upcoming.map(c=>`<div class="card" style="flex-direction:row;justify-content:space-between"><span>${fmtDate(c.date)}</span><span class="mono">${c.start}–${c.end}</span></div>`).join('')}</div>`:'<p class="empty">近期沒有人預約。</p>'}`:''}
 <div class="row" style="margin-top:18px"><button class="primary" id="it-apply">申請借用這${x.cat==='space'?'個空間':'項器材'}</button><a href="#survey">使用後填寫滿意度問卷</a></div>`;
-    $('#it-apply').onclick=()=>{S.preselect=x.code;location.hash='apply'};
+    $('#it-apply').onclick=()=>{S.preselect=x.code;location.hash='borrow'};
   }
 };
 
@@ -584,20 +614,23 @@ async function saveSurvey(resp,fr){
   await serial('srv',async()=>{const ref=S.db.doc('surveys/'+S.uid);if(S.gas){await ref.set({responses:[resp],updatedAt:nowStr()});return}/* 伺服器會自動接在舊回覆後面 */const snap=await ref.get();const list=snap.exists?[...(snap.data().responses||[])]:[];list.push(resp);await ref.set({responses:list,updatedAt:nowStr()})});
   if(fr)await V.mine.setStatus(fr.id,{surveyed:true,surveyedAt:nowStr()},'已收到問卷，謝謝');
 }
+function surveyBlock(px){return `${Q.map(([k,t])=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${t}</p><div class="scale">${SCALE.map((sc,i)=>`<label><input type="radio" name="${px}${k}" value="${i+1}"><b>${i+1}</b>${sc}</label>`).join('')}</div></div>`).join('')}
+<label class="f" style="margin-top:10px">建議或想說的話（選填）<textarea id="${px}-comment"></textarea></label>
+<p class="err" id="${px}-err" role="alert"></p>`}
+async function submitSurveyBlock(root,r,px){
+  const err=root.querySelector('#'+px+'-err');err.textContent='';
+  const ans={};for(const [k] of Q){const c=root.querySelector(`input[name=${px}${k}]:checked`);if(!c){err.textContent='請為每個項目選擇分數。';return false}ans[k]=+c.value}
+  try{await saveSurvey({id:newId(),target:surveyTarget(r),...ans,comment:root.querySelector('#'+px+'-comment').value.trim(),at:nowStr(),reqId:r.id,itemName:r.itemName},r);return true}
+  catch(x){err.textContent='送出失敗，請稍後再試。';return false}
+}
 /* 借用完成（老師點收）後自動跳出問卷 */
 const popShown={};
 function maybeSurveyPopup(){
-  if(!S.ready||curView==='survey'||curView==='login'||ADMIN_TABS.some(t=>t[0]===curView)||!$('#modal').hidden)return;
+  if(!S.ready||curView==='survey'||curView==='mine'||curView==='login'||ADMIN_TABS.some(t=>t[0]===curView)||!$('#modal').hidden)return;
   const r=S.myReq.find(x=>needSurvey(x)&&!popShown[x.id]);if(!r)return;popShown[r.id]=true;
   openModal(`<div><p class="eyebrow">借用完成</p><h2 style="margin:4px 0 0">謝謝使用！請填寫滿意度問卷</h2><p class="meta" style="margin:6px 0 0">${h(r.itemName)}・${fmtDate(r.date)}・歸還於 <span class="mono">${h(r.returnedAt||'')}</span>。大約 1 分鐘，只有資源教室老師看得到。</p></div>
-<form id="pp-form" novalidate>${Q.map(([k,t])=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${t}</p><div class="scale">${SCALE.map((sc,i)=>`<label><input type="radio" name="p${k}" value="${i+1}"><b>${i+1}</b>${sc}</label>`).join('')}</div></div>`).join('')}
-<label class="f" style="margin-top:10px">建議或想說的話（選填）<textarea id="pp-comment"></textarea></label>
-<p class="err" id="pp-err" role="alert"></p><div class="row"><button class="primary" type="submit" id="pp-ok">送出問卷</button><button type="button" data-close>稍後再填</button></div></form>`,m=>{
-    m.querySelector('#pp-form').onsubmit=async e=>{e.preventDefault();const err=$('#pp-err');err.textContent='';
-      const ans={};for(const [k] of Q){const c=m.querySelector(`input[name=p${k}]:checked`);if(!c){err.textContent='請為每個項目選擇分數。';return}ans[k]=+c.value}
-      $('#pp-ok').disabled=true;
-      try{await saveSurvey({id:newId(),target:surveyTarget(r),...ans,comment:$('#pp-comment').value.trim(),at:nowStr(),reqId:r.id,itemName:r.itemName},r);closeModal();toast('已收到問卷，謝謝你的回饋！')}
-      catch(x){$('#pp-ok').disabled=false;err.textContent='送出失敗，請稍後再試。'}};
+<form id="pp-form" novalidate>${surveyBlock('pp')}<div class="row"><button class="primary" type="submit" id="pp-ok">送出問卷</button><button type="button" data-close>稍後再填</button></div></form>`,m=>{
+    m.querySelector('#pp-form').onsubmit=async e=>{e.preventDefault();$('#pp-ok').disabled=true;if(await submitSurveyBlock(m,r,'pp')){closeModal();toast('已收到問卷，謝謝你的回饋！')}else $('#pp-ok').disabled=false};
   });
 }
 V.survey={
