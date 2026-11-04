@@ -133,6 +133,7 @@ a.btn{display:inline-flex;align-items:center;min-height:44px;padding:9px 18px;bo
 a.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .demo-bar{background:var(--warn-soft);border-bottom:1px solid var(--line);font-size:.88rem}
 .demo-bar .wrap{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:8px}
+footer a{color:var(--accent)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padding-block:16px 28px}
 @media (max-width:520px){.bar{grid-template-columns:1fr 52px}.bar .track{grid-column:1/-1;grid-row:2}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
@@ -145,7 +146,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padd
   </div>
 </header>
 <main class="wrap" id="view" tabindex="-1"><p class="note">載入中…</p></main>
-<footer class="wrap">申請借用／歸還：星期一至星期五 08:00–20:00（寒暑假依學校辦公時間調整）。資源教室內電腦 4 台、印表機、影印機、掃描機可直接使用，不需申請。<span id="office"></span></footer>
+<footer class="wrap">申請借用／歸還：星期一至星期五 08:00–20:00（寒暑假依學校辦公時間調整）。資源教室內電腦 4 台、印表機、影印機、掃描機可直接使用，不需申請，使用時請到<a href="#usage">設備使用登記</a>登記。<span id="office"></span></footer>
 <div id="modal" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
@@ -203,8 +204,8 @@ function dueFor(r){const it=item(r.code);if(r.type==='long')return r.endDate||r.
 const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id})));
 
 /* ---------- views ---------- */
-const STUDENT_TABS=[['rules','借用規定'],['apply','申請借用'],['mine','學生/職員申請'],['items','器材一覽'],['survey','滿意度問卷']];
-const ADMIN_TABS=[['review','審核與點交'],['ledger','借用登記冊'],['roster','借用名單'],['stats','滿意度統計'],['setup','設定']];
+const STUDENT_TABS=[['rules','借用規定'],['apply','申請借用'],['mine','學生/職員申請'],['usage','設備使用登記'],['items','器材一覽'],['survey','滿意度問卷']];
+const ADMIN_TABS=[['review','審核與點交'],['ledger','借用登記冊'],['roster','借用名單'],['usagelog','設備使用紀錄'],['stats','滿意度統計'],['setup','設定']];
 let curView=null,curParam=null;
 function navHtml(){
   const r=curView==='item'?'items':curView;
@@ -236,7 +237,7 @@ function repaint(keys){
   const o=$('#office');o.textContent=S.config.office?`　聯絡：${S.config.office}`:'';
   const v=V[curView];if(!v)return;
   if(v.deps&&!v.deps.some(k=>keys.includes(k)))return;
-  if(curView==='review'||curView==='ledger'||curView==='roster'||curView==='stats'||curView==='setup'){
+  if(curView==='review'||curView==='ledger'||curView==='roster'||curView==='stats'||curView==='setup'||curView==='usagelog'){
     if(!S.ready)return;
     if(ADMIN_TABS.some(t=>t[0]===curView)&&!S.admin){location.hash='login';return}
   }
@@ -476,6 +477,75 @@ ${needSurvey(r)?`<div class="note warn">請填寫這次使用的滿意度問卷�
     try{await serial('req',async()=>{const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();if(!snap.exists)return;
       const list=(snap.data().list||[]).map(r=>r.id===id?{...r,...patch}:r);await ref.set({list,updatedAt:nowStr()})});toast(msg)}
     catch(e){toast('更新失敗，請稍後再試')}
+  }
+};
+
+/* ===== 設備使用登記（取代紙本「資源教室設備借用登記簿」） ===== */
+const PCS=['01','02','03','04'];
+const devText=e=>[e.pc?`電腦 ${e.pc}`:'',e.print?'印表機（彩色）':'',e.copy?'影印機（黑白）':'',e.scan?'掃描資料':'',e.paper?`紙張 ${e.paper} 張`:''].filter(Boolean).join('、');
+const reasonText=e=>e.reason==='其他'?`其他：${e.reasonNote||''}`:e.reason;
+V.usage={
+  deps:['config'],
+  shell(){const me=local.get('usage-me')||{},ap=local.get('applicant')||{};const dept=me.dept||ap.dept||'',name=me.name||ap.name||'';
+    return `<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
+<form id="u-form" novalidate>
+<fieldset><legend>使用人</legend><div class="grid">
+<label class="f">學制<select id="u-shift"><option>日間部</option><option ${me.shift==='夜間部'?'selected':''}>夜間部</option></select></label>
+<label class="f">科系<input id="u-dept" value="${h(dept)}" placeholder="例：幼保系"></label>
+<label class="f">姓名<input id="u-name" value="${h(name)}" autocomplete="name"></label></div></fieldset>
+<fieldset><legend>使用設備（可複選）</legend><div class="stack">
+<div class="choices">${PCS.map(n=>`<label class="choice"><input type="radio" name="u-pc" value="${n}"><span><b>電腦 ${n}</b></span></label>`).join('')}<label class="choice"><input type="radio" name="u-pc" value="" checked><span><b>沒有使用電腦</b></span></label></div>
+<div class="choices"><label class="choice"><input type="checkbox" id="u-print"><span><b>印表機（彩色）</b></span></label><label class="choice"><input type="checkbox" id="u-copy"><span><b>影印機（黑白）</b></span></label><label class="choice"><input type="checkbox" id="u-scan"><span><b>掃描資料</b></span></label></div>
+<label class="f" style="max-width:260px">紙張張數 <small>列印或影印用了幾張，沒有就留空</small><input type="number" id="u-paper" min="0" max="999" inputmode="numeric"></label>
+</div></fieldset>
+<fieldset><legend>使用原因</legend><div class="choices">${['課業學習','休閒娛樂','其他'].map((x,i)=>`<label class="choice"><input type="radio" name="u-reason" value="${x}" ${i===0?'checked':''}><span><b>${x}</b></span></label>`).join('')}</div>
+<label class="f" id="u-other-wrap" style="margin-top:10px" hidden>其他原因<input id="u-other"></label></fieldset>
+<p class="err" id="u-err" role="alert"></p><button class="primary" type="submit" id="u-ok">完成登記</button></form><div id="u-done" hidden></div>`},
+  bind(){
+    $('#u-form').addEventListener('change',e=>{if(e.target.name==='u-reason')$('#u-other-wrap').hidden=e.target.value!=='其他'});
+    $('#u-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
+  },
+  paint(){$('#u-gate').innerHTML=gateNotice()},
+  async submit(){
+    const err=$('#u-err');err.textContent='';const v=id=>($('#'+id).value||'').trim();
+    const e={id:newId(),at:nowStr(),date:today(),shift:v('u-shift'),dept:v('u-dept'),name:v('u-name'),pc:($('input[name=u-pc]:checked')||{}).value||'',
+      print:$('#u-print').checked,copy:$('#u-copy').checked,scan:$('#u-scan').checked,paper:Math.max(0,parseInt(v('u-paper'))||0),
+      reason:($('input[name=u-reason]:checked')||{}).value||'',reasonNote:v('u-other')};
+    if(!e.dept||!e.name){err.textContent='請填寫科系與姓名。';return}
+    if(!e.pc&&!e.print&&!e.copy&&!e.scan){err.textContent='請勾選至少一項使用的設備。';return}
+    if(e.reason==='其他'&&!e.reasonNote){err.textContent='請填寫其他原因。';return}
+    if(S.gas&&!S.uid)S.uid=anonUid();
+    if(!S.db||!S.uid){err.textContent='目前無法登記：請從資源教室提供的連結開啟此頁。';return}
+    $('#u-ok').disabled=true;
+    try{
+      await serial('use',async()=>{const ref=S.db.doc('usage/'+S.uid);if(S.gas){await ref.set({entries:[e],updatedAt:nowStr()});return}
+        const snap=await ref.get();const list=snap.exists?[...(snap.data().entries||[])]:[];list.push(e);await ref.set({entries:list,updatedAt:nowStr()})});
+      local.set('usage-me',{shift:e.shift,dept:e.dept,name:e.name});
+      $('#u-form').hidden=true;$('#u-done').hidden=false;
+      $('#u-done').innerHTML=`<div class="note ok" style="padding:20px"><b>已完成登記</b><br><span class="mono">${h(e.at)}</span>　${h(e.name)}　${h(devText(e))}　${h(reasonText(e))}</div><p class="row"><button id="u-again">再登記一筆</button><a href="#rules">回到首頁</a></p>`;
+      $('#u-again').onclick=()=>route();
+    }catch(x){$('#u-ok').disabled=false;err.textContent=x&&x.code==='invalid_argument'?'你目前的權限無法登記，請向資源教室老師確認。':'登記失敗，請稍後再試。'}
+  }
+};
+V.usagelog={
+  deps:['usage'],
+  shell(){return `<div class="spread"><h1>設備使用紀錄</h1><button id="ul-export">匯出 Excel</button></div><p class="lede">取代紙本「資源教室設備借用登記簿」。學生在「設備使用登記」填寫後會即時出現在這裡，Google 試算表的「設備使用登記簿」分頁也會同步更新。</p>
+<div class="row" style="margin-bottom:12px"><input id="ul-q" placeholder="搜尋姓名、科系" style="flex:2;min-width:200px" aria-label="搜尋"><input type="month" id="ul-m" value="${today().slice(0,7)}" style="flex:1;min-width:150px" aria-label="月份"></div><div id="ul-body"></div>`},
+  bind(){['ul-q','ul-m'].forEach(id=>$('#'+id).addEventListener('input',()=>this.paint()));
+    $('#ul-export').onclick=()=>{const r=this.rows();saveFile(`資源教室設備使用登記簿_${$('#ul-m').value||today()}.xlsx`,xlsxBlob([['登記簿',[['序號','日期時間','學制','科系','姓名','使用設備','紙張張數','使用原因'],...r.map((e,i)=>[i+1,e.at,e.shift,e.dept,e.name,devText(e),e.paper||'',reasonText(e)])],[6,17,8,14,10,36,9,18]]]))}},
+  rows(){const q=$('#ul-q').value.trim().toLowerCase(),m=$('#ul-m').value;
+    return (S.usage||[]).filter(e=>(!m||(e.date||'').startsWith(m))&&(!q||[e.name,e.dept].join(' ').toLowerCase().includes(q))).sort((a,b)=>a.at<b.at?-1:1)},
+  paint(){
+    if(!S.got.usage){$('#ul-body').innerHTML='<p class="note">載入中…</p>';return}
+    const r=this.rows();
+    if(!r.length){$('#ul-body').innerHTML=`<div class="empty">${(S.usage||[]).length?'這個月份或搜尋條件下沒有紀錄。':'還沒有設備使用紀錄。到「設定」下載「設備使用登記」QR code，貼在電腦與印表機旁。'}</div>`;return}
+    const cnt=f=>r.filter(f).length,paper=r.reduce((a,e)=>a+(e.paper||0),0);
+    $('#ul-body').innerHTML=`<div class="tally"><div><b>${r.length}</b><span>登記人次</span></div><div><b>${cnt(e=>e.pc)}</b><span>使用電腦</span></div><div><b>${cnt(e=>e.print)}</b><span>彩色列印</span></div><div><b>${cnt(e=>e.copy)}</b><span>黑白影印</span></div><div><b>${cnt(e=>e.scan)}</b><span>掃描</span></div><div><b>${paper}</b><span>紙張（張）</span></div></div>
+<div class="flags" style="margin-bottom:10px">${['課業學習','休閒娛樂','其他'].map(x=>`<span class="chip">${x} ${cnt(e=>e.reason===x)}</span>`).join('')}${PCS.map(n=>`<span class="chip info">電腦 ${n}：${cnt(e=>e.pc===n)}</span>`).join('')}</div>
+<div class="tablewrap" style="max-height:70vh"><table><thead><tr><th>序號</th><th>日期時間</th><th>學制</th><th>科系</th><th>姓名</th><th>使用設備</th><th>使用原因</th><th></th></tr></thead><tbody>
+${r.map((e,i)=>`<tr><td class="mono">${i+1}</td><td class="mono">${h(e.at)}</td><td>${h(e.shift)}</td><td>${h(e.dept)}</td><td>${h(e.name)}</td><td class="wrap">${h(devText(e))}</td><td>${h(reasonText(e))}</td><td><button class="small" data-del="${h(e.uid)}|${h(e.id)}">刪除</button></td></tr>`).join('')}</tbody></table></div>`;
+    $('#ul-body').onclick=ev=>{const d=ev.target.dataset.del;if(!d)return;const [uid,id]=d.split('|');const e=(S.usage||[]).find(x=>x.id===id);
+      confirmBox('刪除這筆使用紀錄？',`${e.at}・${e.name}・${devText(e)}`,'刪除',async()=>{try{await serial('use-'+uid,async()=>{const ref=S.db.doc('usage/'+uid);const sn=await ref.get();if(!sn.exists)return;await ref.set({...sn.data(),entries:(sn.data().entries||[]).filter(x=>x.id!==id)})});toast('已刪除')}catch(x){toast('刪除失敗，請重試')}})};
   }
 };
 
@@ -825,7 +895,7 @@ async function qrPng(text,title,sub){await loadQR();
   return await new Promise(res=>c.toBlob(res,'image/png'));
 }
 function qrTargets(){const u=(S.config.url||'').replace(/#.*$/,'');if(!u)return [];
-  return [{code:'apply',title:'線上預借申請',sub:'掃描閱讀借用規定並申請',url:u},{code:'survey',title:'使用滿意度問卷',sub:'使用後請掃描填寫',url:u+'#survey'},{code:'items',title:'器材與空間一覽',sub:'查看可借器材',url:u+'#items'},
+  return [{code:'apply',title:'線上預借申請',sub:'掃描閱讀借用規定並申請',url:u},{code:'survey',title:'使用滿意度問卷',sub:'使用後請掃描填寫',url:u+'#survey'},{code:'usage',title:'設備使用登記',sub:'使用電腦、列印、影印、掃描請掃描登記',url:u+'#usage'},{code:'items',title:'器材與空間一覽',sub:'查看可借器材',url:u+'#items'},
     ...S.catalog.map(x=>({code:x.code,title:x.name,sub:`${x.code}・掃描申請借用`,url:u+'#item-'+x.code}))]}
 function catalogDialog(x){
   const isNew=!x;x=x||{code:'',name:'',cat:'general',qty:1,out:0,note:'',longOk:false};
@@ -889,7 +959,7 @@ V.setup={
     $('#ev-list').onclick=async e=>{const d=e.target.dataset.rm;if(d){await saveConfig({eventDays:(S.config.eventDays||[]).filter(x=>x.date!==d)});toast('已移除')}};
   },
   paint(){if(!this._filled&&S.got.config){this._filled=true;const c=S.config;$('#cf-sem').value=c.semesterStart||'';$('#cf-office').value=c.office||'';$('#cf-url').value=c.url||''}
-    const t=qrTargets().filter(x=>x.code==='apply'||x.code==='survey');
+    const t=qrTargets().filter(x=>['apply','usage','survey'].includes(x.code));
     $('#cf-qr').innerHTML=t.length?t.map(x=>`<button class="small" data-png="${x.code}">下載「${h(x.title)}」QR code (PNG)</button>`).join(''):'<span class="meta">請先填寫並儲存分享連結。</span>';
     $('#cat-list').innerHTML=S.catalog.length?`<div class="tablewrap"><table><thead><tr><th>名稱</th><th>類別</th><th>數量</th><th>借出中</th><th>長期借用</th><th>說明</th><th></th></tr></thead><tbody>${S.catalog.map(x=>`<tr><td>${h(x.name)}</td><td>${h(CATS[x.cat])}</td><td class="mono">${x.qty||0}</td><td class="mono">${x.out||0}</td><td>${x.longOk?'可':''}</td><td class="wrap">${h(x.note)}</td><td><button class="small" data-edit="${h(x.code)}">編輯</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">尚未建立器材清單。</div>';
     const ev=(S.config.eventDays||[]).filter(e=>e.date>=addDays(today(),-30));
@@ -903,7 +973,7 @@ async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncod
 let fails=0,lockUntil=0;
 function logout(){S.admin=false;sess.set('rr-unlock',null);sess.set('rr-pw',null);
   adminUnsubs.forEach(u=>{try{u()}catch(e){}});adminUnsubs=[];adminStarted=false;
-  S.allReq=[];S.loans=[];S.roster=[];S.surveys=[];['allReq','loans','roster','surveys'].forEach(k=>delete S.got[k]);S.notes={};
+  S.allReq=[];S.loans=[];S.roster=[];S.surveys=[];S.usage=[];['allReq','loans','roster','surveys','usage'].forEach(k=>delete S.got[k]);S.notes={};
   closeModal();toast('已登出資源教室管理');
   if(location.hash==='#apply')route();else location.hash='apply'}
 V.login={
@@ -929,6 +999,7 @@ function startAdmin(){
   adminUnsubs.push(db.collection('requests').onSnapshot(s=>{S.allReq=s.docs.map(d=>({id:d.id,...d.data()}));done('allReq')},fail('allReq')));
   adminUnsubs.push(db.collection('loans').onSnapshot(s=>{S.loans=s.docs.map(d=>({id:d.id,...d.data()}));done('loans')},fail('loans')));
   adminUnsubs.push(db.collection('roster').onSnapshot(s=>{S.roster=s.docs.map(d=>({id:d.id,...d.data()}));done('roster')},fail('roster')));
+  adminUnsubs.push(db.collection('usage').onSnapshot(s=>{S.usage=s.docs.flatMap(d=>(d.data().entries||[]).map(e=>({...e,uid:d.id})));done('usage')},fail('usage')));
   adminUnsubs.push(db.collection('surveys').onSnapshot(s=>{S.surveys=s.docs.flatMap(d=>d.data().responses||[]);done('surveys')},fail('surveys')));
 }
 

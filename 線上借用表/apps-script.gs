@@ -13,6 +13,7 @@ const SITE_URL = 'https://educeduc-alt.github.io/resource-room/%E7%B7%9A%E4%B8%8
 
 const DOCS_SHEET = '_資料（請勿修改）';
 const PUBLIC_READ = ['catalog', 'config', 'calendar'];
+const OWN = ['requests', 'surveys', 'usage'];   // 每人只能讀寫自己的
 const SEED_CATALOG = [{"code": "g01", "name": "筆記型電腦", "cat": "general", "qty": 8, "out": 0, "note": "部分規格與機型老舊，116 年預計增購 2 台", "longOk": false, "sort": 1}, {"code": "g02", "name": "投影機", "cat": "general", "qty": 2, "out": 0, "note": "單槍投影機", "longOk": false, "sort": 2}, {"code": "g03", "name": "平板", "cat": "general", "qty": 7, "out": 0, "note": "", "longOk": false, "sort": 3}, {"code": "g05", "name": "數位相機／單眼相機", "cat": "general", "qty": 2, "out": 0, "note": "", "longOk": false, "sort": 5}, {"code": "g06", "name": "攝影機／數位攝影機", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 6}, {"code": "g07", "name": "擴視機（桌上型／可攜式）", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 7}, {"code": "g08", "name": "簡報筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 8}, {"code": "g09", "name": "放大滑鼠", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 9}, {"code": "g10", "name": "錄音筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 10}, {"code": "g11", "name": "護貝機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 11}, {"code": "g12", "name": "計算機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 12}, {"code": "g13", "name": "吹風機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 13}, {"code": "g14", "name": "裁紙刀（大）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 14}, {"code": "g15", "name": "裁紙刀（小）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 15}, {"code": "t01", "name": "電子翻譯機（學習翻譯機）", "cat": "general3", "qty": 2, "out": 0, "note": "", "longOk": true, "sort": 16}, {"code": "t02", "name": "延長線", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 17}, {"code": "t03", "name": "8 吋小電風扇", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 18}, {"code": "t04", "name": "鍵盤", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 19}, {"code": "t05", "name": "耳機", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 20}, {"code": "t06", "name": "彩色筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 21}, {"code": "t07", "name": "麥克筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 22}, {"code": "t08", "name": "熱熔膠槍", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 23}, {"code": "l01", "name": "牌卡", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 24}, {"code": "l02", "name": "桌遊", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 25}, {"code": "l03", "name": "手眼協調訓練機", "cat": "leisure", "qty": 1, "out": 0, "note": "須配合家銘學長時間，以利協助架設器材", "longOk": false, "sort": 26}, {"code": "l04", "name": "投影設備（休閒用）", "cat": "leisure", "qty": 1, "out": 0, "note": "限觀賞、遊戲借用", "longOk": false, "sort": 27}, {"code": "s01", "name": "悅讀書房", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；使用後至資源教室告知完畢、領回證件並填寫滿意度問卷", "longOk": false, "sort": 28}, {"code": "s02", "name": "課輔室", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；借用當日由工讀生或老師協助開門", "longOk": false, "sort": 29}];
 
 function doGet() { return out({ ok: true, service: '資源教室線上借用表', time: new Date() }); }
@@ -66,23 +67,26 @@ function canRead(p, admin, uid) {
   if (admin) return true;
   const s = String(p).split('/');
   if (PUBLIC_READ.includes(s[0])) return true;
-  if (s[0] === 'requests' || s[0] === 'surveys') return !!uid && s[1] === uid;
+  if (OWN.includes(s[0])) return !!uid && s[1] === uid;
   return false;
 }
 function canWrite(p, admin, uid) {
   if (admin) return true;
   const s = String(p).split('/');
-  return (s[0] === 'requests' || s[0] === 'surveys') && s.length === 2 && !!uid && s[1] === uid;
+  return OWN.includes(s[0]) && s.length === 2 && !!uid && s[1] === uid;
 }
 function validPath(p) { return typeof p === 'string' && /^[A-Za-z0-9_\-.~:@+]+(\/[A-Za-z0-9_\-.~:@+]+)*$/.test(p) && p.split('/').length % 2 === 0; }
 
 /* 學生只能新增「待審核」申請、取消、確認歸還、標記已填問卷；審核結果由老師決定 */
 function sanitize(path, oldDoc, doc) {
   const root = path.split('/')[0];
-  if (root === 'surveys') {
-    const old = (oldDoc && oldDoc.responses) || [], ids = {};
+  if (root === 'surveys' || root === 'usage') {   // 只能新增，不能改或刪舊的
+    const f = root === 'surveys' ? 'responses' : 'entries';
+    const old = (oldDoc && oldDoc[f]) || [], ids = {};
     old.forEach(r => ids[r.id] = true);
-    return { responses: old.concat((doc.responses || []).filter(r => r && r.id && !ids[r.id])), updatedAt: doc.updatedAt || '' };
+    const o = { updatedAt: doc.updatedAt || '' };
+    o[f] = old.concat((doc[f] || []).filter(r => r && r.id && !ids[r.id]));
+    return o;
   }
   const old = (oldDoc && oldDoc.list) || [], byId = {};
   old.forEach(r => byId[r.id] = r);
@@ -172,6 +176,15 @@ function rebuild(st, root) {
     rows = [];
     docs('surveys').forEach(d => (d.responses || []).forEach(x => rows.push([x.at, x.target, x.itemName || '', x.q1, x.q2, x.q3, x.q4, x.q5, x.comment || ''])));
     rows.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+  } else if (root === 'usage') {
+    name = '設備使用登記簿';
+    head = ['序號', '日期時間', '學制', '科系', '姓名', '使用設備', '紙張張數', '使用原因'];
+    const list = [];
+    docs('usage').forEach(d => (d.entries || []).forEach(e => list.push(e)));
+    list.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+    rows = list.map((e, i) => [i + 1, e.at, e.shift, e.dept, e.name,
+      [e.pc ? '電腦 ' + e.pc : '', e.print ? '印表機（彩色）' : '', e.copy ? '影印機（黑白）' : '', e.scan ? '掃描資料' : ''].filter(String).join('、'),
+      e.paper || '', e.reason === '其他' ? '其他：' + (e.reasonNote || '') : e.reason]);
   } else if (root === 'roster') {
     name = '借用名單';
     head = ['學號', '姓名', '系級', '類別', '證明有效期限', '備註'];
@@ -192,4 +205,4 @@ function rebuild(st, root) {
 }
 
 /* 手動執行一次可建立所有分頁、確認權限 */
-function 初始化() { const st = load(); ['catalog', 'requests', 'loans', 'surveys', 'roster'].forEach(r => rebuild(st, r)); }
+function 初始化() { const st = load(); ['catalog', 'requests', 'loans', 'surveys', 'usage', 'roster'].forEach(r => rebuild(st, r)); }
