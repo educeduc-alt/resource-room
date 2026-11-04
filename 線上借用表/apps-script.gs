@@ -166,7 +166,7 @@ function rebuild(st, root) {
     docs('requests').forEach(d => (d.list || []).forEach(r => rows.push([r.createdAt, STATUS[r.status] || r.status, TYPES[r.type] || r.type, r.itemName, r.date, r.start ? r.start + '–' + r.end : '', r.due || r.endDate || '', r.role, r.no, r.name, r.dept, r.phone, r.purpose, r.reviewNote || '', r.returnRequestedAt || '', r.returnedAt || '', r.role === '教職員' ? '不需' : r.surveyed ? '已填' : r.status === 'returned' ? '未填' : ''])));
     rows.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
   } else if (root === 'loans') {
-    name = '借用登記冊';
+    name = '設備借用紀錄';
     head = ['申請日', '使用日期', '借用人', '學號', '系級', '借用品項', '財產/物品編號', '經手人', '抵押證件', '出借時間', '應還日期', '歸還日期', '簽收人', '狀態', '歸還狀況', '來源'];
     rows = docs('loans').map(l => [l.applyDate, l.date, l.name, l.no, l.dept, l.item, l.assetNo, l.handler, l.idHeld, l.outAt, l.due, l.returnedAt, l.receiver, l.status === 'returned' ? (l.abnormal ? '已歸還・異常' : '已歸還') : '借出中', l.returnNote || '', ({ online: '線上', walkin: '現場', import: '匯入' })[l.source] || '']);
     rows.sort((a, b) => String(b[1]).localeCompare(String(a[1])));

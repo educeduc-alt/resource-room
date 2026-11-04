@@ -220,7 +220,7 @@ const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id}))
 
 /* ---------- views ---------- */
 const STUDENT_TABS=[['rules','借用規定'],['apply','申請借用'],['mine','學生/職員申請']];
-const ADMIN_TABS=[['review','審核與點交'],['ledger','借用登記冊'],['roster','借用名單'],['usagelog','設備使用紀錄'],['stats','滿意度統計'],['setup','設定']];
+const ADMIN_TABS=[['review','審核與點交'],['ledger','設備借用紀錄'],['usagelog','設備使用紀錄'],['stats','滿意度統計'],['setup','設定']];
 let curView=null,curParam=null;
 function navHtml(){
   const r=['borrow','usage','items','item'].includes(curView)?'apply':curView==='survey'?'mine':curView;
@@ -311,7 +311,7 @@ V.borrow={
   deps:['catalog','config','calendar'],
   shell(){
     const a=local.get('applicant')||{};
-    return `${segNav('borrow')}<h1>申請借用設備</h1>
+    return `<h1>申請借用設備</h1>
 <p class="lede">送出申請後，經資源教室老師審核通過，使用當日攜帶學生證或教職員證到資源教室領取。結果會顯示在「學生/職員申請」。</p>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
@@ -519,7 +519,7 @@ const reasonText=e=>e.reason==='其他'?`其他：${e.reasonNote||''}`:e.reason;
 V.usage={
   deps:['config'],
   shell(){const me=local.get('usage-me')||{},ap=local.get('applicant')||{};const dept=me.dept||ap.dept||'',name=me.name||ap.name||'';
-    return `${segNav('usage')}<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
+    return `<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
 <form id="u-form" novalidate>
 <fieldset><legend>使用人</legend><div class="grid">
 <label class="f">學制<select id="u-shift"><option>日間部</option><option ${me.shift==='夜間部'?'selected':''}>夜間部</option></select></label>
@@ -666,8 +666,7 @@ ${fr?`<div class="note info" style="margin-bottom:16px">這份問卷對應你借
 function reqFlags(r,all){
   const f=[];const rm=rosterMap();
   if(r.role==='學生'){
-    if(!S.roster.length)f.push(['尚未匯入借用名單','']);
-    else{const m=rm[r.no];if(!m)f.push(['學號不在借用名單','bad']);else f.push([m.name&&m.name!==r.name?`名單姓名為 ${m.name}`:'名單內',m.name&&m.name!==r.name?'warn':'ok'])}
+    if(S.roster.length){const m=rm[r.no];if(!m)f.push(['學號不在借用名單','bad']);else f.push([m.name&&m.name!==r.name?`名單姓名為 ${m.name}`:'名單內',m.name&&m.name!==r.name?'warn':'ok'])}
   }else f.push(['教職員業務需求','']);
   const ev=eventOn(r.date);if(ev)f.push([`活動日：${ev.label}`,'bad']);
   if(r.type==='leisure'&&leisureSlot(r.date)===false)f.push(['不在開放週次','warn']);
@@ -685,7 +684,7 @@ async function editReq(uid,id,patch){
 async function bumpOut(code,d){const it=item(code);if(!it)return;await serial('cat-'+code,()=>S.db.doc('catalog/'+code).update({out:Math.max(0,(it.out||0)+d)}))}
 V.review={
   deps:['allReq','loans','roster','calendar','catalog','config'],
-  shell(){return `<div class="spread"><h1>審核與點交</h1><button id="rv-walk">現場登記借出</button></div><p class="lede">審核線上申請，並在學生到場時完成領取與歸還的點交，紀錄會自動寫入借用登記冊。</p><div id="rv-body"><p class="note">載入中…</p></div>`},
+  shell(){return `<div class="spread"><h1>審核與點交</h1><button id="rv-walk">現場登記借出</button></div><p class="lede">審核線上申請，並在學生到場時完成領取與歸還的點交，紀錄會自動寫入設備借用紀錄。</p><div id="rv-body"><p class="note">載入中…</p></div>`},
   bind(){$('#rv-walk').onclick=()=>walkIn();
     $('#view').addEventListener('input',e=>{if(e.target.dataset.note)S.notes[e.target.dataset.note]=e.target.value})},
   paint(){
@@ -753,7 +752,7 @@ ${r.type==='space'?'':`<div><b style="font-size:.9rem">出借時狀況檢查（�
       name:r.name,no:r.no,dept:r.dept,role:r.role,phone:r.phone,assetNo:($('#co-asset')||{}).value?.trim()||'',handler:staff,idHeld:$('#co-id').value,
       checkOut:r.type==='space'?[]:readChecks('co'),outAt:nowStr(),due:$('#co-due').value,note:$('#co-note').value.trim(),status:'out'};
     $('#co-ok').disabled=true;
-    try{await S.db.doc('loans/'+id).set(rec);await editReq(r.uid,r.id,{status:'out',loanId:id,outAt:rec.outAt,due:rec.due,assetNo:rec.assetNo});await bumpOut(r.code,1);closeModal();toast('已完成點交並寫入登記冊')}
+    try{await S.db.doc('loans/'+id).set(rec);await editReq(r.uid,r.id,{status:'out',loanId:id,outAt:rec.outAt,due:rec.due,assetNo:rec.assetNo});await bumpOut(r.code,1);closeModal();toast('已完成點交並寫入設備借用紀錄')}
     catch(e){$('#co-ok').disabled=false;$('#co-err').textContent='登記失敗，請重試。'}
   }})
 }
@@ -827,7 +826,7 @@ async function batchWrite(docs,label,onProgress){let done=0;
   for(let i=0;i<docs.length;i+=8){await Promise.all(docs.slice(i,i+8).map(([p,d])=>S.db.doc(p).set(d)));done+=Math.min(8,docs.length-i);onProgress&&onProgress(done)}}
 function importDialog(kind){
   const L=kind==='ledger';const alias=L?LEDGER_ALIAS:ROSTER_ALIAS,cols=L?LEDGER_COLS.filter(c=>c[0]!=='outAt'&&c[0]!=='statusText'):ROSTER_COLS;
-  openModal(`<h2 style="margin:0">${L?'匯入借用登記冊':'匯入借用名單'}</h2>
+  openModal(`<h2 style="margin:0">${L?'匯入設備借用紀錄':'匯入借用名單'}</h2>
 <p style="margin:0">${L?'可匯入過去紙本「物品借用登記本」謄打的 Excel 或 CSV。系統會辨識下列欄位名稱，有填「歸還日期」的列會標記為已歸還。':'匯入領有鑑輔會證明的學生名單。學號相同的資料會更新。名單只有資源教室（編輯者以上）看得到。'}</p>
 <p class="mono" style="margin:0;color:var(--muted);font-size:.8rem">${cols.map(c=>c[1]).join('、')}</p>
 <div class="row"><button class="small" id="im-tpl">下載空白範本 (.xlsx)</button></div>
@@ -836,7 +835,7 @@ ${L?'':`<label class="choice"><input type="checkbox" id="im-replace"><span><b>�
 <div id="im-prev"></div><p class="err" id="im-err"></p>
 <div class="row"><button class="primary" id="im-ok" disabled>確認匯入</button><button data-close>取消</button></div>`,m=>{
   let rows=[];
-  m.querySelector('#im-tpl').onclick=()=>saveFile(L?'借用登記冊範本.xlsx':'借用名單範本.xlsx',xlsxBlob([[L?'登記冊':'名單',[cols.map(c=>c[1])],cols.map(()=>14)]]));
+  m.querySelector('#im-tpl').onclick=()=>saveFile(L?'設備借用紀錄範本.xlsx':'借用名單範本.xlsx',xlsxBlob([[L?'設備借用紀錄':'名單',[cols.map(c=>c[1])],cols.map(()=>14)]]));
   m.querySelector('#im-file').onchange=async e=>{
     const f=e.target.files[0];$('#im-err').textContent='';$('#im-prev').innerHTML='';$('#im-ok').disabled=true;if(!f)return;
     try{
@@ -866,11 +865,11 @@ ${L?'':`<label class="choice"><input type="checkbox" id="im-replace"><span><b>�
   }})
 }
 
-/* ===== 借用登記冊 (admin) ===== */
+/* ===== 設備借用紀錄 (admin) ===== */
 const loanStatus=l=>l.status==='returned'?(l.abnormal?['已歸還・異常','warn']:['已歸還','']):(l.due&&l.due<today()?['逾期未還','bad']:['借出中','info']);
 V.ledger={
   deps:['loans','allReq'],
-  shell(){return `<div class="spread"><h1>借用登記冊</h1><div class="row"><button id="lg-import">匯入登記冊</button><button id="lg-export">匯出 Excel</button><button class="primary" id="lg-walk">現場登記</button></div></div>
+  shell(){return `<div class="spread"><h1>設備借用紀錄</h1><div class="row"><button id="lg-import">匯入紀錄</button><button id="lg-export">匯出 Excel</button><button class="primary" id="lg-walk">現場登記</button></div></div>
 <p class="lede">取代紙本「物品借用登記本」與「空間借用登記本」。線上申請點交、現場登記與匯入的舊紀錄都會集中在這裡。</p>
 <div class="row" style="margin-bottom:12px"><input id="lg-q" placeholder="搜尋姓名、學號、品項、財產編號" style="flex:2;min-width:200px" aria-label="搜尋"><select id="lg-st" style="flex:1;min-width:130px" aria-label="狀態"><option value="">全部狀態</option><option value="out">借出中</option><option value="over">逾期未還</option><option value="returned">已歸還</option><option value="abn">歸還異常</option></select><input type="month" id="lg-m" style="flex:1;min-width:150px" aria-label="月份"></div>
 <div id="lg-body"></div>`},
@@ -883,7 +882,7 @@ V.ledger={
   paint(){
     if(!S.got.loans){$('#lg-body').innerHTML='<p class="note">載入中…</p>';return}
     const rows=this.rows();
-    if(!S.loans.length){$('#lg-body').innerHTML=`<div class="empty">登記冊還沒有紀錄。<br>學生完成領取點交、或用「現場登記」「匯入登記冊」後，紀錄會出現在這裡。</div>`;return}
+    if(!S.loans.length){$('#lg-body').innerHTML=`<div class="empty">設備借用紀錄還沒有資料。<br>學生完成領取點交、或用「現場登記」「匯入紀錄」後，紀錄會出現在這裡。</div>`;return}
     $('#lg-body').innerHTML=`<p class="meta">共 ${rows.length} 筆${rows.length!==S.loans.length?`（全部 ${S.loans.length} 筆）`:''}</p><div class="tablewrap" style="max-height:70vh"><table><thead><tr><th>使用日期</th><th>借用人</th><th>學號</th><th>系級</th><th>借用品項</th><th>財產編號</th><th>經手人</th><th>應還</th><th>歸還日期</th><th>簽收人</th><th>狀態</th><th>問卷</th><th>來源</th><th></th></tr></thead><tbody>
 ${rows.map(l=>{const [st,c]=loanStatus(l);const rq=allRequests().find(x=>x.id===l.reqId);const sv=l.role==='教職員'?'不需':rq&&rq.surveyed?'<span class="chip ok">已填</span>':rq&&rq.status==='returned'?'<span class="chip warn">未填</span>':'';return `<tr><td class="mono">${h(l.date)}${l.time?`<br>${h(l.time)}`:''}</td><td>${h(l.name)}</td><td class="mono">${h(l.no)}</td><td>${h(l.dept)}</td><td>${h(l.item)}</td><td class="mono">${h(l.assetNo)}</td><td>${h(l.handler)}</td><td class="mono">${h(l.due)}</td><td class="mono">${h(l.returnedAt)}</td><td>${h(l.receiver)}</td><td><span class="chip ${c}">${st}</span>${l.returnNote?`<br><small>${h(l.returnNote)}</small>`:''}</td><td>${sv}</td><td>${({online:'線上',walkin:'現場',import:'匯入'})[l.source]||''}</td>
 <td>${l.status==='out'?`<button class="small primary" data-ret="${h(l.id)}">歸還</button>`:''} <button class="small" data-del="${h(l.id)}" aria-label="刪除">刪除</button></td></tr>`}).join('')}</tbody></table></div>`;
@@ -891,30 +890,11 @@ ${rows.map(l=>{const [st,c]=loanStatus(l);const rq=allRequests().find(x=>x.id===
       if(d){const l=S.loans.find(x=>x.id===d);confirmBox('刪除這筆登記？',`${l.name}・${l.item}・${l.date}。刪除後無法復原。`,'刪除',async()=>{await S.db.doc('loans/'+d).delete();if(l.status==='out')await bumpOut(l.code,-1);toast('已刪除')})}};
   },
   export(){const rows=this.rows();const aoa=[LEDGER_COLS.map(c=>c[1]),...rows.map(l=>LEDGER_COLS.map(([k])=>k==='statusText'?loanStatus(l)[0]:(l[k]??'')))];
-    saveFile(`資源教室借用登記冊_${today()}.xlsx`,xlsxBlob([['登記冊',aoa,[11,11,10,12,12,16,14,8,16,11,11,8,12,20]]]))}
+    saveFile(`資源教室設備借用紀錄_${today()}.xlsx`,xlsxBlob([['設備借用紀錄',aoa,[11,11,10,12,12,16,14,8,16,11,11,8,12,20]]]))}
 };
 
 /* ===== 借用名單 (admin) ===== */
-V.roster={
-  deps:['roster'],
-  shell(){return `<div class="spread"><h1>借用名單</h1><div class="row"><button id="ro-import" class="primary">匯入名單</button><button id="ro-export">匯出 Excel</button><button id="ro-add">新增一位</button></div></div>
-<p class="lede">本校領有鑑輔會證明的學生享有優先借用。審核時系統會用學號比對此名單；學生不需要在申請表上填寫身分類別。此名單只有資源教室老師（編輯者以上）看得到。</p>
-<input id="ro-q" placeholder="搜尋學號、姓名、系級" style="max-width:360px;margin-bottom:12px" aria-label="搜尋"><div id="ro-body"></div>`},
-  bind(){$('#ro-import').onclick=()=>importDialog('roster');$('#ro-q').addEventListener('input',()=>this.paint());
-    $('#ro-export').onclick=()=>saveFile(`資源教室借用名單_${today()}.xlsx`,xlsxBlob([['名單',[ROSTER_COLS.map(c=>c[1]),...S.roster.map(r=>ROSTER_COLS.map(([k])=>r[k]||''))],[12,10,14,12,14,20]]]));
-    $('#ro-add').onclick=()=>openModal(`<h2 style="margin:0">新增名單</h2><div class="grid">${ROSTER_COLS.map(([k,t])=>`<label class="f">${t}<input id="ra-${k}" ${k==='validUntil'?'type="date"':''}></label>`).join('')}</div><p class="err" id="ra-err"></p><div class="row"><button class="primary" id="ra-ok">新增</button><button data-close>取消</button></div>`,m=>{
-      m.querySelector('#ra-ok').onclick=async()=>{const o={};ROSTER_COLS.forEach(([k])=>o[k]=$('#ra-'+k).value.trim());o.no=o.no.toUpperCase();
-        if(!/^[A-Z0-9_\-.]+$/.test(o.no)||!o.name){$('#ra-err').textContent='請填寫學號（英數字）與姓名。';return}
-        await S.db.doc('roster/'+o.no).set({...o,updatedAt:nowStr()});closeModal();toast('已新增')}})},
-  paint(){
-    if(!S.got.roster){$('#ro-body').innerHTML='<p class="note">載入中…</p>';return}
-    if(!S.roster.length){$('#ro-body').innerHTML=`<div class="empty">尚未匯入名單。按「匯入名單」上傳 Excel 或 CSV（第一列為欄位：學號、姓名、系級、類別、證明有效期限、備註）。</div>`;return}
-    const q=$('#ro-q').value.trim().toLowerCase(),t=today();
-    const rows=S.roster.filter(r=>!q||[r.no,r.name,r.dept].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.no<b.no?-1:1);
-    $('#ro-body').innerHTML=`<p class="meta">共 ${S.roster.length} 位${q?`，符合 ${rows.length} 位`:''}</p><div class="tablewrap" style="max-height:70vh"><table><thead><tr>${ROSTER_COLS.map(c=>`<th>${c[1]}</th>`).join('')}<th></th></tr></thead><tbody>${rows.map(r=>`<tr><td class="mono">${h(r.no)}</td><td>${h(r.name)}</td><td>${h(r.dept)}</td><td>${h(r.category)}</td><td class="mono">${h(r.validUntil)}${r.validUntil&&r.validUntil<t?' <span class="chip warn">已過期</span>':''}</td><td class="wrap">${h(r.note)}</td><td><button class="small" data-del="${h(r.id)}">移除</button></td></tr>`).join('')}</tbody></table></div>`;
-    $('#ro-body').onclick=e=>{const d=e.target.dataset.del;if(d)confirmBox('從名單移除？',`學號 ${d}`,'移除',async()=>{await S.db.doc('roster/'+d).delete();toast('已移除')})};
-  }
-};
+V.roster={shell(){return ''},bind(){location.replace('#ledger')}};
 
 /* ===== 器材與 QR (admin) ===== */
 let qrP=null;
@@ -943,7 +923,7 @@ function catalogDialog(x){
     if(isNew&&item(code)){$('#cd-err').textContent='代碼已存在。';return}
     const sort=isNew?(Math.max(0,...S.catalog.map(c=>c.sort||0))+1):x.sort||0;
     await S.db.doc('catalog/'+code).set({code,name,cat:$('#cd-cat').value,qty:+$('#cd-qty').value||0,out:+$('#cd-out').value||0,note:$('#cd-note').value.trim(),longOk:$('#cd-long').checked,sort});closeModal();toast('已儲存')};
-  const d=m.querySelector('#cd-del');if(d)d.onclick=()=>confirmBox('刪除此器材？','登記冊紀錄會保留。','刪除',async()=>{await S.db.doc('catalog/'+x.code).delete();toast('已刪除')});
+  const d=m.querySelector('#cd-del');if(d)d.onclick=()=>confirmBox('刪除此器材？','設備借用紀錄會保留。','刪除',async()=>{await S.db.doc('catalog/'+x.code).delete();toast('已刪除')});
  })
 }
 
@@ -1010,7 +990,7 @@ function logout(){S.admin=false;sess.set('rr-unlock',null);sess.set('rr-pw',null
   closeModal();toast('已登出資源教室管理');
   if(location.hash==='#apply')route();else location.hash='apply'}
 V.login={
-  shell(){return `<div style="max-width:420px"><h1>資源教室登入</h1><p class="lede">審核、借用登記冊、名單與統計僅供資源教室老師使用。</p>
+  shell(){return `<div style="max-width:420px"><h1>資源教室登入</h1><p class="lede">審核、設備借用紀錄、設備使用紀錄與統計僅供資源教室老師使用。</p>
 <form id="lg-form" novalidate><fieldset><legend>管理密碼</legend><div class="stack"><label class="f">密碼<input type="password" id="lg-pw" autocomplete="current-password"></label>
 <p class="err" id="lg-err" role="alert"></p><button class="primary" type="submit" id="lg-ok">登入</button></div></fieldset></form>
 <p class="meta">登入狀態只保留到關閉這個分頁為止。</p></div>`},
@@ -1021,7 +1001,7 @@ V.login={
     else try{ok=(await sha('hk-resource-room:'+pw))===PASS_HASH}catch(x){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
     if(!ok){fails++;$('#lg-pw').value='';if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='密碼不正確。';return}
     fails=0;
-    if(!S.editor){err.textContent='密碼正確，但你的帳號在這個頁面沒有「編輯者」權限，無法讀取名單與登記冊。請請頁面擁有者在「分享」中把你設為編輯者。';return}
+    if(!S.editor){err.textContent='密碼正確，但你的帳號在這個頁面沒有「編輯者」權限，無法讀取借用與使用紀錄。請請頁面擁有者在「分享」中把你設為編輯者。';return}
     sess.set('rr-unlock',PASS_HASH);S.admin=true;startAdmin();toast('已登入資源教室管理');
     const to=S.after&&S.after!=='login'?S.after:'review';S.after=null;location.hash=to})}
 };
@@ -1031,7 +1011,6 @@ function startAdmin(){
   const done=k=>{S.got[k]=true;repaint([k])},fail=k=>()=>{S.got[k]=true;repaint([k])};
   adminUnsubs.push(db.collection('requests').onSnapshot(s=>{S.allReq=s.docs.map(d=>({id:d.id,...d.data()}));done('allReq')},fail('allReq')));
   adminUnsubs.push(db.collection('loans').onSnapshot(s=>{S.loans=s.docs.map(d=>({id:d.id,...d.data()}));done('loans')},fail('loans')));
-  adminUnsubs.push(db.collection('roster').onSnapshot(s=>{S.roster=s.docs.map(d=>({id:d.id,...d.data()}));done('roster')},fail('roster')));
   adminUnsubs.push(db.collection('usage').onSnapshot(s=>{S.usage=s.docs.flatMap(d=>(d.data().entries||[]).map(e=>({...e,uid:d.id})));done('usage')},fail('usage')));
   adminUnsubs.push(db.collection('surveys').onSnapshot(s=>{S.surveys=s.docs.flatMap(d=>d.data().responses||[]);done('surveys')},fail('surveys')));
 }
@@ -1059,7 +1038,7 @@ function makeDemoDb(){
 }
 const demoDownloads={async save({filename,data}){const b=data instanceof Blob?data:new Blob([data]);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);return{status:'saved'}}};
 function demoBanner(db){const b=document.createElement('div');b.className='demo-bar';b.innerHTML=`<div class="wrap"><span><b>展示版</b>：資料只存在這台電腦的瀏覽器，換電腦或清除瀏覽資料就會消失；正式使用請改用 claude.ai 上的版本。老師端請按「資源教室登入」。</span><button class="small" id="demo-reset">清除展示資料</button></div>`;
-  document.querySelector('header.top').after(b);b.querySelector('#demo-reset').onclick=()=>confirmBox('清除所有展示資料？','申請、登記冊、名單與問卷都會清空，器材清單恢復預設。','清除',()=>db.reset())}
+  document.querySelector('header.top').after(b);b.querySelector('#demo-reset').onclick=()=>confirmBox('清除所有展示資料？','申請、借用紀錄、使用紀錄與問卷都會清空，器材清單恢復預設。','清除',()=>db.reset())}
 
 /* ---------- Google 試算表資料庫（GitHub Pages 正式版） ---------- */
 function makeGasDb(api){
