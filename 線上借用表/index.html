@@ -149,8 +149,6 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padd
 <div id="modal" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* Google 試算表資料庫網址（Apps Script 網頁應用程式）。留空 = 展示版，資料只存在瀏覽器。 */
 const API_URL='https://script.google.com/macros/s/AKfycby-Ejb2weptdOCqGR6JFbrd9mAToo09d10haGf_8-K3kR4L7WqlXulmDNUazSXRAxCv/exec';
@@ -229,8 +227,10 @@ function route(){
   $('#view').innerHTML=v.shell(p);
   v.bind&&v.bind(p);
   v.paint&&v.paint(p);
+  setTimeout(maybeSurveyPopup,300);
 }
-window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0)});
+let lastNavRefresh=0;
+window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0);if(S.db&&S.db.refresh&&Date.now()-lastNavRefresh>2500){lastNavRefresh=Date.now();S.db.refresh()}});
 function repaint(keys){
   $('#nav').innerHTML=navHtml();
   const o=$('#office');o.textContent=S.config.office?`　聯絡：${S.config.office}`:'';
@@ -316,6 +316,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
   paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.qr();this.detail(false)},
   qr(){const box=$('#a-qr');if(!box)return;const u=(S.config.url||'').replace(/#.*$/,'');
     if(!u){box.hidden=true;return}box.hidden=false;const url=u;if(box.dataset.url===url)return;box.dataset.url=url;
+    if(!window.qrcode){loadQR().then(()=>{box.dataset.url='';this.qr()}).catch(()=>{});box.hidden=true;return}
     box.innerHTML=`<div class="qrbox">${qrSvg(url)}</div><b>手機掃描申請</b><span class="meta">貼在資源教室門口，學生掃描即可線上預借</span>${S.admin?'<button class="small" id="a-qr-dl">下載 PNG</button>':''}`;
     const b=$('#a-qr-dl');if(b)b.onclick=async()=>saveFile('QR_apply_線上預借申請.png',await qrPng(url,'線上預借申請','掃描閱讀借用規定並申請'))},
   type(){return ($('input[name=a-type]:checked')||{}).value||'item'},
@@ -509,6 +510,26 @@ ${x.cat==='space'||x.cat==='leisure'?`<h2>近期已預約時段</h2>${upcoming.l
 };
 
 /* ===== 滿意度問卷 ===== */
+async function saveSurvey(resp,fr){
+  await serial('srv',async()=>{const ref=S.db.doc('surveys/'+S.uid);if(S.gas){await ref.set({responses:[resp],updatedAt:nowStr()});return}/* 伺服器會自動接在舊回覆後面 */const snap=await ref.get();const list=snap.exists?[...(snap.data().responses||[])]:[];list.push(resp);await ref.set({responses:list,updatedAt:nowStr()})});
+  if(fr)await V.mine.setStatus(fr.id,{surveyed:true,surveyedAt:nowStr()},'已收到問卷，謝謝');
+}
+/* 借用完成（老師點收）後自動跳出問卷 */
+const popShown={};
+function maybeSurveyPopup(){
+  if(!S.ready||curView==='survey'||curView==='login'||ADMIN_TABS.some(t=>t[0]===curView)||!$('#modal').hidden)return;
+  const r=S.myReq.find(x=>needSurvey(x)&&!popShown[x.id]);if(!r)return;popShown[r.id]=true;
+  openModal(`<div><p class="eyebrow">借用完成</p><h2 style="margin:4px 0 0">謝謝使用！請填寫滿意度問卷</h2><p class="meta" style="margin:6px 0 0">${h(r.itemName)}・${fmtDate(r.date)}・歸還於 <span class="mono">${h(r.returnedAt||'')}</span>。大約 1 分鐘，只有資源教室老師看得到。</p></div>
+<form id="pp-form" novalidate>${Q.map(([k,t])=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${t}</p><div class="scale">${SCALE.map((sc,i)=>`<label><input type="radio" name="p${k}" value="${i+1}"><b>${i+1}</b>${sc}</label>`).join('')}</div></div>`).join('')}
+<label class="f" style="margin-top:10px">建議或想說的話（選填）<textarea id="pp-comment"></textarea></label>
+<p class="err" id="pp-err" role="alert"></p><div class="row"><button class="primary" type="submit" id="pp-ok">送出問卷</button><button type="button" data-close>稍後再填</button></div></form>`,m=>{
+    m.querySelector('#pp-form').onsubmit=async e=>{e.preventDefault();const err=$('#pp-err');err.textContent='';
+      const ans={};for(const [k] of Q){const c=m.querySelector(`input[name=p${k}]:checked`);if(!c){err.textContent='請為每個項目選擇分數。';return}ans[k]=+c.value}
+      $('#pp-ok').disabled=true;
+      try{await saveSurvey({id:newId(),target:surveyTarget(r),...ans,comment:$('#pp-comment').value.trim(),at:nowStr(),reqId:r.id,itemName:r.itemName},r);closeModal();toast('已收到問卷，謝謝你的回饋！')}
+      catch(x){$('#pp-ok').disabled=false;err.textContent='送出失敗，請稍後再試。'}};
+  });
+}
 V.survey={
   deps:['config'],
   shell(){const fr=S.surveyFor&&S.myReq.find(r=>r.id===S.surveyFor);const tg=fr?surveyTarget(fr):SURVEY_TARGETS[0];
@@ -530,8 +551,7 @@ ${fr?`<div class="note info" style="margin-bottom:16px">這份問卷對應你借
     const resp={id:newId(),target:$('input[name=s-target]:checked').value,...ans,comment:$('#s-comment').value.trim(),at:nowStr(),...(fr?{reqId:fr.id,itemName:fr.itemName}:{})};
     $('#s-submit').disabled=true;
     try{
-      await serial('srv',async()=>{const ref=S.db.doc('surveys/'+S.uid);const snap=await ref.get();const list=snap.exists?[...(snap.data().responses||[])]:[];list.push(resp);await ref.set({responses:list,updatedAt:nowStr()})});
-      if(fr)await V.mine.setStatus(fr.id,{surveyed:true,surveyedAt:nowStr()},'已收到問卷，謝謝');
+      await saveSurvey(resp,fr);
       S.surveyFor=null;$('#s-form').hidden=true;$('#s-done').hidden=false;
       $('#s-done').innerHTML=`<div class="note ok" style="padding:20px"><b>已收到你的回饋，謝謝！</b><br>若你在悅讀書房，請記得到資源教室告知使用完畢並領回證件。</div><p class="row"><a href="#mine">回到學生/職員申請</a><button id="s-again">再填一份</button></p>`;
       $('#s-again').onclick=()=>route();
@@ -684,7 +704,10 @@ function mapRows(rows,alias){
   const out=rows.map(r=>{const o={};for(const [k,hd] of Object.entries(map))o[k]=r[hd]==null?'':String(r[hd]).trim();return o});
   return {out,used,unused:heads.filter(x=>!used.includes(x)),map};
 }
+let xlsxP=null;
+function loadXLSX(){if(window.XLSX)return Promise.resolve();if(!xlsxP)xlsxP=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=ok;sc.onerror=()=>{xlsxP=null;no(new Error('Excel 元件載入失敗'))};document.head.appendChild(sc)});return xlsxP}
 async function readSheet(file){
+  await loadXLSX();
   const buf=await file.arrayBuffer();
   const wb=file.name.toLowerCase().endsWith('.csv')?XLSX.read(new TextDecoder('utf-8').decode(buf).replace(/^﻿/,''),{type:'string',cellDates:true}):XLSX.read(buf,{type:'array',cellDates:true});
   const rows=[];for(const n of wb.SheetNames){const r=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:true});const valid=r.filter(o=>Object.values(o).some(v=>String(v).trim()));rows.push(...valid);if(valid.length)break}
@@ -693,9 +716,9 @@ async function readSheet(file){
 let DL=null;
 async function saveFile(filename,data){
   if(!DL){toast('這個檢視無法下載檔案，請在 claude.ai 開啟此頁');return}
-  try{await DL.save({filename,data});}catch(e){if(e&&e.code!=='declined')toast('下載失敗：'+(e.message||e.code))}
+  try{data=await data;await DL.save({filename,data});}catch(e){if(e&&e.code!=='declined')toast('下載失敗：'+(e.message||e.code))}
 }
-function xlsxBlob(sheets){const wb=XLSX.utils.book_new();for(const [name,aoa,widths] of sheets){const ws=XLSX.utils.aoa_to_sheet(aoa);if(widths)ws['!cols']=widths.map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,name)}return new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})])}
+async function xlsxBlob(sheets){await loadXLSX();const wb=XLSX.utils.book_new();for(const [name,aoa,widths] of sheets){const ws=XLSX.utils.aoa_to_sheet(aoa);if(widths)ws['!cols']=widths.map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,name)}return new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})])}
 async function batchWrite(docs,label,onProgress){let done=0;
   if(S.db.batch){for(let i=0;i<docs.length;i+=100){await S.db.batch(docs.slice(i,i+100));done+=Math.min(100,docs.length-i);onProgress&&onProgress(done)}return}
   for(let i=0;i<docs.length;i+=8){await Promise.all(docs.slice(i,i+8).map(([p,d])=>S.db.doc(p).set(d)));done+=Math.min(8,docs.length-i);onProgress&&onProgress(done)}}
@@ -791,13 +814,15 @@ V.roster={
 };
 
 /* ===== 器材與 QR (admin) ===== */
+let qrP=null;
+function loadQR(){if(window.qrcode)return Promise.resolve();if(!qrP)qrP=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';sc.onload=ok;sc.onerror=()=>{qrP=null;no()};document.head.appendChild(sc)});return qrP}
 function qrSvg(text){const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}
-function qrPng(text,title,sub){
+async function qrPng(text,title,sub){await loadQR();
   const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=10,m=4*cell,size=n*cell+m*2,W=size,H=size+110;
   const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);g.fillStyle='#111';
   for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))g.fillRect(m+k*cell,m+r*cell,cell,cell);
   g.textAlign='center';g.font='bold 30px "Noto Sans TC",sans-serif';g.fillText(title,W/2,size+38);g.font='22px "Noto Sans TC",sans-serif';g.fillStyle='#444';g.fillText(sub,W/2,size+76);
-  return new Promise(res=>c.toBlob(res,'image/png'));
+  return await new Promise(res=>c.toBlob(res,'image/png'));
 }
 function qrTargets(){const u=(S.config.url||'').replace(/#.*$/,'');if(!u)return [];
   return [{code:'apply',title:'線上預借申請',sub:'掃描閱讀借用規定並申請',url:u},{code:'survey',title:'使用滿意度問卷',sub:'使用後請掃描填寫',url:u+'#survey'},{code:'items',title:'器材與空間一覽',sub:'查看可借器材',url:u+'#items'},
@@ -934,37 +959,65 @@ function demoBanner(db){const b=document.createElement('div');b.className='demo-
 
 /* ---------- Google 試算表資料庫（GitHub Pages 正式版） ---------- */
 function makeGasDb(api){
-  const subs=new Set();let timer=null,inflight=false,again=false;
-  const meta={fromCache:false,hasPendingWrites:false};
+  const subs=new Set();let timer=null,inflight=false,again=false,saveT=null,pend=0,chain=Promise.resolve();
+  const meta={fromCache:false,hasPendingWrites:false},PUB=['catalog','config','calendar'];
+  const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
+  const cache={},loadedCols=new Set();
+  try{const c=JSON.parse(localStorage.getItem('rr-cache')||'{}');Object.assign(cache,c.docs||{});(c.cols||[]).forEach(x=>loadedCols.add(x))}catch(e){}
+  const keep=k=>PUB.includes(k.split('/')[0])||(S.uid&&k==='requests/'+S.uid);
+  const persist=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{const docs={};for(const k in cache)if(keep(k))docs[k]=cache[k];
+    try{localStorage.setItem('rr-cache',JSON.stringify({docs,cols:[...loadedCols].filter(c=>PUB.includes(c))}))}catch(e){}},300)};
   const call=async body=>{
     const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...body,uid:S.uid||'',pw:sess.get('rr-pw')||undefined})});
     let j;try{j=await r.json()}catch(e){throw{code:'unavailable',message:'伺服器沒有回應'}}
     if(!j.ok)throw{code:j.code||'unavailable',message:j.message||''};return j};
-  const snap=(path,data)=>({id:path.split('/').pop(),exists:data!=null,data:()=>data==null?undefined:JSON.parse(JSON.stringify(data)),metadata:meta});
+  const snap=(path,data)=>({id:path.split('/').pop(),exists:data!=null,data:()=>clone(data)??undefined,metadata:meta});
+  const colDocs=p=>{const n=p.split('/').length+1;return Object.keys(cache).filter(k=>k.startsWith(p+'/')&&k.split('/').length===n&&cache[k]!=null).sort().map(k=>snap(k,cache[k]))};
+  function emit(x,force){
+    if(x.kind==='doc'){if(!(x.path in cache))return;const key=JSON.stringify(cache[x.path]);if(!force&&key===x.last)return;x.last=key;x.next(snap(x.path,cache[x.path]))}
+    else{if(!loadedCols.has(x.path))return;const docs=colDocs(x.path);const key=JSON.stringify(docs.map(d=>[d.id,cache[x.path+'/'+d.id]]));if(!force&&key===x.last)return;x.last=key;
+      x.next({docs,size:docs.length,empty:!docs.length,metadata:meta,docChanges:()=>[]})}
+  }
+  const emitAll=()=>subs.forEach(x=>emit(x));
   async function refresh(){
-    if(inflight){again=true;return}const list=[...subs];if(!list.length)return;inflight=true;
+    if(pend>0)return;if(inflight){again=true;return}const list=[...subs];if(!list.length)return;inflight=true;
     try{const j=await call({op:'read',reads:list.map(x=>({kind:x.kind,path:x.path}))});
-      j.results.forEach((res,i)=>{const x=list[i];if(!subs.has(x))return;const key=JSON.stringify(res);if(key===x.last)return;x.last=key;
-        if(x.kind==='doc')x.next(snap(x.path,res.data));
-        else{const docs=(res.docs||[]).map(d=>snap(x.path+'/'+d.id,d.data));x.next({docs,size:docs.length,empty:!docs.length,metadata:meta,docChanges:()=>[]})}});
-      S.offline=false;
+      j.results.forEach((res,i)=>{const x=list[i];
+        if(x.kind==='doc')cache[x.path]=res.data;
+        else{const n=x.path.split('/').length+1,seen=new Set();(res.docs||[]).forEach(d=>{const k=x.path+'/'+d.id;cache[k]=d.data;seen.add(k)});
+          Object.keys(cache).forEach(k=>{if(k.startsWith(x.path+'/')&&k.split('/').length===n&&!seen.has(k))delete cache[k]});loadedCols.add(x.path)}});
+      if(pend>0){again=true;return}
+      persist();emitAll();
+      if(S.offline){S.offline=false;repaint(['config','myReq'])}
     }catch(e){if(!S.offline){S.offline=true;repaint(['config','myReq'])}}
     finally{inflight=false;if(again){again=false;refresh()}}
   }
-  const soon=()=>{clearTimeout(timer);timer=setTimeout(refresh,60)};
-  setInterval(()=>{if(document.visibilityState!=='hidden')refresh()},15000);
+  const soon=(ms=40)=>{clearTimeout(timer);timer=setTimeout(refresh,ms)};
+  setInterval(()=>{if(document.visibilityState!=='hidden')refresh()},10000);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh()});
-  const sub=(kind,path,next)=>{const x={kind,path,next};subs.add(x);soon();return()=>subs.delete(x)};
-  const w=async(op,path,data)=>{await call({op,path,data});soon()};
+  const sub=(kind,path,next)=>{const x={kind,path,next};subs.add(x);setTimeout(()=>emit(x,true),0);soon();return()=>subs.delete(x)};
+  const merge=(t,src)=>{for(const[k,v]of Object.entries(src)){if(v&&typeof v==='object'&&!Array.isArray(v)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))merge(t[k],v);else t[k]=clone(v)}return t};
+  /* 先更新畫面，再送到 Google；失敗就還原 */
+  /* 寫入依序送出、不擋畫面；失敗時提示並重新讀取 */
+  function send(body){pend++;chain=chain.then(()=>call(body)).then(()=>{persist()},e=>{toast(e&&e.message&&e.code!=='unavailable'?'儲存失敗：'+e.message:'有資料沒有存到資料庫，請檢查網路後重試');loadedCols.clear();Object.keys(cache).forEach(k=>delete cache[k])})
+    .finally(()=>{pend--;if(!pend)soon(150)});return chain}
+  async function write(op,path,data){
+    if(op==='update'&&cache[path]==null&&!(path in cache)){const d=(await call({op:'get',path})).data;cache[path]=d}
+    if(op==='update'&&cache[path]==null)throw{code:'invalid_argument',message:'missing'};
+    if(op==='set')cache[path]=clone(data);else if(op==='update')cache[path]=merge(clone(cache[path]),data);else cache[path]=null;
+    emitAll();send({op,path,data});
+  }
+  const watched=p=>[...subs].some(x=>x.kind==='doc'?x.path===p:p.startsWith(x.path+'/')&&loadedCols.has(x.path));
   const doc=p=>({id:p.split('/').pop(),path:p,
-    get:async()=>snap(p,(await call({op:'get',path:p})).data),
-    set:d=>w('set',p,d),update:d=>w('update',p,d),delete:()=>w('delete',p),
+    get:async()=>{if(p in cache&&watched(p))return snap(p,cache[p]);const d=(await call({op:'get',path:p})).data;cache[p]=d;return snap(p,d)},
+    set:d=>write('set',p,d),update:d=>write('update',p,d),delete:()=>write('delete',p),
     onSnapshot:(next,err)=>sub('doc',p,next),collection:c=>col(p+'/'+c)});
   const col=p=>({path:p,doc:id=>doc(p+'/'+(id||newId())),
     get:async()=>{const j=await call({op:'read',reads:[{kind:'col',path:p}]});const docs=j.results[0].docs.map(d=>snap(p+'/'+d.id,d.data));return{docs,size:docs.length,empty:!docs.length,metadata:meta}},
     onSnapshot:(next,err)=>sub('col',p,next)});
   return{doc,collection:col,refresh,
-    batch:async writes=>{await call({op:'batch',writes:writes.map(([path,data])=>({op:'set',path,data}))});soon()},
+    forget(prefix){Object.keys(cache).forEach(k=>{if(k.startsWith(prefix))delete cache[k]});persist()},
+    batch:async writes=>{writes.forEach(([path,data])=>cache[path]=clone(data));emitAll();await send({op:'batch',writes:writes.map(([path,data])=>({op:'set',path,data}))})},
     login:async pw=>{try{const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'login',pw})});return !!(await r.json()).ok}catch(e){throw{code:'unavailable'}}}};
 }
 const digits=s=>String(s||'').replace(/\D/g,'');
@@ -974,13 +1027,13 @@ async function setIdentity(no,phone,name){
   if(uid!==S.uid){S.uid=uid;subMine()}
   return uid;
 }
-function clearIdentity(){try{localStorage.removeItem('rr-id')}catch(e){}S.uid=null;S.myReq=[];if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}S.got.myReq=false;route()}
+function clearIdentity(){try{localStorage.removeItem('rr-id')}catch(e){}if(S.db&&S.db.forget)S.db.forget('requests/');S.uid=null;S.myReq=[];if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}S.got.myReq=false;route()}
 function anonUid(){let a=local.get('rr-anon');if(!a){const b=new Uint8Array(32);crypto.getRandomValues(b);a='u'+[...b].map(x=>x.toString(16).padStart(2,'0')).join('');local.set('rr-anon',a)}return a}
 function subMine(){
   if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}
   S.myReq=[];S.got.myReq=false;
   if(!S.db||!S.uid)return;
-  S.mineUnsub=S.db.doc('requests/'+S.uid).onSnapshot(s=>{S.myReq=s.exists?(s.data().list||[]):[];S.got.myReq=true;repaint(['myReq'])},()=>{S.got.myReq=true;repaint(['myReq'])});
+  S.mineUnsub=S.db.doc('requests/'+S.uid).onSnapshot(s=>{S.myReq=s.exists?(s.data().list||[]):[];S.got.myReq=true;repaint(['myReq']);maybeSurveyPopup()},()=>{S.got.myReq=true;repaint(['myReq'])});
 }
 
 /* ---------- boot ---------- */
