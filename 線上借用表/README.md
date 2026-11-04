@@ -17,7 +17,7 @@
    - 執行身分：**我**
    - 誰可以存取：**所有人**
 6. 按「部署」，複製「網頁應用程式網址」（https://script.google.com/macros/s/…/exec）。
-7. 把網址填到 `index.html` 的 `const API_URL='';` 引號中間（或交給 Claude 更新）。
+7. 網址已填入 `index.html` 的 `API_URL`。重新部署時請用「管理部署作業 → 編輯 → 新版本」，網址才不會變。
 
 `API_URL` 留空時，網頁是「展示版」，資料只存在自己的瀏覽器。
 
