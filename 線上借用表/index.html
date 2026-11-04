@@ -152,6 +152,8 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padd
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+/* Google 試算表資料庫網址（Apps Script 網頁應用程式）。留空 = 展示版，資料只存在瀏覽器。 */
+const API_URL='';
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -242,7 +244,8 @@ function repaint(keys){
 }
 function gateNotice(){
   if(S.noDb)return `<div class="note warn">這個頁面目前無法連線到資料庫。請登入 claude.ai 並從資源教室提供的連結開啟；若仍看到此訊息，請向資源教室老師確認你的分享權限（需為「參與者」以上）。</div>`;
-  if(S.ready&&!S.uid)return `<div class="note warn">無法辨識你的帳號，因此無法送出申請。請先登入後再開啟此頁。</div>`;
+  if(S.offline)return `<div class="note warn">目前連不上資料庫，畫面可能不是最新的。請檢查網路後重新整理。</div>`;
+  if(S.ready&&!S.uid&&!S.gas)return `<div class="note warn">無法辨識你的帳號，因此無法送出申請。請先登入後再開啟此頁。</div>`;
   if(S.stale)return `<div class="note">資料連線較慢，目前顯示的內容可能不是最新的。</div>`;
   return '';
 }
@@ -383,7 +386,8 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
     const t=this.type(),v=id=>(($('#'+id)||{}).value||'').trim();
     const ap={role:v('a-role'),no:v('a-no').toUpperCase(),name:v('a-name'),dept:v('a-dept'),phone:v('a-phone')};
     const fail=m=>{err.textContent=m;return false};
-    if(!S.db||!S.uid)return fail('目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
+    if(S.gas&&ap.no&&ap.phone){const before=S.uid;await setIdentity(ap.no,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
+    if(!S.db||!S.uid)return fail(S.gas?'請先填寫學號／員工編號與聯絡電話。':'目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
     if(S.myReq.some(needSurvey))return fail('你有已歸還的借用尚未填寫滿意度問卷，請先到「學生/職員申請」填寫後再送出新的申請。');
     if(!ap.no||!ap.name||!ap.dept||!ap.phone)return fail('請填寫申請人的學號／員工編號、姓名、系級／單位與聯絡電話。');
     const purpose=v('a-purpose'),min=addDays(today(),3);
@@ -445,7 +449,14 @@ V.mine={
   deps:['myReq','catalog'],
   shell(){return `<h1>學生/職員申請</h1><p class="lede">這頁只顯示<b>你自己</b>送出的申請，其他人看不到。審核結果、借出與歸還紀錄都在這裡。器材用完後按「確認歸還」，並把器材帶回資源教室由老師點收。學生在歸還完成後請填寫滿意度問卷（教職員不需填寫）。</p><div id="m-gate"></div><div id="m-list" class="list"></div>`},
   paint(){
-    $('#m-gate').innerHTML=gateNotice()+pendingSurveyNote();
+    const id=local.get('rr-id');
+    if(S.gas&&(!S.uid||!id||id.uid!==S.uid)){
+      $('#m-gate').innerHTML=gateNotice();
+      $('#m-list').innerHTML=`<form id="m-find" class="card" style="max-width:520px" novalidate><h3>查詢我的申請</h3><p class="meta" style="margin:0">請輸入申請時填寫的學號／員工編號與聯絡電話。</p><div class="grid"><label class="f">學號／員工編號<input id="mf-no" autocomplete="off"></label><label class="f">聯絡電話<input id="mf-phone" type="tel"></label></div><p class="err" id="mf-err"></p><button class="primary" type="submit">查詢</button></form>`;
+      $('#m-find').onsubmit=async e=>{e.preventDefault();const no=$('#mf-no').value.trim(),ph=$('#mf-phone').value.trim();if(!no||!digits(ph)){$('#mf-err').textContent='請填寫學號與電話。';return}await setIdentity(no,ph);this.paint()};
+      return}
+    $('#m-gate').innerHTML=gateNotice()+(S.gas?`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> <span class="mono">${h(id.no)}</span></span><button class="small" id="m-switch">不是你？切換身分</button></div>`:'')+pendingSurveyNote();
+    if(S.gas)$('#m-switch').onclick=()=>clearIdentity();
     const list=[...S.myReq].sort((a,b)=>needSurvey(a)!==needSurvey(b)?(needSurvey(a)?-1:1):(a.createdAt<b.createdAt?1:-1));
     if(!S.got.myReq&&S.uid){$('#m-list').innerHTML='<p class="note">載入中…</p>';return}
     if(!list.length){$('#m-list').innerHTML=`<div class="empty">你還沒有送出任何申請。<br><a href="#apply">前往申請借用</a></div>`;return}
@@ -519,6 +530,7 @@ ${fr?`<div class="note info" style="margin-bottom:16px">這份問卷對應你借
   async submit(){
     const err=$('#s-err');err.textContent='';
     const ans={};for(const [k] of Q){const c=$(`input[name=${k}]:checked`);if(!c){err.textContent='請為每個項目選擇分數。';return}ans[k]=+c.value}
+    if(S.gas&&!S.uid)S.uid=anonUid();
     if(!S.db||!S.uid){err.textContent='目前無法送出：請登入後從資源教室提供的連結開啟此頁。';return}
     const forId=S.surveyFor,fr=forId&&S.myReq.find(r=>r.id===forId);
     const resp={id:newId(),target:$('input[name=s-target]:checked').value,...ans,comment:$('#s-comment').value.trim(),at:nowStr(),...(fr?{reqId:fr.id,itemName:fr.itemName}:{})};
@@ -691,7 +703,9 @@ async function saveFile(filename,data){
   try{await DL.save({filename,data});}catch(e){if(e&&e.code!=='declined')toast('下載失敗：'+(e.message||e.code))}
 }
 function xlsxBlob(sheets){const wb=XLSX.utils.book_new();for(const [name,aoa,widths] of sheets){const ws=XLSX.utils.aoa_to_sheet(aoa);if(widths)ws['!cols']=widths.map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,name)}return new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})])}
-async function batchWrite(docs,label,onProgress){let done=0;for(let i=0;i<docs.length;i+=8){await Promise.all(docs.slice(i,i+8).map(([p,d])=>S.db.doc(p).set(d)));done+=Math.min(8,docs.length-i);onProgress&&onProgress(done)}}
+async function batchWrite(docs,label,onProgress){let done=0;
+  if(S.db.batch){for(let i=0;i<docs.length;i+=100){await S.db.batch(docs.slice(i,i+100));done+=Math.min(100,docs.length-i);onProgress&&onProgress(done)}return}
+  for(let i=0;i<docs.length;i+=8){await Promise.all(docs.slice(i,i+8).map(([p,d])=>S.db.doc(p).set(d)));done+=Math.min(8,docs.length-i);onProgress&&onProgress(done)}}
 function importDialog(kind){
   const L=kind==='ledger';const alias=L?LEDGER_ALIAS:ROSTER_ALIAS,cols=L?LEDGER_COLS.filter(c=>c[0]!=='outAt'&&c[0]!=='statusText'):ROSTER_COLS;
   openModal(`<h2 style="margin:0">${L?'匯入借用登記冊':'匯入借用名單'}</h2>
@@ -869,7 +883,7 @@ const PASS_HASH='9d6573f4edcc85a7d4693459d49732efd1539f14563508221b9b4e6d2572d98
 const sess={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 let fails=0,lockUntil=0;
-function logout(){S.admin=false;sess.set('rr-unlock',null);
+function logout(){S.admin=false;sess.set('rr-unlock',null);sess.set('rr-pw',null);
   adminUnsubs.forEach(u=>{try{u()}catch(e){}});adminUnsubs=[];adminStarted=false;
   S.allReq=[];S.loans=[];S.roster=[];S.surveys=[];['allReq','loans','roster','surveys'].forEach(k=>delete S.got[k]);S.notes={};
   closeModal();toast('已登出資源教室管理');
@@ -881,7 +895,9 @@ V.login={
 <p class="meta">登入狀態只保留到關閉這個分頁為止。</p></div>`},
   bind(){$('#lg-form').addEventListener('submit',async e=>{e.preventDefault();const err=$('#lg-err');err.textContent='';
     if(Date.now()<lockUntil){err.textContent=`嘗試次數過多，請 ${Math.ceil((lockUntil-Date.now())/1000)} 秒後再試。`;return}
-    let ok=false;try{ok=(await sha('hk-resource-room:'+$('#lg-pw').value))===PASS_HASH}catch(x){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
+    let ok=false;const pw=$('#lg-pw').value;
+    if(S.gas){try{ok=await S.db.login(pw)}catch(x){err.textContent='連不上資料庫，請檢查網路後再試。';return}if(ok)sess.set('rr-pw',pw)}
+    else try{ok=(await sha('hk-resource-room:'+pw))===PASS_HASH}catch(x){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
     if(!ok){fails++;$('#lg-pw').value='';if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='密碼不正確。';return}
     fails=0;
     if(!S.editor){err.textContent='密碼正確，但你的帳號在這個頁面沒有「編輯者」權限，無法讀取名單與登記冊。請請頁面擁有者在「分享」中把你設為編輯者。';return}
@@ -923,6 +939,57 @@ const demoDownloads={async save({filename,data}){const b=data instanceof Blob?da
 function demoBanner(db){const b=document.createElement('div');b.className='demo-bar';b.innerHTML=`<div class="wrap"><span><b>展示版</b>：資料只存在這台電腦的瀏覽器，換電腦或清除瀏覽資料就會消失；正式使用請改用 claude.ai 上的版本。老師端請按「資源教室登入」。</span><button class="small" id="demo-reset">清除展示資料</button></div>`;
   document.querySelector('header.top').after(b);b.querySelector('#demo-reset').onclick=()=>confirmBox('清除所有展示資料？','申請、登記冊、名單與問卷都會清空，器材清單恢復預設。','清除',()=>db.reset())}
 
+/* ---------- Google 試算表資料庫（GitHub Pages 正式版） ---------- */
+function makeGasDb(api){
+  const subs=new Set();let timer=null,inflight=false,again=false;
+  const meta={fromCache:false,hasPendingWrites:false};
+  const call=async body=>{
+    const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...body,uid:S.uid||'',pw:sess.get('rr-pw')||undefined})});
+    let j;try{j=await r.json()}catch(e){throw{code:'unavailable',message:'伺服器沒有回應'}}
+    if(!j.ok)throw{code:j.code||'unavailable',message:j.message||''};return j};
+  const snap=(path,data)=>({id:path.split('/').pop(),exists:data!=null,data:()=>data==null?undefined:JSON.parse(JSON.stringify(data)),metadata:meta});
+  async function refresh(){
+    if(inflight){again=true;return}const list=[...subs];if(!list.length)return;inflight=true;
+    try{const j=await call({op:'read',reads:list.map(x=>({kind:x.kind,path:x.path}))});
+      j.results.forEach((res,i)=>{const x=list[i];if(!subs.has(x))return;const key=JSON.stringify(res);if(key===x.last)return;x.last=key;
+        if(x.kind==='doc')x.next(snap(x.path,res.data));
+        else{const docs=(res.docs||[]).map(d=>snap(x.path+'/'+d.id,d.data));x.next({docs,size:docs.length,empty:!docs.length,metadata:meta,docChanges:()=>[]})}});
+      S.offline=false;
+    }catch(e){if(!S.offline){S.offline=true;repaint(['config','myReq'])}}
+    finally{inflight=false;if(again){again=false;refresh()}}
+  }
+  const soon=()=>{clearTimeout(timer);timer=setTimeout(refresh,60)};
+  setInterval(()=>{if(document.visibilityState!=='hidden')refresh()},15000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh()});
+  const sub=(kind,path,next)=>{const x={kind,path,next};subs.add(x);soon();return()=>subs.delete(x)};
+  const w=async(op,path,data)=>{await call({op,path,data});soon()};
+  const doc=p=>({id:p.split('/').pop(),path:p,
+    get:async()=>snap(p,(await call({op:'get',path:p})).data),
+    set:d=>w('set',p,d),update:d=>w('update',p,d),delete:()=>w('delete',p),
+    onSnapshot:(next,err)=>sub('doc',p,next),collection:c=>col(p+'/'+c)});
+  const col=p=>({path:p,doc:id=>doc(p+'/'+(id||newId())),
+    get:async()=>{const j=await call({op:'read',reads:[{kind:'col',path:p}]});const docs=j.results[0].docs.map(d=>snap(p+'/'+d.id,d.data));return{docs,size:docs.length,empty:!docs.length,metadata:meta}},
+    onSnapshot:(next,err)=>sub('col',p,next)});
+  return{doc,collection:col,refresh,
+    batch:async writes=>{await call({op:'batch',writes:writes.map(([path,data])=>({op:'set',path,data}))});soon()},
+    login:async pw=>{try{const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'login',pw})});return !!(await r.json()).ok}catch(e){throw{code:'unavailable'}}}};
+}
+const digits=s=>String(s||'').replace(/\D/g,'');
+async function setIdentity(no,phone,name){
+  const uid='u'+await sha(String(no).toUpperCase().trim()+'|'+digits(phone));
+  local.set('rr-id',{uid,no:String(no).toUpperCase().trim(),name:name||''});
+  if(uid!==S.uid){S.uid=uid;subMine()}
+  return uid;
+}
+function clearIdentity(){try{localStorage.removeItem('rr-id')}catch(e){}S.uid=null;S.myReq=[];if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}S.got.myReq=false;route()}
+function anonUid(){let a=local.get('rr-anon');if(!a){const b=new Uint8Array(32);crypto.getRandomValues(b);a='u'+[...b].map(x=>x.toString(16).padStart(2,'0')).join('');local.set('rr-anon',a)}return a}
+function subMine(){
+  if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}
+  S.myReq=[];S.got.myReq=false;
+  if(!S.db||!S.uid)return;
+  S.mineUnsub=S.db.doc('requests/'+S.uid).onSnapshot(s=>{S.myReq=s.exists?(s.data().list||[]):[];S.got.myReq=true;repaint(['myReq'])},()=>{S.got.myReq=true;repaint(['myReq'])});
+}
+
 /* ---------- boot ---------- */
 route();
 (async()=>{
@@ -930,13 +997,14 @@ route();
   const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
   if(!C||!C.use){
     if(inFrame){S.noDb=true;S.ready=true;repaint(['config']);return}
-    S.demo=true;db=makeDemoDb();dl=demoDownloads;user={id:async()=>'demo-user',canEdit:async()=>true};demoBanner(db);
-    db.doc('config/site').get().then(sn=>{const c=sn.data()||{};if(!c.url)db.doc('config/site').set({...c,url:location.origin+location.pathname})});
+    if(API_URL){S.gas=true;db=makeGasDb(API_URL);dl=demoDownloads;const id=local.get('rr-id');user={id:async()=>id&&id.uid||null,canEdit:async()=>true}}
+    else{S.demo=true;db=makeDemoDb();dl=demoDownloads;user={id:async()=>'demo-user',canEdit:async()=>true};demoBanner(db);
+    db.doc('config/site').get().then(sn=>{const c=sn.data()||{};if(!c.url)db.doc('config/site').set({...c,url:location.origin+location.pathname})})}
   }else [db,user,dl]=await Promise.all([C.use('db'),C.use('user'),C.use('downloads')]);
   DL=dl;S.db=db;S.user=user;
   if(!db){S.noDb=true;S.ready=true;repaint(['config','myReq']);route();return}
   if(user){try{S.uid=await user.id()}catch(e){} try{S.editor=!!(await user.canEdit())}catch(e){}}
-  S.admin=S.editor&&sess.get('rr-unlock')===PASS_HASH;
+  S.admin=S.gas?!!sess.get('rr-pw'):S.editor&&sess.get('rr-unlock')===PASS_HASH;
   S.ready=true;
   const timer=setTimeout(()=>{if(!S.got.catalog){S.stale=true;repaint(['config','catalog','myReq'])}},10000);
   const done=k=>{S.got[k]=true;if(k==='catalog'){clearTimeout(timer);S.stale=false}repaint([k])};
@@ -944,9 +1012,7 @@ route();
   db.collection('catalog').onSnapshot(s=>{S.catalog=s.docs.map(d=>d.data()).sort((a,b)=>(a.sort||0)-(b.sort||0));if(!s.metadata.fromCache)done('catalog');else repaint(['catalog'])},fail('catalog'));
   db.doc('config/site').onSnapshot(s=>{S.config=s.exists?{...s.data()}:{};done('config')},fail('config'));
   db.collection('calendar').onSnapshot(s=>{S.calendar=s.docs.map(d=>({id:d.id,...d.data()}));done('calendar')},fail('calendar'));
-  if(S.uid){
-    db.doc('requests/'+S.uid).onSnapshot(s=>{S.myReq=s.exists?(s.data().list||[]):[];done('myReq')},fail('myReq'));
-  }
+  subMine();
   if(S.admin)startAdmin();
   route();
 })();
