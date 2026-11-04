@@ -608,7 +608,7 @@ ${r.map((e,i)=>`<tr><td class="mono">${i+1}</td><td class="mono">${h(e.at)}</td>
 function invHtml(){
   if(!S.catalog.length)return '<p class="meta">器材清單載入中…</p>';
   return Object.entries(CATS).map(([c,t])=>{const l=S.catalog.filter(x=>x.cat===c);if(!l.length)return '';
-      return `<h3 style="margin:14px 0 6px">${t}</h3><div class="tablewrap"><table><thead><tr><th>名稱</th><th>代碼</th><th>${c==='space'?'狀態':'可借'}</th><th>說明</th></tr></thead><tbody>${l.map(x=>{const left=(x.qty||0)-(x.out||0);return `<tr><td><a href="#item-${h(x.code)}">${h(x.name)}</a></td><td class="mono">${h(x.code)}</td><td>${c==='space'?(x.out>0?'<span class="chip info">使用中</span>':'<span class="chip ok">可預約</span>'):`<span class="mono">${left}</span> / <span class="mono">${x.qty||0}</span>`}</td><td class="wrap">${h(x.note||'')}${x.longOk?' <span class="chip">可長期借用</span>':''}</td></tr>`}).join('')}</tbody></table></div>`}).join('');
+      return `<h3 style="margin:14px 0 6px">${t}</h3><div class="tablewrap"><table><thead><tr><th>名稱</th><th>${c==='space'?'狀態':'可借'}</th></tr></thead><tbody>${l.map(x=>{const left=(x.qty||0)-(x.out||0);return `<tr><td><a href="#item-${h(x.code)}">${h(x.name)}</a>${x.longOk?' <span class="chip">可長期借用</span>':''}</td><td>${c==='space'?(x.out>0?'<span class="chip info">使用中</span>':'<span class="chip ok">可預約</span>'):`<span class="mono">${left}</span> / <span class="mono">${x.qty||0}</span>`}</td></tr>`}).join('')}</tbody></table></div>`}).join('');
 }
 /* 舊的「器材一覽」連結：轉到申請借用設備並展開一覽表 */
 V.items={shell(){return '<p class="note">載入中…</p>'},bind(){S.openInv=true;location.replace('#apply')}};
