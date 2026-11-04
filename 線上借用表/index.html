@@ -376,7 +376,7 @@ V.apply={
 <a class="pickcard" href="#borrow"><span class="eyebrow">帶離教室・需老師審核</span><b>申請借用設備</b><span class="go">我要借設備 →</span></a>
 <a class="pickcard" href="#usage"><span class="eyebrow">教室內使用・免審核</span><b>設備使用登記</b><span class="go">我要登記使用 →</span></a>
 </div>
-<details class="inv" id="b-inv-box" style="margin-top:18px" ${S.openInv?'open':''}><summary>查看器材一覽表（目前可借數量與借用期限）</summary><div id="b-inv"></div></details>`},
+<details class="inv" id="b-inv-box" style="margin-top:18px" ${S.openInv?'open':''}><summary>查看器材一覽表（資源教室目前剩餘數量與借用期限）</summary><div id="b-inv"></div></details>`},
   deps:['config','myReq','catalog'],
   paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();V.borrow.qr();const iv=$('#b-inv');if(iv)iv.innerHTML=invHtml();if(S.openInv){S.openInv=false;const d=$('#b-inv-box');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),50)}}}
 };
@@ -440,7 +440,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     if(!S.catalog.length){html=`<fieldset><legend>品項</legend><p class="note">器材清單載入中…</p></fieldset>`}
     else if(t==='item'){
       const grp=c=>S.catalog.filter(x=>x.cat===c);
-      const opt=x=>{const left=(x.qty||0)-(x.out||0);return `<label class="choice"><input type="checkbox" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><span class="chip ${left>0?'ok':'warn'}">${left>0?`可借 ${left} 件`:'可先預約'}</span></span></label>`};
+      const opt=x=>{const left=(x.qty||0)-(x.out||0);return `<label class="choice"><input type="checkbox" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><span class="chip ${left>0?'ok':'warn'}">${left>0?`資源教室還剩 ${left} 件`:'目前已全部借出，可先預約'}</span></span></label>`};
       html=`<fieldset><legend>選擇器材（可複選）</legend><div class="stack">
 <h3>當天歸還</h3><div class="choices">${grp('general').map(opt).join('')}</div>
 <h3>3 天內歸還</h3><div class="choices">${grp('general3').map(opt).join('')}</div></div></fieldset>
@@ -705,7 +705,7 @@ ${r.map((e,i)=>`<tr><td class="mono">${i+1}</td><td class="mono">${h(e.at)}</td>
 function invHtml(){
   if(!S.catalog.length)return '<p class="meta">器材清單載入中…</p>';
   return Object.entries(CATS).map(([c,t])=>{const l=S.catalog.filter(x=>x.cat===c);if(!l.length)return '';
-      return `<h3 style="margin:14px 0 6px">${t}</h3><div class="tablewrap"><table><thead><tr><th>名稱</th><th>${c==='space'?'狀態':'可借'}</th></tr></thead><tbody>${l.map(x=>{const left=(x.qty||0)-(x.out||0);return `<tr><td><a href="#item-${h(x.code)}">${h(x.name)}</a>${x.longOk?' <span class="chip">可長期借用</span>':''}</td><td>${c==='space'?(x.out>0?'<span class="chip info">使用中</span>':'<span class="chip ok">可預約</span>'):`<span class="mono">${left}</span> / <span class="mono">${x.qty||0}</span>`}</td></tr>`}).join('')}</tbody></table></div>`}).join('');
+      return `<h3 style="margin:14px 0 6px">${t}</h3><div class="tablewrap"><table><thead><tr><th>名稱</th><th>${c==='space'?'狀態':'資源教室剩餘數量'}</th></tr></thead><tbody>${l.map(x=>{const left=(x.qty||0)-(x.out||0);return `<tr><td><a href="#item-${h(x.code)}">${h(x.name)}</a>${x.longOk?' <span class="chip">可長期借用</span>':''}</td><td>${c==='space'?(x.out>0?'<span class="chip info">使用中</span>':'<span class="chip ok">可預約</span>'):`還剩 <span class="mono">${left}</span> 件（共 <span class="mono">${x.qty||0}</span> 件）`}</td></tr>`}).join('')}</tbody></table></div>`}).join('');
 }
 /* 舊的「器材一覽」連結：轉到申請借用設備並展開一覽表 */
 V.items={shell(){return '<p class="note">載入中…</p>'},bind(){S.openInv=true;location.replace('#apply')}};
@@ -721,7 +721,7 @@ V.item={
     const upcoming=S.calendar.filter(c=>c.code===x.code&&c.date>=today()).sort((a,b)=>(a.date+a.start)<(b.date+b.start)?-1:1).slice(0,10);
     const rule=x.cat==='general'?'當天歸還':x.cat==='general3'?'3 天內歸還':x.cat==='leisure'?'當天歸還，限期中考第 10、11 週 18:00–20:00、期末考第 19 週 10:00–15:00':'週一至週五 08:00–20:00，該空間無人使用時才可借用';
     $('#it-box').innerHTML=`<p class="mono" style="color:var(--muted);margin:0">${h(x.code)}・${h(CATS[x.cat]||'')}</p><h1>${h(x.name)}</h1>
-<div class="tally"><div><b>${x.cat==='space'?(x.out>0?'使用中':'可預約'):left}</b><span>${x.cat==='space'?'目前狀態':'目前可借件數'}</span></div><div><b style="font-size:1rem;line-height:1.5">${rule}</b><span>借用期限</span></div></div>
+<div class="tally"><div><b>${x.cat==='space'?(x.out>0?'使用中':'可預約'):left}</b><span>${x.cat==='space'?'目前狀態':'資源教室目前還剩（件）'}</span></div><div><b style="font-size:1rem;line-height:1.5">${rule}</b><span>借用期限</span></div></div>
 ${x.note?`<p class="note">${h(x.note)}</p>`:''}
 ${x.cat==='space'||x.cat==='leisure'?`<h2>近期已預約時段</h2>${upcoming.length?`<div class="list">${upcoming.map(c=>`<div class="card" style="flex-direction:row;justify-content:space-between"><span>${fmtDate(c.date)}</span><span class="mono">${c.start}–${c.end}</span></div>`).join('')}</div>`:'<p class="empty">近期沒有人預約。</p>'}`:''}
 <div class="row" style="margin-top:18px"><button class="primary" id="it-apply">申請借用這${x.cat==='space'?'個空間':'項器材'}</button><a href="#survey">使用後填寫滿意度問卷</a></div>`;
