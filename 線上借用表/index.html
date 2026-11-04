@@ -281,22 +281,22 @@ V.rules={
   shell(){
     const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li><div>${x}</div></li>`).join('')}</ol></section>`;
     return `<article class="rules-doc"><p class="eyebrow">弘光科技大學</p><h1>資源教室空間器材借用辦法</h1>
-<p class="lede">申請借用前請詳閱以下規定。提出借用即表示願意接受並遵守本辦法。</p>
-${sec('壹、借用對象',['以本校領有鑑輔會證明之學生為優先。','本校教職員因業務需求方面需使用空間器材者。'])}
-${sec('貳、借用項目',['一般性器材借用：除直接於資源教室使用電腦（提供四台電腦）、印表機、影印機及掃描機外，請至資源教室填寫物品借用登記本（預借空間器材亦同，於使用日前三天登記），並攜帶證件（教職員證或學生證）領取。',
-'休閒性器材借用：需依照使用開放時間才可進行借用申請，於使用日前三天完成申請表填寫，經資源教室老師審核通過後，當日請借用人攜帶證件（教職員證或學生證）領取。<br><span class="mark">※一般性器材、休閒性器材皆須經過紙本登記與審核，未於規定時間內完成申請則不得借用。</span>',
-'長期借用器材：以學習輔具為主，如錄音筆、翻譯機、耳機等，且需依照當下借用數量評估是否能長期借用，借用時請填寫『長期借用申請單』。',
+<p class="lede"><b>提出借用即表示願意接受並遵守本辦法。</b></p>
+${sec('壹、借用對象',['以本校<b>領有鑑輔會證明之學生為優先</b>。','本校教職員因業務需求方面需使用空間器材者。'])}
+${sec('貳、借用項目',['一般性器材借用：除直接於資源教室使用電腦（提供四台電腦）、印表機、影印機及掃描機外，請至資源教室填寫物品借用登記本，<b>預借須於使用日前三天登記</b>，並<b>攜帶教職員證或學生證領取</b>。',
+'休閒性器材借用：需依照使用開放時間申請，<b>於使用日前三天完成申請</b>，經<b>資源教室老師審核通過</b>後，當日<b>攜帶教職員證或學生證領取</b>。<br><span class="mark"><b>未於規定時間完成登記與審核，不得借用。</b></span>',
+'長期借用器材：以學習輔具為主，如錄音筆、翻譯機、耳機等，需依照當下數量評估，借用時<b>須填寫「長期借用申請單」</b>。',
 '悅讀書房與課輔室之借用：需至資源教室詢問老師，該空間無人使用才得以借用，借用當日請攜帶個人證件至資源教室找工讀生或老師協助開門，使用後須至資源教室告知使用完畢並領回個人證件、填寫悅讀書房滿意度調查表。',
 '一般書籍、影片借用：借用方式請依照弘光科技大學資源教室圖書分館圖書借閱要點辦理。',
 '置物櫃借用申請：每學年度上學期開放申請，使用期限為一學年，以行動不便及無法提重物之身障生為優先（需於寒、暑假清空）。'])}
-${sec('參、借用方式',['申請借用及相關處理須於資源教室辦公時間辦理（寒暑假期間依學校正常辦公時間調整）。','申請借用／歸還時間為星期一至星期五 08:00 至 20:00，未於規定時間內將不予受理。','申請借用經確認後，若因故不借用，須提前通知資源教室，以供其他須使用者借用。'])}
+${sec('參、借用方式',['申請借用及相關處理<b>須於資源教室辦公時間辦理</b>（寒暑假依學校辦公時間調整）。','申請借用／歸還時間為<b>星期一至星期五 08:00 至 20:00</b>，未於規定時間內不予受理。','確認申請後若因故不借用，<b>須提前通知資源教室</b>。'])}
 ${sec('肆、借用規定',['於資源教室內使用休閒性器材時，若遇有人來訪或老師接聽電話時，請注意音量。','設備領取與歸還時，請借用者與資源教室老師依「物品借用申請單」所填寫之項目作清點與狀況檢查，一旦完成借出後，器材問題將由借用者負責。',
-'請準時辦理相關器材領取與歸還，並做好數量清點與狀況檢查，各項設備請妥善保管、使用，器材於出借期間因人為疏失造成損壞（如使用時發現器材異常請立即通知資源教室老師，隱情不報者視同損壞）、遺失，由資源教室老師審視損壞情形，借用之申請人需負擔<b>維修費用之 70% 至 100%</b> 不等或自行購買相同規格器材歸還資源教室。（非人為因素之損壞除外）',
+'請<b>準時領取與歸還</b>，並清點數量與檢查狀況。若因人為疏失造成損壞或遺失，借用人須負擔<b>維修費用 70% 至 100%</b>，或購買相同規格器材歸還。（非人為因素除外）',
 '使用器材須聽從協助者（資源教室老師）之督導。','各項器材上若有使用不明、疑問者，應詢問資源教室老師。','借用者一旦向資源教室提出借用，即表示願接受及遵守資源教室空間器材借用之相關規定。'])}
 ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則不予以核准。','活動內容安全考量為優先。'])}
 <section class="rule"><h2>陸、器材明細及借用辦法</h2>
 <div class="tablewrap"><table class="rtable"><thead><tr><th>項目</th><th>器材明細</th><th>可借用時間</th><th>可借用期限</th></tr></thead><tbody>
-<tr><td rowspan="2"><b>一般性器材借用</b><br><small>（含長期借用設備）</small></td><td class="wrap">筆記型電腦、投影機、平板、數位相機、攝影機、擴視機、簡報筆、放大滑鼠、錄音筆、護貝機、計算機、吹風機、裁紙刀（大／小）</td><td rowspan="2">星期一至星期五<br><span class="mono">08:00–20:00</span></td><td>當天</td></tr>
+<tr><td rowspan="2"><b>一般性器材借用</b></td><td class="wrap">筆記型電腦、投影機、平板、數位相機、攝影機、擴視機、簡報筆、放大滑鼠、錄音筆、護貝機、計算機、吹風機、裁紙刀（大／小）</td><td rowspan="2">星期一至星期五<br><span class="mono">08:00–20:00</span></td><td>當天</td></tr>
 <tr><td class="wrap">電子翻譯機、延長線、8 吋小電風扇、鍵盤、耳機、彩色筆、麥克筆、熱熔膠槍</td><td>3 天內</td></tr>
 <tr><td><b>休閒性器材借用</b></td><td class="wrap">1. 牌卡<br>2. 桌遊<br>3. 手眼協調訓練機（須配合家銘學長時間，以利協助架設器材）<br>4. 投影設備（限觀賞、遊戲借用）</td><td class="wrap">期中考：第 10、11 週 <span class="mono">18:00–20:00</span><br>期末考：第 19 週 <span class="mono">10:00–15:00</span></td><td>當天</td></tr>
 </tbody></table></div></section>
@@ -307,12 +307,12 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
   deps:['config','myReq'],
-  shell(){return `<div class="apply-head"><div><p class="eyebrow">先選擇你的需求</p><h1>今天要借設備，還是登記使用？</h1><p class="lede">需要帶離資源教室，選「申請借用設備」；只在教室內使用，選「設備使用登記」。</p></div>
+  shell(){return `<div class="apply-head"><div><p class="eyebrow">先選擇你的需求</p><h1>今天要借設備，還是登記使用？</h1></div>
 <aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
 <div id="a-gate"></div>
 <div class="pick">
-<a class="pickcard" href="#borrow"><span class="eyebrow">帶離教室・需老師審核</span><b>申請借用設備</b><span>筆電、投影機、錄音筆等器材，或預約悅讀書房、課輔室。</span><span class="go">我要借設備 →</span></a>
-<a class="pickcard" href="#usage"><span class="eyebrow">教室內使用・免審核</span><b>設備使用登記</b><span>使用資源教室的電腦、印表機、影印機或掃描機。</span><span class="go">我要登記使用 →</span></a>
+<a class="pickcard" href="#borrow"><span class="eyebrow">帶離教室・需老師審核</span><b>申請借用設備</b><span class="go">我要借設備 →</span></a>
+<a class="pickcard" href="#usage"><span class="eyebrow">教室內使用・免審核</span><b>設備使用登記</b><span class="go">我要登記使用 →</span></a>
 </div>`},
   paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();V.borrow.qr()}
 };
@@ -321,7 +321,7 @@ V.borrow={
   shell(){
     const a=local.get('applicant')||{};
     return `<h1>申請借用設備</h1>
-<p class="lede">送出申請後，經資源教室老師審核通過，使用當日攜帶學生證或教職員證到資源教室領取。結果會顯示在「學生/職員申請」。</p>
+<p class="lede"><b>老師審核通過後，使用當日請攜帶學生證或教職員證領取。</b></p>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
 <fieldset><legend>申請人</legend><div class="grid">
@@ -332,12 +332,12 @@ V.borrow={
 <label class="f">聯絡電話<input id="a-phone" type="tel" autocomplete="tel" value="${h(a.phone)}"></label>
 </div></fieldset>
 <fieldset><legend>借用類別</legend><div class="choices" id="a-types">
-${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 天內歸還'],['leisure','休閒性器材','牌卡、桌遊等，限期中、期末考週開放時段'],['space','空間借用','悅讀書房、課輔室'],['long','長期借用','學習輔具：錄音筆、翻譯機、耳機']].map(([k,t,d],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b><small>${d}</small></span></label>`).join('')}
+${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借用'],['long','長期借用']].map(([k,t],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b></span></label>`).join('')}
 </div></fieldset>
 <details class="inv" id="b-inv-box" ${S.openInv?'open':''}><summary>器材一覽表：目前可借數量與借用期限</summary><div id="b-inv"></div></details>
 <div id="a-detail"></div>
 <fieldset><legend>用途說明</legend><div class="stack">
-<label class="f">用途說明 <small id="a-purpose-hint">簡述用途，例如：課堂報告、讀書會</small><textarea id="a-purpose"></textarea></label>
+<label class="f">用途說明<textarea id="a-purpose" placeholder="例如：課堂報告、讀書會"></textarea></label>
 </div></fieldset>
 <p class="err" id="a-err" role="alert"></p>
 <div class="row"><button type="submit" class="primary" id="a-submit">送出申請</button><span class="mono" style="color:var(--muted)" id="a-count"></span></div>
@@ -354,7 +354,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
   qr(){const box=$('#a-qr');if(!box)return;const u=(S.config.url||'').replace(/#.*$/,'');
     if(!u){box.hidden=true;return}box.hidden=false;const url=u;if(box.dataset.url===url)return;box.dataset.url=url;
     if(!window.qrcode){loadQR().then(()=>{box.dataset.url='';this.qr()}).catch(()=>{});box.hidden=true;return}
-    box.innerHTML=`<div class="qrbox">${qrSvg(url)}</div><b>手機掃描申請</b><span class="meta">貼在資源教室門口，學生掃描即可線上預借</span>${S.admin?'<button class="small" id="a-qr-dl">下載 PNG</button>':''}`;
+    box.innerHTML=`<div class="qrbox">${qrSvg(url)}</div><b>手機掃描申請</b>${S.admin?'<button class="small" id="a-qr-dl">下載 PNG</button>':''}`;
     const b=$('#a-qr-dl');if(b)b.onclick=async()=>saveFile('QR_apply_線上預借申請.png',await qrPng(url,'線上預借申請','掃描閱讀借用規定並申請'))},
   type(){return ($('input[name=a-type]:checked')||{}).value||'item'},
   detail(reset){
@@ -366,7 +366,7 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
     if(!S.catalog.length){html=`<fieldset><legend>品項</legend><p class="note">器材清單載入中…</p></fieldset>`}
     else if(t==='item'){
       const grp=c=>S.catalog.filter(x=>x.cat===c);
-      const opt=x=>{const left=(x.qty||0)-(x.out||0);return `<label class="choice"><input type="checkbox" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><small>${left>0?`目前可借 ${left} 件`:'目前已全數借出，可先預約'}</small></span></label>`};
+      const opt=x=>{const left=(x.qty||0)-(x.out||0);return `<label class="choice"><input type="checkbox" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><span class="chip ${left>0?'ok':'warn'}">${left>0?`可借 ${left} 件`:'可先預約'}</span></span></label>`};
       html=`<fieldset><legend>選擇器材（可複選）</legend><div class="stack">
 <h3>當天歸還</h3><div class="choices">${grp('general').map(opt).join('')}</div>
 <h3>3 天內歸還</h3><div class="choices">${grp('general3').map(opt).join('')}</div></div></fieldset>
@@ -377,14 +377,14 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
       if(S.config.semesterStart){
         const opts=[];for(let i=0;i<120;i++){const d=addDays(min,i);const s=leisureSlot(d);if(s&&dow(d)>0&&dow(d)<6&&!eventOn(d))opts.push(`<option value="${d}">${fmtDate(d)}　${s.label} ${s.start}–${s.end}</option>`)}
         dateField=opts.length?`<label class="f">開放日期與時段<select id="a-date"><option value="">請選擇</option>${opts.join('')}</select></label>`:`<p class="note">本學期已沒有可預約的休閒性器材開放時段（期中考第 10、11 週 18:00–20:00；期末考第 19 週 10:00–15:00）。</p>`;
-      }else dateField=`<label class="f">使用日期 <small>期中考第 10、11 週 18:00–20:00；期末考第 19 週 10:00–15:00</small><input type="date" id="a-date" min="${min}"></label>`;
-      html=`<fieldset><legend>選擇器材</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><small>${h(x.note||'')}</small></span></label>`).join('')}</div></fieldset>
+      }else dateField=`<label class="f">使用日期<input type="date" id="a-date" min="${min}"></label>`;
+      html=`<fieldset><legend>選擇器材</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
 <fieldset><legend>使用時段</legend><div class="grid">${dateField}</div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='space'){
       const list=S.catalog.filter(x=>x.cat==='space');
       const tsel=(id,def)=>`<select id="${id}">${TIMES.map(x=>`<option ${x===def?'selected':''}>${x}</option>`).join('')}</select>`;
-      html=`<fieldset><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><small>${h(x.note||'')}</small></span></label>`).join('')}</div></fieldset>
-<fieldset><legend>日期與時間</legend><div class="grid"><label class="f">使用日期 <small>限週一至週五</small><input type="date" id="a-date" min="${min}"></label><label class="f">開始時間${tsel('a-start','13:00')}</label><label class="f">結束時間${tsel('a-end','15:00')}</label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+      html=`<fieldset><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
+<fieldset><legend>日期與時間</legend><div class="grid"><label class="f">使用日期<input type="date" id="a-date" min="${min}"></label><label class="f">開始時間${tsel('a-start','13:00')}</label><label class="f">結束時間${tsel('a-end','15:00')}</label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='long'){
       const list=S.catalog.filter(x=>x.longOk);
       html=`<fieldset><legend>長期借用（學習輔具）</legend><p class="note" style="margin-top:0">是否核准長期借用，會依當下借用數量評估。核准後於資源教室填寫『長期借用申請單』並領取。</p><div class="grid">
@@ -537,7 +537,7 @@ V.usage={
 <fieldset><legend>使用設備（可複選）</legend><div class="stack">
 <div class="choices">${PCS.map(n=>`<label class="choice"><input type="radio" name="u-pc" value="${n}"><span><b>電腦 ${n}</b></span></label>`).join('')}<label class="choice"><input type="radio" name="u-pc" value="" checked><span><b>沒有使用電腦</b></span></label></div>
 <div class="choices"><label class="choice"><input type="checkbox" id="u-print"><span><b>印表機（彩色）</b></span></label><label class="choice"><input type="checkbox" id="u-copy"><span><b>影印機（黑白）</b></span></label><label class="choice"><input type="checkbox" id="u-scan"><span><b>掃描資料</b></span></label></div>
-<label class="f" style="max-width:260px">紙張張數 <small>列印或影印用了幾張，沒有就留空</small><input type="number" id="u-paper" min="0" max="999" inputmode="numeric"></label>
+<label class="f" style="max-width:260px">紙張張數<input type="number" id="u-paper" min="0" max="999" inputmode="numeric" placeholder="沒有可留空"></label>
 </div></fieldset>
 <fieldset><legend>使用原因</legend><div class="choices">${['課業學習','休閒娛樂','其他'].map((x,i)=>`<label class="choice"><input type="radio" name="u-reason" value="${x}" ${i===0?'checked':''}><span><b>${x}</b></span></label>`).join('')}</div>
 <label class="f" id="u-other-wrap" style="margin-top:10px" hidden>其他原因<input id="u-other"></label></fieldset>
@@ -770,7 +770,7 @@ function returnLoan(l){
   openModal(`<h2 style="margin:0">歸還點交：${h(l.item)}</h2><p class="meta" style="margin:0">${h(l.name)} <span class="mono">${h(l.no)}</span>・出借 <span class="mono">${h(l.outAt||l.date)}</span>${l.assetNo?`・編號 <span class="mono">${h(l.assetNo)}</span>`:''}</p>
 <div class="grid"><label class="f">簽收人<input id="rt-staff" value="${h(staff)}"></label><label class="f">歸還日期<input type="date" id="rt-date" value="${today()}"></label></div>
 ${l.type==='space'?'':`<div><b style="font-size:.9rem">歸還時狀況檢查</b>${checkFields('rt')}</div>`}
-<label class="f">狀況說明 <small>若有損壞或遺失，請記錄情形；依規定由老師審視後決定借用人負擔維修費用 70%–100%（非人為因素除外）。</small><textarea id="rt-note"></textarea></label>
+<label class="f">狀況說明<textarea id="rt-note" placeholder="若有損壞或遺失，請記錄情形"></textarea></label>
 <div class="note">記得歸還證件${l.idHeld?`（${h(l.idHeld)}）`:''}，並請借用人掃描滿意度問卷 QR code。</div>
 <p class="err" id="rt-err"></p><div class="row"><button class="primary" id="rt-ok">完成歸還</button><button data-close>取消</button></div>`,m=>{
   m.querySelector('#rt-ok').onclick=async()=>{
@@ -786,7 +786,7 @@ ${l.type==='space'?'':`<div><b style="font-size:.9rem">歸還時狀況檢查</b>
 function walkIn(){
   const staff=local.get('staff')||'';
   openModal(`<h2 style="margin:0">現場登記借出</h2><p class="meta" style="margin:0">未線上申請、直接到資源教室借用時使用。</p>
-<div class="grid"><label class="f">身分<select id="wk-role"><option>學生</option><option>教職員</option></select></label><label class="f">學號 <small>教職員免填</small><input id="wk-no"></label><label class="f">姓名<input id="wk-name"></label><label class="f">系級／單位<input id="wk-dept"></label><label class="f">聯絡電話<input id="wk-phone" type="tel"></label>
+<div class="grid"><label class="f">身分<select id="wk-role"><option>學生</option><option>教職員</option></select></label><label class="f">學號<input id="wk-no" placeholder="教職員免填"></label><label class="f">姓名<input id="wk-name"></label><label class="f">系級／單位<input id="wk-dept"></label><label class="f">聯絡電話<input id="wk-phone" type="tel"></label>
 <label class="f">品項<select id="wk-code">${Object.entries(CATS).map(([c,t])=>`<optgroup label="${t}">${S.catalog.filter(x=>x.cat===c).map(x=>`<option value="${h(x.code)}">${h(x.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
 <label class="f">財產／物品編號<input id="wk-asset" class="mono"></label><label class="f">經手人<input id="wk-staff" value="${h(staff)}"></label><label class="f">抵押證件<select id="wk-id"><option>學生證</option><option>教職員證</option><option>其他證件</option></select></label><label class="f">應歸還日期<input type="date" id="wk-due" value="${today()}"></label></div>
 <div><b style="font-size:.9rem">出借時狀況檢查</b>${checkFields('wk')}</div>
@@ -840,7 +840,7 @@ function importDialog(kind){
 <p class="mono" style="margin:0;color:var(--muted);font-size:.8rem">${cols.map(c=>c[1]).join('、')}</p>
 <div class="row"><button class="small" id="im-tpl">下載空白範本 (.xlsx)</button></div>
 <label class="f">選擇檔案（.xlsx、.xls、.csv）<input type="file" id="im-file" accept=".xlsx,.xls,.csv"></label>
-${L?'':`<label class="choice"><input type="checkbox" id="im-replace"><span><b>先清空現有名單再匯入</b><small>新學年更新名單時使用</small></span></label>`}
+${L?'':`<label class="choice"><input type="checkbox" id="im-replace"><span><b>先清空現有名單再匯入</b></span></label>`}
 <div id="im-prev"></div><p class="err" id="im-err"></p>
 <div class="row"><button class="primary" id="im-ok" disabled>確認匯入</button><button data-close>取消</button></div>`,m=>{
   let rows=[];
@@ -893,7 +893,7 @@ V.ledger={
     const rows=this.rows();
     if(!S.loans.length){$('#lg-body').innerHTML=`<div class="empty">設備借用紀錄還沒有資料。<br>學生完成領取點交、或用「現場登記」「匯入紀錄」後，紀錄會出現在這裡。</div>`;return}
     $('#lg-body').innerHTML=`<p class="meta">共 ${rows.length} 筆${rows.length!==S.loans.length?`（全部 ${S.loans.length} 筆）`:''}</p><div class="tablewrap" style="max-height:70vh"><table><thead><tr><th>使用日期</th><th>借用人</th><th>學號</th><th>系級</th><th>借用品項</th><th>財產編號</th><th>經手人</th><th>應還</th><th>歸還日期</th><th>簽收人</th><th>狀態</th><th>問卷</th><th>來源</th><th></th></tr></thead><tbody>
-${rows.map(l=>{const [st,c]=loanStatus(l);const rq=allRequests().find(x=>x.id===l.reqId);const sv=l.role==='教職員'?'不需':rq&&rq.surveyed?'<span class="chip ok">已填</span>':rq&&rq.status==='returned'?'<span class="chip warn">未填</span>':'';return `<tr><td class="mono">${h(l.date)}${l.time?`<br>${h(l.time)}`:''}</td><td>${h(l.name)}</td><td class="mono">${h(l.no)}</td><td>${h(l.dept)}</td><td>${h(l.item)}</td><td class="mono">${h(l.assetNo)}</td><td>${h(l.handler)}</td><td class="mono">${h(l.due)}</td><td class="mono">${h(l.returnedAt)}</td><td>${h(l.receiver)}</td><td><span class="chip ${c}">${st}</span>${l.returnNote?`<br><small>${h(l.returnNote)}</small>`:''}</td><td>${sv}</td><td>${({online:'線上',walkin:'現場',import:'匯入'})[l.source]||''}</td>
+${rows.map(l=>{const [st,c]=loanStatus(l);const rq=allRequests().find(x=>x.id===l.reqId);const sv=l.role==='教職員'?'不需':rq&&rq.surveyed?'<span class="chip ok">已填</span>':rq&&rq.status==='returned'?'<span class="chip warn">未填</span>':'';return `<tr><td class="mono">${h(l.date)}${l.time?`<br>${h(l.time)}`:''}</td><td>${h(l.name)}</td><td class="mono">${h(l.no)}</td><td>${h(l.dept)}</td><td>${h(l.item)}</td><td class="mono">${h(l.assetNo)}</td><td>${h(l.handler)}</td><td class="mono">${h(l.due)}</td><td class="mono">${h(l.returnedAt)}</td><td>${h(l.receiver)}</td><td><span class="chip ${c}">${st}</span>${l.returnNote?`<br>${h(l.returnNote)}`:''}</td><td>${sv}</td><td>${({online:'線上',walkin:'現場',import:'匯入'})[l.source]||''}</td>
 <td>${l.status==='out'?`<button class="small primary" data-ret="${h(l.id)}">歸還</button>`:''} <button class="small" data-del="${h(l.id)}" aria-label="刪除">刪除</button></td></tr>`}).join('')}</tbody></table></div>`;
     $('#lg-body').onclick=e=>{const r=e.target.dataset.ret,d=e.target.dataset.del;if(r)returnLoan(S.loans.find(l=>l.id===r));
       if(d){const l=S.loans.find(x=>x.id===d);confirmBox('刪除這筆登記？',`${l.name}・${l.item}・${l.date}。刪除後無法復原。`,'刪除',async()=>{await S.db.doc('loans/'+d).delete();if(l.status==='out')await bumpOut(l.code,-1);toast('已刪除')})}};
@@ -922,7 +922,7 @@ function qrTargets(){const u=(S.config.url||'').replace(/#.*$/,'');if(!u)return 
 function catalogDialog(x){
   const isNew=!x;x=x||{code:'',name:'',cat:'general',qty:1,out:0,note:'',longOk:false};
   openModal(`<h2 style="margin:0">${isNew?'新增器材':'編輯：'+h(x.name)}</h2><div class="grid">
-<label class="f">代碼 <small>英文小寫與數字，系統內部識別用</small><input id="cd-code" class="mono" value="${h(x.code)}" ${isNew?'':'disabled'}></label><label class="f">名稱<input id="cd-name" value="${h(x.name)}"></label>
+<label class="f">代碼<input id="cd-code" class="mono" value="${h(x.code)}" ${isNew?'':'disabled'} placeholder="英文小寫與數字"></label><label class="f">名稱<input id="cd-name" value="${h(x.name)}"></label>
 <label class="f">類別<select id="cd-cat">${Object.entries(CATS).map(([k,t])=>`<option value="${k}" ${x.cat===k?'selected':''}>${t}</option>`).join('')}</select></label>
 <label class="f">數量<input id="cd-qty" type="number" min="0" value="${x.qty||0}"></label><label class="f">借出中<input id="cd-out" type="number" min="0" value="${x.out||0}"></label></div>
 <label class="f">說明<input id="cd-note" value="${h(x.note||'')}"></label><label class="choice" style="max-width:320px"><input type="checkbox" id="cd-long" ${x.longOk?'checked':''}><span><b>可長期借用（學習輔具）</b></span></label>
@@ -963,9 +963,9 @@ async function saveConfig(patch){S.config={...S.config,...patch};await serial('c
 V.setup={
   deps:['config','catalog'],
   shell(){this._filled=false;const c=S.config;return `<h1>設定</h1><p class="lede">學期週次與活動日會影響學生可以選的日期。</p>
-<fieldset><legend>學期</legend><div class="grid"><label class="f">第 1 週星期一 <small>用來計算期中考第 10、11 週與期末考第 19 週的休閒性器材開放時段</small><input type="date" id="cf-sem" value="${h(c.semesterStart||'')}"></label>
-<label class="f">資源教室聯絡方式 <small>顯示在頁尾</small><input id="cf-office" value="${h(c.office||'')}" placeholder="例：分機 1234"></label></div>
-<label class="f" style="margin-top:12px">此頁的分享連結 <small>申請頁與問卷的 QR code 會指向這個連結。在 claude.ai 開啟此頁 →「分享」→ 複製連結</small><input id="cf-url" class="mono" placeholder="https://claude.ai/artifact/…"></label>
+<fieldset><legend>學期</legend><div class="grid"><label class="f">第 1 週星期一<input type="date" id="cf-sem" value="${h(c.semesterStart||'')}"></label>
+<label class="f">資源教室聯絡方式<input id="cf-office" value="${h(c.office||'')}" placeholder="例：分機 1234"></label></div>
+<label class="f" style="margin-top:12px">此頁的分享連結<input id="cf-url" class="mono" placeholder="https://claude.ai/artifact/…"></label>
 <div class="row" style="margin-top:12px"><button class="primary" id="cf-save">儲存</button></div></fieldset>
 <fieldset><legend>QR code 下載</legend><div class="row" id="cf-qr"></div></fieldset>
 <fieldset><legend>器材與空間清單</legend><div class="spread" style="margin-bottom:8px"><span class="meta">「數量」為可出借總數；「借出中」會在點交與歸還時自動增減。</span><button class="small" id="cat-add">新增器材</button></div><div id="cat-list"></div></fieldset>
