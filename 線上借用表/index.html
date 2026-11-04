@@ -315,9 +315,9 @@ ${[['item','一般性器材','筆電、投影機、錄音筆等，當天或 3 �
   },
   paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.qr();this.detail(false)},
   qr(){const box=$('#a-qr');if(!box)return;const u=(S.config.url||'').replace(/#.*$/,'');
-    if(!u){box.hidden=true;return}box.hidden=false;const url=u+'#apply';if(box.dataset.url===url)return;box.dataset.url=url;
+    if(!u){box.hidden=true;return}box.hidden=false;const url=u;if(box.dataset.url===url)return;box.dataset.url=url;
     box.innerHTML=`<div class="qrbox">${qrSvg(url)}</div><b>手機掃描申請</b><span class="meta">貼在資源教室門口，學生掃描即可線上預借</span>${S.admin?'<button class="small" id="a-qr-dl">下載 PNG</button>':''}`;
-    const b=$('#a-qr-dl');if(b)b.onclick=async()=>saveFile('QR_apply_線上預借申請.png',await qrPng(url,'線上預借申請','掃描申請空間與器材'))},
+    const b=$('#a-qr-dl');if(b)b.onclick=async()=>saveFile('QR_apply_線上預借申請.png',await qrPng(url,'線上預借申請','掃描閱讀借用規定並申請'))},
   type(){return ($('input[name=a-type]:checked')||{}).value||'item'},
   detail(reset){
     const box=$('#a-detail');if(!box)return;
@@ -800,7 +800,7 @@ function qrPng(text,title,sub){
   return new Promise(res=>c.toBlob(res,'image/png'));
 }
 function qrTargets(){const u=(S.config.url||'').replace(/#.*$/,'');if(!u)return [];
-  return [{code:'apply',title:'線上預借申請',sub:'掃描申請空間與器材',url:u+'#apply'},{code:'survey',title:'使用滿意度問卷',sub:'使用後請掃描填寫',url:u+'#survey'},{code:'items',title:'器材與空間一覽',sub:'查看可借器材',url:u+'#items'},
+  return [{code:'apply',title:'線上預借申請',sub:'掃描閱讀借用規定並申請',url:u},{code:'survey',title:'使用滿意度問卷',sub:'使用後請掃描填寫',url:u+'#survey'},{code:'items',title:'器材與空間一覽',sub:'查看可借器材',url:u+'#items'},
     ...S.catalog.map(x=>({code:x.code,title:x.name,sub:`${x.code}・掃描申請借用`,url:u+'#item-'+x.code}))]}
 function catalogDialog(x){
   const isNew=!x;x=x||{code:'',name:'',cat:'general',qty:1,out:0,note:'',longOk:false};
