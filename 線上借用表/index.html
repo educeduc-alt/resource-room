@@ -282,7 +282,7 @@ function navHtml(){
   return s;
 }
 function route(){
-  let r=(location.hash||'#apply').slice(1)||'apply',p=null;
+  let r=(location.hash||'#rules').slice(1)||'rules',p=null;
   if(r.startsWith('item-')){p=r.slice(5);r='item'}
   if(r==='logout'){logout();return}
   if(!V[r])r='apply';
