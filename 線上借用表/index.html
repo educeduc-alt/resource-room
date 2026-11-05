@@ -178,11 +178,11 @@ details.inv summary{cursor:pointer;font-weight:700;color:var(--accent)}
 .qlabel{display:block;margin-bottom:6px;font-size:.92rem}
 .choices.tight{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
 .scale.agree label b{font-size:.9rem}
-.quick{list-style:none;counter-reset:q;padding:0;margin:14px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.quick{list-style:none;counter-reset:q;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:10px;max-width:720px}
 .quick li{counter-increment:q;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 52px;position:relative;display:flex;flex-direction:column;gap:2px;min-width:0}
 .quick li::before{content:counter(q);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;display:grid;place-items:center;font-size:.9rem}
 .quick li>b{font-size:1.02rem}
-.quick li span{color:var(--muted)}
+.quick li span{color:var(--fg)}
 .quick li span b{color:var(--fg)}
 a.btn.big{font-size:1.1rem;padding:12px 26px}
 details.fullrules{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
@@ -360,12 +360,12 @@ V.rules={
     const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li><div>${x}</div></li>`).join('')}</ol></section>`;
     return `<article class="rules-doc"><p class="eyebrow">弘光科技大學・資源教室</p><h1>借用前，先看這 6 點</h1>
 <ol class="quick">
-<li><b>誰可以借</b><span>本校領有鑑輔會證明的學生優先；教職員因業務需要也可借用。</span></li>
-<li><b>什麼時間</b><span>星期一至星期五 08:00–20:00 申請、領取與歸還。</span></li>
-<li><b>怎麼領取</b><span>老師審核通過後，帶<b>學生證或教職員證</b>到資源教室，當場清點後領取。</span></li>
-<li><b>準時歸還</b><span>一般器材當天或 3 天內歸還；空間用完到資源教室告知，並領回證件。</span></li>
-<li><b>損壞賠償</b><span>人為疏失造成損壞或遺失，需負擔<b>維修費用 70%–100%</b>，或買相同規格歸還。</span></li>
-<li><b>歸還之後</b><span>學生請填 1 分鐘的滿意度問卷（教職員免填）。</span></li>
+<li><b>誰能借用</b><span>本校<b>領有鑑輔會證明的學生</b>優先；<b>教職員</b>因業務需要也可借用。</span></li>
+<li><b>時間</b><span><b>星期一至星期五 08:00–20:00</b> 申請、領取與歸還。</span></li>
+<li><b>借多久</b><span>一般器材<b>當天歸還</b>；電子翻譯機、延長線、鍵盤、耳機等<b>3 天內歸還</b>；長期借用依<b>老師核准的期限</b>；空間<b>用完即歸還</b>。</span></li>
+<li><b>怎麼領取</b><span>老師<b>審核通過</b>後，帶<b>學生證或教職員證</b>到資源教室，<b>當場清點</b>後領取。</span></li>
+<li><b>損壞賠償</b><span><b>人為疏失</b>造成損壞或遺失，需負擔<b>維修費用 70%–100%</b>，或<b>買相同規格歸還</b>。</span></li>
+<li><b>歸還之後</b><span>學生請填<b>1 分鐘滿意度問卷</b>（教職員免填）。</span></li>
 </ol>
 <div class="row" style="margin:18px 0 8px"><a class="btn primary big" href="#apply">我已了解，開始借用 →</a></div>
 <p class="meta">提出借用即表示願意接受並遵守資源教室空間器材借用辦法。</p>
