@@ -178,6 +178,40 @@ details.inv summary{cursor:pointer;font-weight:700;color:var(--accent)}
 .qlabel{display:block;margin-bottom:6px;font-size:.92rem}
 .choices.tight{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
 .scale.agree label b{font-size:.9rem}
+.quick{list-style:none;counter-reset:q;padding:0;margin:14px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.quick li{counter-increment:q;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 52px;position:relative;display:flex;flex-direction:column;gap:2px;min-width:0}
+.quick li::before{content:counter(q);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;display:grid;place-items:center;font-size:.9rem}
+.quick li>b{font-size:1.02rem}
+.quick li span{color:var(--muted)}
+.quick li span b{color:var(--fg)}
+a.btn.big{font-size:1.1rem;padding:12px 26px}
+details.fullrules{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+details.fullrules>summary{cursor:pointer;font-weight:700;color:var(--accent);padding:6px 0}
+.whocard{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:0 0 16px}
+.submitbar{position:sticky;bottom:0;z-index:4;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));margin-top:8px;box-shadow:0 -6px 18px rgba(0,0,0,.06)}
+.submitbar #a-count{font-weight:500}
+.sent{background:var(--ok-soft);border:1px solid var(--ok);border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.sent b{color:var(--ok);font-size:1.05rem}.sent ol{margin:6px 0 0;padding-left:1.3em}
+.tally.jump{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.tally.jump button{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;min-height:0;display:block}
+.tally.jump button:hover{border-color:var(--accent)}
+.tally.jump b{display:block;font-size:1.6rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.tally.jump b.n-warn{color:var(--warn)}.tally.jump b.n-ok{color:var(--ok)}
+.tally.jump span{font-size:.85rem;color:var(--muted)}.tally.jump em{font-style:normal;color:var(--bad);font-weight:700}
+section.wb{scroll-margin-top:120px;margin-top:8px}
+.card.has-bad{border-color:var(--bad)}
+button.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+button.ok:hover{filter:brightness(1.08);background:var(--ok)}
+.dayhead{margin:14px 0 6px;font-size:1rem}
+.dayhead.today{color:var(--ok)}.dayhead.late{color:var(--bad)}
+table.prep tr.ready td{background:var(--ok-soft)}
+table.prep input[type=checkbox]{width:22px;height:22px}
+tr.late td{background:var(--bad-soft)}
+details.later{margin-top:12px}details.later summary{cursor:pointer;color:var(--accent);font-weight:500}
+.choices.compact{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.choices.compact .choice{padding:8px 10px;gap:8px}
+.choices.compact .choice .chip{font-size:.72rem;padding:1px 7px;margin-top:3px;white-space:normal}
+@media (max-width:520px){.choices.compact{grid-template-columns:1fr 1fr}}
 footer a{color:var(--accent)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padding-block:16px 28px}
 @media (max-width:520px){.bar{grid-template-columns:1fr 52px}.bar .track{grid-column:1/-1;grid-row:2}}
@@ -270,7 +304,7 @@ const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id}))
 
 /* ---------- views ---------- */
 const STUDENT_TABS=[['rules','① 借用說明'],['apply','② 我要借／使用設備'],['mine','③ 查詢我的申請']];
-const ADMIN_TABS=[['review','審核與點交'],['records','設備紀錄'],['stats','滿意度統計'],['setup','設定']];
+const ADMIN_TABS=[['review','今日工作台'],['records','設備紀錄'],['stats','滿意度統計'],['setup','設定']];
 const ADMIN_VIEWS=['review','records','ledger','usagelog','spaceweek','stats','roomstats','setup'];
 const isAdminView=v=>ADMIN_VIEWS.includes(v);
 let curView=null,curParam=null;
@@ -287,6 +321,7 @@ function route(){
   if(r==='logout'){logout();return}
   if(!V[r])r='apply';
   if(r!=='survey')S.surveyFor=null;
+  if(r!=='mine')S.justSent=0;
   if(isAdminView(r)&&S.ready&&!S.admin){S.after=r;r='login'}
   if(r==='login'&&S.admin){location.hash='review';return}
   curView=r;curParam=p;
@@ -323,8 +358,18 @@ const V={};
 V.rules={
   shell(){
     const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li><div>${x}</div></li>`).join('')}</ol></section>`;
-    return `<article class="rules-doc"><p class="eyebrow">弘光科技大學</p><h1>資源教室空間器材借用辦法</h1>
-<p class="lede"><b>提出借用即表示願意接受並遵守本辦法。</b></p>
+    return `<article class="rules-doc"><p class="eyebrow">弘光科技大學・資源教室</p><h1>借用前，先看這 6 點</h1>
+<ol class="quick">
+<li><b>誰可以借</b><span>本校領有鑑輔會證明的學生優先；教職員因業務需要也可借用。</span></li>
+<li><b>什麼時間</b><span>星期一至星期五 08:00–20:00 申請、領取與歸還。</span></li>
+<li><b>怎麼領取</b><span>老師審核通過後，帶<b>學生證或教職員證</b>到資源教室，當場清點後領取。</span></li>
+<li><b>準時歸還</b><span>一般器材當天或 3 天內歸還；空間用完到資源教室告知，並領回證件。</span></li>
+<li><b>損壞賠償</b><span>人為疏失造成損壞或遺失，需負擔<b>維修費用 70%–100%</b>，或買相同規格歸還。</span></li>
+<li><b>歸還之後</b><span>學生請填 1 分鐘的滿意度問卷（教職員免填）。</span></li>
+</ol>
+<div class="row" style="margin:18px 0 8px"><a class="btn primary big" href="#apply">我已了解，開始借用 →</a></div>
+<p class="meta">提出借用即表示願意接受並遵守資源教室空間器材借用辦法。</p>
+<details class="fullrules"><summary>查看完整借用辦法</summary><h2 style="margin-top:14px">資源教室空間器材借用辦法</h2>
 ${sec('壹、借用對象',['以本校<b>領有鑑輔會證明之學生為優先</b>。','本校教職員因業務需求方面需使用空間器材者。'])}
 ${sec('貳、借用項目',['一般性器材借用：除直接於資源教室使用電腦（提供四台電腦）、印表機、影印機及掃描機外，請至資源教室填寫物品借用登記本，<b>預借須於使用日前三天登記</b>，並<b>攜帶教職員證或學生證領取</b>。',
 '休閒性器材借用：需依照使用開放時間申請，<b>於使用日前三天完成申請</b>，經<b>資源教室老師審核通過</b>後，當日<b>攜帶教職員證或學生證領取</b>。<br><span class="mark"><b>未於規定時間完成登記與審核，不得借用。</b></span>',
@@ -343,7 +388,7 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 <tr><td class="wrap">電子翻譯機、延長線、8 吋小電風扇、鍵盤、耳機、彩色筆、麥克筆、熱熔膠槍</td><td>3 天內</td></tr>
 <tr><td><b>休閒性器材借用</b></td><td class="wrap">1. 牌卡<br>2. 桌遊<br>3. 手眼協調訓練機（須配合家銘學長時間，以利協助架設器材）<br>4. 投影設備（限觀賞、遊戲借用）</td><td class="wrap">期中考：第 10、11 週 <span class="mono">18:00–20:00</span><br>期末考：第 19 週 <span class="mono">10:00–15:00</span></td><td>當天</td></tr>
 </tbody></table></div></section>
-<div class="row" style="margin-top:24px"><a class="btn primary" href="#apply">我已了解，前往申請借用</a><a class="btn" href="#items">查看器材一覽</a></div></article>`}
+<div class="row" style="margin-top:24px"><a class="btn primary" href="#apply">我已了解，開始借用 →</a><a class="btn" href="#items">查看器材一覽</a></div></details></article>`}
 };
 
 /* ===== 空間週表（同紙本「課輔二／悅讀書房借用登記表」） ===== */
@@ -383,33 +428,36 @@ V.apply={
 V.borrow={
   deps:['catalog','config','calendar'],
   shell(){
-    const a=local.get('applicant')||{};
+    const a=local.get('applicant')||{};const known=a.name&&a.phone&&(a.role==='教職員'||a.no);
     return `<h1>申請借用設備</h1>
 <p class="lede"><b>老師審核通過後，使用當日請攜帶學生證或教職員證領取。</b></p>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
-<fieldset><legend>申請人</legend><div class="grid">
+
+<fieldset><legend>借用類別</legend><div class="choices compact" id="a-types">
+${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借用'],['long','長期借用']].map(([k,t],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b></span></label>`).join('')}
+</div></fieldset>
+<div id="a-detail"></div>
+<fieldset><legend>用途說明 <small style="font-weight:400;color:var(--muted)">選填，長期借用必填</small></legend>
+<label class="f"><textarea id="a-purpose" placeholder="例如：課堂報告、讀書會" aria-label="用途說明" style="min-height:60px"></textarea></label></fieldset>
+${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</b>${a.no?`・<span class="mono">${h(a.no)}</span>`:''}・${h(a.dept)}・<span class="mono">${h(a.phone)}</span></span><button type="button" class="small" id="a-whoedit">修改</button></div>`:''}
+<fieldset id="a-who" ${known?'hidden':''}><legend>申請人資料 <small style="font-weight:400;color:var(--muted)">填一次，下次自動帶入</small></legend><div class="grid">
 <label class="f">身分<select id="a-role"><option>學生</option><option ${a.role==='教職員'?'selected':''}>教職員</option></select></label>
 <label class="f" id="a-no-wrap">學號<input id="a-no" autocomplete="off" value="${h(a.no)}" inputmode="latin"></label>
 <label class="f">姓名<input id="a-name" autocomplete="name" value="${h(a.name)}"></label>
 <label class="f">系級／單位<input id="a-dept" value="${h(a.dept)}" placeholder="例：幼保系二甲"></label>
 <label class="f">聯絡電話<input id="a-phone" type="tel" autocomplete="tel" value="${h(a.phone)}"></label>
 </div></fieldset>
-<fieldset><legend>借用類別</legend><div class="choices" id="a-types">
-${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借用'],['long','長期借用']].map(([k,t],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b></span></label>`).join('')}
-</div></fieldset>
-<div id="a-detail"></div>
-<fieldset><legend>用途說明</legend><div class="stack">
-<label class="f">用途說明<textarea id="a-purpose" placeholder="例如：課堂報告、讀書會"></textarea></label>
-</div></fieldset>
 <p class="err" id="a-err" role="alert"></p>
-<div class="row"><button type="submit" class="primary" id="a-submit">送出申請</button><span class="mono" style="color:var(--muted)" id="a-count"></span></div>
+<div class="submitbar"><span id="a-count">請先選擇要借的器材</span><button type="submit" class="primary" id="a-submit">送出申請</button></div>
 </form>`;
   },
   bind(){
     const roleSync=()=>{const staff=$('#a-role').value==='教職員';$('#a-no-wrap').hidden=staff};$('#a-role').addEventListener('change',roleSync);roleSync();
     if(S.preselect){const it=item(S.preselect);if(it){const t=it.cat==='leisure'?'leisure':it.cat==='space'?'space':'item';$('#a-type-'+t).checked=true}}
-    $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true)});
+    $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true);this.sum()});
+    const we=$('#a-whoedit');if(we)we.onclick=()=>{$('#a-who').hidden=false;$('#a-whocard').hidden=true;$('#a-name').focus()};
+    $('#apply-form').addEventListener('change',()=>this.sum());$('#apply-form').addEventListener('click',()=>setTimeout(()=>this.sum(),0));
     $('#apply-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
     $('#a-detail').addEventListener('change',e=>{if(this.type()==='space'&&e.target.name==='a-code'){if(S.spSel&&S.spSel.code!==e.target.value)S.spSel=null;this.spPaint()}if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
     $('#a-detail').addEventListener('click',e=>{const b=e.target.closest('.cell');
@@ -418,7 +466,12 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
       if(e.target.id==='sp-prev'){S.spWeek=addDays(S.spWeek,-7);this.spPaint()}
       if(e.target.id==='sp-next'){S.spWeek=addDays(S.spWeek,7);this.spPaint()}});
   },
-  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.detail(false)},
+  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.detail(false);this.sum()},
+  sum(){const el=$('#a-count');if(!el)return;const t=this.type(),d=($('#a-date')||{}).value;let txt='';
+    if(t==='item'){const n=$$('input[name=a-code]:checked').length;txt=n?`已選 ${n} 項${d?`・${fmtDate(d)}`:'・請選日期'}`:'請先勾選要借的器材'}
+    else if(t==='space'){const sl=S.spSel;txt=sl&&sl.periods.size?`${h(item(sl.code)?.name||'')}・${fmtDate(sl.date)}・${sl.periods.size} 節`:'請在週表點選節次'}
+    else{const c=($('input[name=a-code]:checked')||$('#a-code')||{}).value;txt=c?`${h(item(c)?.name||'')}${d?`・${fmtDate(d)}`:'・請選日期'}`:'請先選擇器材'}
+    el.innerHTML=txt},
   spPaint(){const g=$('#sp-grid');if(!g)return;if(!S.spWeek)S.spWeek=thisWeek();
     const sel=($('input[name=a-code]:checked')||{}).value;const codes=S.catalog.filter(x=>x.cat==='space').map(x=>x.code).filter(c=>!sel||c===sel);
     $('#sp-wk').textContent=`${fmtDate(S.spWeek)} – ${fmtDate(addDays(S.spWeek,4))}`;$('#sp-prev').disabled=S.spWeek<=thisWeek();
@@ -442,9 +495,9 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
       const grp=c=>S.catalog.filter(x=>x.cat===c);
       const opt=x=>{const left=(x.qty||0)-(x.out||0);return `<label class="choice"><input type="checkbox" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b><span class="chip ${left>0?'ok':'warn'}">${left>0?`資源教室還剩 ${left} 件`:'目前已全部借出，可先預約'}</span></span></label>`};
       html=`<fieldset><legend>選擇器材（可複選）</legend><div class="stack">
-<h3>當天歸還</h3><div class="choices">${grp('general').map(opt).join('')}</div>
-<h3>3 天內歸還</h3><div class="choices">${grp('general3').map(opt).join('')}</div></div></fieldset>
-<fieldset><legend>使用日期</legend><div class="grid"><label class="f">使用日期 <input type="date" id="a-date" min="${min}"></label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+<h3>當天歸還</h3><div class="choices compact">${grp('general').map(opt).join('')}</div>
+<h3>3 天內歸還</h3><div class="choices compact">${grp('general3').map(opt).join('')}</div></div></fieldset>
+<fieldset><legend>使用日期</legend><div class="grid"><label class="f">使用日期 <input type="date" id="a-date" min="${min}" value="${[0,6].includes(dow(today()))?thisWeek():today()}"></label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='leisure'){
       const list=S.catalog.filter(x=>x.cat==='leisure');
       let dateField;
@@ -497,6 +550,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     if(S.gas&&idKey&&ap.phone){const before=S.uid;await setIdentity(idKey,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
     if(!S.db||!S.uid)return fail(S.gas?(staffRole?'請先填寫姓名與聯絡電話。':'請先填寫學號與聯絡電話。'):'目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
     if(S.myReq.some(needSurvey))return fail('你有已歸還的借用尚未填寫滿意度問卷，請先到「學生/職員申請」填寫後再送出新的申請。');
+    if((!staffRole&&!ap.no)||!ap.name||!ap.dept||!ap.phone){const w=$('#a-who');if(w){w.hidden=false;const c=$('#a-whocard');if(c)c.hidden=true}}
     if((!staffRole&&!ap.no)||!ap.name||!ap.dept||!ap.phone)return fail(staffRole?'請填寫申請人的姓名、單位與聯絡電話。':'請填寫申請人的學號、姓名、系級與聯絡電話。');
     const purpose=v('a-purpose'),min=today();
     const base={...ap,type:t,purpose,createdAt:nowStr(),status:'pending'};
@@ -548,7 +602,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
         await ref.set({list,updatedAt:nowStr()});
       });
       local.set('applicant',ap);S.preselect=null;S.spSel=null;
-      toast(`已送出 ${reqs.length} 筆申請，請等候老師審核`);
+      toast(`已送出 ${reqs.length} 筆申請，請等候老師審核`);S.justSent=reqs.length;
       location.hash='mine';
     }catch(e){
       btn.disabled=false;btn.textContent='送出申請';
@@ -571,7 +625,7 @@ V.mine={
       $('#m-list').innerHTML=`<form id="m-find" class="card" style="max-width:520px" novalidate><h3>查詢我的申請</h3><p class="meta" style="margin:0">學生請輸入學號，教職員請輸入姓名，再加上申請時填寫的聯絡電話。</p><div class="grid"><label class="f">學號（教職員填姓名）<input id="mf-no" autocomplete="off"></label><label class="f">聯絡電話<input id="mf-phone" type="tel"></label></div><p class="err" id="mf-err"></p><button class="primary" type="submit">查詢</button></form>`;
       $('#m-find').onsubmit=async e=>{e.preventDefault();const no=$('#mf-no').value.trim(),ph=$('#mf-phone').value.trim();if(!no||!digits(ph)){$('#mf-err').textContent='請填寫學號（或教職員姓名）與電話。';return}await setIdentity(no,ph);this.paint()};
       return}
-    $('#m-gate').innerHTML=gateNotice()+(S.gas?`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> ${id.no!==id.name?`<span class="mono">${h(id.no)}</span>`:''}</span><button class="small" id="m-switch">不是你？切換身分</button></div>`:'')+pendingSurveyNote();
+    $('#m-gate').innerHTML=(S.justSent?`<div class="sent"><b>✓ 已送出 ${S.justSent} 筆申請</b><ol><li>老師審核後，結果會顯示在下方。</li><li>核准後，使用當天帶<b>學生證或教職員證</b>到資源教室領取。</li><li>用完按「確認歸還」，把器材帶回資源教室。</li></ol></div>`:'')+gateNotice()+(S.gas?`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> ${id.no!==id.name?`<span class="mono">${h(id.no)}</span>`:''}</span><button class="small" id="m-switch">不是你？切換身分</button></div>`:'')+pendingSurveyNote();
     if(S.gas)$('#m-switch').onclick=()=>clearIdentity();
     const list=[...S.myReq].sort((a,b)=>needSurvey(a)!==needSurvey(b)?(needSurvey(a)?-1:1):(a.createdAt<b.createdAt?1:-1));
     if(!S.got.myReq&&S.uid){$('#m-list').innerHTML='<p class="note">載入中…</p>';return}
@@ -581,7 +635,7 @@ V.mine={
 <div class="spread"><h3>${h(r.itemName)} <span class="chip">${h(TYPES[r.type]||r.type)}</span></h3><span class="row" style="gap:6px">${chipFor(r.status)}${r.status==='returned'&&r.role!=='教職員'?(r.surveyed?'<span class="chip ok">問卷已填</span>':'<span class="chip warn">問卷未填</span>'):''}</span></div>
 <div class="meta"><span>使用日期 ${fmtDate(r.date)}${perText(r)?` <span class="mono">${perText(r)}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}</span><span>申請於 <span class="mono">${h(r.createdAt)}</span></span></div>
 ${r.reviewNote?`<div class="note ${r.status==='rejected'?'bad':''}">老師備註：${h(r.reviewNote)}</div>`:''}
-${r.status==='approved'?`<div class="note ok">請於 ${fmtDate(r.date)} 攜帶${r.role==='教職員'?'教職員證':'學生證'}到資源教室${sp(r)?'，由工讀生或老師協助開門':'領取'}。</div>`:''}
+${r.status==='approved'&&r.prepared?`<div class="note ok"><b>✓ 已準備好，可以來領取了</b></div>`:''}${r.status==='approved'?`<div class="note ok">請於 ${fmtDate(r.date)} 攜帶${r.role==='教職員'?'教職員證':'學生證'}到資源教室${sp(r)?'，由工讀生或老師協助開門':'領取'}。</div>`:''}
 ${r.status==='out'?`<div class="note info">${sp(r)?'開門時間':'領取時間'} <span class="mono">${h(r.outAt||'')}</span>${r.due?`・請於 <b>${fmtDate(r.due)}</b> 前${sp(r)?'使用完畢':'歸還'}`:''}${r.assetNo?`・編號 <span class="mono">${h(r.assetNo)}</span>`:''}</div>`:''}
 ${r.status==='returning'?`<div class="note info">你已於 <span class="mono">${h(r.returnRequestedAt||'')}</span> 確認${sp(r)?'使用完畢':'歸還'}。請${sp(r)?'到資源教室告知並領回證件':'把器材（含配件）帶回資源教室'}，由老師點收後完成。</div>`:''}
 ${r.status==='returned'?`<div class="note ${r.abnormal?'warn':'ok'}">歸還完成：<span class="mono">${h(r.returnedAt||'')}</span>${r.receiver?`・簽收人 ${h(r.receiver)}`:''}・狀況${r.abnormal?'異常':'正常'}${r.returnNote?`（${h(r.returnNote)}）`:''}</div>`:''}
@@ -826,44 +880,85 @@ async function editReq(uid,id,patch){
     const list=(snap.data().list||[]).map(r=>r.id===id?{...r,...patch}:r);await ref.set({...snap.data(),list,updatedAt:nowStr()})});
 }
 async function bumpOut(code,d){const it=item(code);if(!it)return;await serial('cat-'+code,()=>S.db.doc('catalog/'+code).update({out:Math.max(0,(it.out||0)+d)}))}
+function copyText(text,label){
+  const done=()=>toast(`已複製${label}，可以貼到 LINE 或訊息`);
+  const fallback=()=>openModal(`<h2 style="margin:0">${h(label)}</h2><p class="meta" style="margin:0">全選後複製。</p><textarea id="cp-t" style="min-height:240px" readonly>${h(text)}</textarea><div class="row"><button data-close>關閉</button></div>`,m=>{const t=m.querySelector('#cp-t');t.focus();t.select()});
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+}
+const blocked=(r,all)=>/chip bad/.test(reqFlags(r,all));
 V.review={
   deps:['allReq','loans','roster','calendar','catalog','config'],
-  shell(){return `<div class="spread"><h1>審核與點交</h1><button id="rv-walk">現場登記借出</button></div><p class="lede">審核線上申請，並在學生到場時完成領取與歸還的點交，紀錄會自動寫入設備借用紀錄。</p><div id="rv-body"><p class="note">載入中…</p></div>`},
+  shell(){return `<div class="spread"><h1>今日工作台</h1><button id="rv-walk">現場登記借出</button></div><div id="rv-body"><p class="note">載入中…</p></div>`},
   bind(){$('#rv-walk').onclick=()=>walkIn();
     $('#view').addEventListener('input',e=>{if(e.target.dataset.note)S.notes[e.target.dataset.note]=e.target.value})},
   paint(){
     if(!S.got.allReq){return}
-    const all=allRequests(),t=today();
-    const pend=all.filter(r=>r.status==='pending').sort((a,b)=>a.date<b.date?-1:1);
-    const appr=all.filter(r=>r.status==='approved').sort((a,b)=>a.date<b.date?-1:1);
+    const all=allRequests(),t=today(),tm=dow(t)===5?addDays(t,3):addDays(t,1);
+    const pend=all.filter(r=>r.status==='pending').sort((a,b)=>(a.date+a.createdAt)<(b.date+b.createdAt)?-1:1);
+    const appr=all.filter(r=>r.status==='approved').sort((a,b)=>(a.date+(a.start||''))<(b.date+(b.start||''))?-1:1);
+    const prep=appr.filter(r=>r.date<=tm),later=appr.filter(r=>r.date>tm);
     const out=S.loans.filter(l=>l.status==='out').sort((a,b)=>(a.due||'')<(b.due||'')?-1:1);
     const over=out.filter(l=>l.due&&l.due<t);
+    const since=addDays(t,-30);
+    const ret=all.filter(r=>r.status==='returned'&&r.role!=='教職員'&&(r.returnedAt||r.date)>=since).sort((a,b)=>(b.returnedAt||'')<(a.returnedAt||'')?-1:1);
+    const unfilled=ret.filter(r=>!r.surveyed);
     const release=all.filter(r=>['cancelled','rejected'].includes(r.status)&&S.calendar.some(c=>c.id===r.id));
-    const person=r=>`${h(r.name)}　<span class="mono">${h(r.no)}</span>　${h(r.dept)}　<span class="mono">${h(r.phone)}</span>`;
+    const okPend=pend.filter(r=>!blocked(r,all));
     const when=r=>`${fmtDate(r.date)}${perText(r)?` <span class="mono">${perText(r)}</span>`:''}${r.endDate?` 至 ${fmtDate(r.endDate)}`:''}`;
-    $('#rv-body').innerHTML=`<div class="tally"><div><b>${pend.length}</b><span>待審核</span></div><div><b>${appr.length}</b><span>已核准・待領取</span></div><div><b>${out.length}</b><span>借出中</span></div><div><b style="color:${over.length?'var(--bad)':'inherit'}">${over.length}</b><span>逾期未還</span></div></div>
-<h2>待審核</h2>${pend.length?`<div class="list">${pend.map(r=>`<article class="card">
+    const dayLabel=d=>d<t?`${fmtDate(d)}（已過使用日）`:d===t?`今天 ${fmtDate(d)}`:`${d===tm?(dow(t)===5?'下週一':'明天'):''} ${fmtDate(d)}`;
+    const groups=[...new Set(prep.map(r=>r.date))];
+    const onlyUnfilled=S.rvOnlyUnfilled!==false;
+    const showRet=onlyUnfilled?unfilled:ret;
+    $('#rv-body').innerHTML=`<div class="tally jump">
+<button data-jump="rv-pend"><b class="${pend.length?'n-warn':''}">${pend.length}</b><span>① 待審核</span></button>
+<button data-jump="rv-prep"><b class="${prep.length?'n-ok':''}">${prep.length}</b><span>② 今明兩天要準備</span></button>
+<button data-jump="rv-out"><b>${out.length}</b><span>③ 借出中${over.length?`・<em>逾期 ${over.length}</em>`:''}</span></button>
+<button data-jump="rv-sv"><b class="${unfilled.length?'n-warn':''}">${unfilled.length}</b><span>④ 問卷未填（30 天內）</span></button></div>
+
+<section id="rv-pend" class="wb"><div class="spread"><h2>① 待審核</h2>${okPend.length>1?`<button class="primary small" data-act="approveall">全部同意（沒有衝突的 ${okPend.length} 筆）</button>`:''}</div>
+${pend.length?`<div class="list">${pend.map(r=>`<article class="card ${blocked(r,all)?'has-bad':''}">
 <div class="spread"><h3>${h(r.itemName)} <span class="chip">${h(TYPES[r.type])}</span></h3><span class="meta">申請於 <span class="mono">${h(r.createdAt)}</span></span></div>
-<div class="meta"><span>${when(r)}</span><span>${person(r)}</span></div>
+<div class="meta"><span><b>${when(r)}</b></span><span>${h(r.name)}　<span class="mono">${h(r.no)}</span>　${h(r.dept)}　<span class="mono">${h(r.phone)}</span></span></div>
 ${r.purpose||r.reason?`<div>${h([r.reason,r.purpose].filter(Boolean).join('・'))}</div>`:''}
 <div class="flags">${reqFlags(r,all)}</div>
-<div class="row"><input data-note="${h(r.id)}" placeholder="給申請人的備註（選填）" value="${h(S.notes[r.id]||'')}" style="flex:1;min-width:200px" aria-label="審核備註"><button class="primary small" data-act="approve" data-u="${h(r.uid)}" data-id="${h(r.id)}">同意借用</button><button class="small danger" data-act="reject" data-u="${h(r.uid)}" data-id="${h(r.id)}">不同意</button></div>
-</article>`).join('')}</div>`:'<div class="empty">目前沒有待審核的申請。</div>'}
-<h2>已核准・待領取</h2>${appr.length?`<div class="list">${appr.map(r=>`<article class="card"><div class="spread"><h3>${h(r.itemName)}</h3>${r.date<t?'<span class="chip warn">已過使用日</span>':r.date===t?'<span class="chip ok">今天</span>':''}</div>
-<div class="meta"><span>${when(r)}</span><span>${person(r)}</span></div>
-<div class="row"><button class="primary small" data-act="checkout" data-u="${h(r.uid)}" data-id="${h(r.id)}">${r.type==='space'?'開門登記':'領取點交'}</button><button class="small" data-act="noshow" data-u="${h(r.uid)}" data-id="${h(r.id)}">未到・取消</button></div></article>`).join('')}</div>`:'<div class="empty">沒有待領取的申請。</div>'}
-<h2>借出中</h2>${out.length?`<div class="tablewrap"><table><thead><tr><th>借用人</th><th>品項</th><th>財產編號</th><th>出借</th><th>應還</th><th></th></tr></thead><tbody>${out.map(l=>`<tr><td>${h(l.name)} <span class="mono">${h(l.no)}</span></td><td>${h(l.item)}</td><td class="mono">${h(l.assetNo)}</td><td class="mono">${h(l.outAt||l.date)}</td><td>${l.due?fmtDate(l.due):''} ${l.due&&l.due<t?'<span class="chip bad">逾期</span>':''}${(all.find(x=>x.id===l.reqId)||{}).status==='returning'?' <span class="chip ok">借用人已確認歸還</span>':''}</td><td><button class="small primary" data-act="return" data-loan="${h(l.id)}">歸還點交</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">目前沒有借出中的器材。</div>'}
-${release.length?`<h2>已取消但仍占用時段</h2><div class="list">${release.map(r=>`<div class="card"><div class="spread"><span>${h(r.itemName)}　${when(r)}　${h(r.name)}　${chipFor(r.status)}</span><button class="small" data-act="release" data-id="${h(r.id)}">釋出時段</button></div></div>`).join('')}</div>`:''}`;
-    $('#rv-body').onclick=e=>{const b=e.target.closest('button[data-act]');if(!b)return;const r=all.find(x=>x.id===b.dataset.id&&x.uid===b.dataset.u);
-      ({approve:()=>this.decide(r,'approved'),reject:()=>this.decide(r,'rejected'),checkout:()=>checkout(r),noshow:()=>confirmBox('標記為未到並取消？','申請人沒有在使用日前來領取時使用。','取消申請',()=>this.decide(r,'cancelled')),
+<div class="row"><input data-note="${h(r.id)}" placeholder="給申請人的備註（選填）" value="${h(S.notes[r.id]||'')}" style="flex:1;min-width:200px" aria-label="審核備註"><button class="ok small" data-act="approve" data-u="${h(r.uid)}" data-id="${h(r.id)}">同意借用</button><button class="small danger" data-act="reject" data-u="${h(r.uid)}" data-id="${h(r.id)}">不同意</button></div>
+</article>`).join('')}</div>`:'<div class="empty">目前沒有待審核的申請。</div>'}</section>
+
+<section id="rv-prep" class="wb"><div class="spread"><h2>② 今明兩天要準備</h2>${prep.length?`<button class="small" data-act="copyprep">複製準備清單給工讀生</button>`:''}</div>
+${prep.length?groups.map(d=>`<h3 class="dayhead ${d<t?'late':d===t?'today':''}">${dayLabel(d)}</h3><div class="tablewrap"><table class="prep"><thead><tr><th>已備妥</th><th>時段</th><th>品項</th><th>借用人</th><th>電話</th><th></th></tr></thead><tbody>
+${prep.filter(r=>r.date===d).map(r=>`<tr class="${r.prepared?'ready':''}"><td><input type="checkbox" data-prep="${h(r.id)}" data-u="${h(r.uid)}" ${r.prepared?'checked':''} aria-label="已備妥"></td><td class="mono">${h(perText(r)||'整天')}</td><td>${h(r.itemName)}</td><td>${h(r.name)} <span class="meta">${h(r.dept)}</span></td><td class="mono">${h(r.phone)}</td>
+<td class="row" style="gap:6px;flex-wrap:nowrap"><button class="primary small" data-act="checkout" data-u="${h(r.uid)}" data-id="${h(r.id)}">${r.type==='space'?'開門登記':'領取點交'}</button><button class="small" data-act="noshow" data-u="${h(r.uid)}" data-id="${h(r.id)}">未到</button></td></tr>`).join('')}</tbody></table></div>`).join(''):'<div class="empty">今天和明天沒有要準備的借用。</div>'}
+${later.length?`<details class="later"><summary>之後的預約（${later.length} 筆）</summary><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>日期</th><th>時段</th><th>品項</th><th>借用人</th><th></th></tr></thead><tbody>${later.map(r=>`<tr><td>${fmtDate(r.date)}</td><td class="mono">${h(perText(r)||'整天')}</td><td>${h(r.itemName)}</td><td>${h(r.name)}</td><td><button class="small" data-act="noshow" data-u="${h(r.uid)}" data-id="${h(r.id)}">取消</button></td></tr>`).join('')}</tbody></table></div></details>`:''}</section>
+
+<section id="rv-out" class="wb"><h2>③ 借出中</h2>
+${out.length?`<div class="tablewrap"><table><thead><tr><th>應還</th><th>借用人</th><th>品項</th><th>財產編號</th><th>出借</th><th></th></tr></thead><tbody>${out.map(l=>{const rq=all.find(x=>x.id===l.reqId)||{};return `<tr class="${l.due&&l.due<t?'late':''}"><td>${l.due?fmtDate(l.due):''} ${l.due&&l.due<t?'<span class="chip bad">逾期</span>':''}${rq.status==='returning'?' <span class="chip ok">已確認歸還</span>':''}</td><td>${h(l.name)} <span class="mono">${h(l.phone||'')}</span></td><td>${h(l.item)}</td><td class="mono">${h(l.assetNo)}</td><td class="mono">${h(l.outAt||l.date)}</td><td><button class="small primary" data-act="return" data-loan="${h(l.id)}">歸還點交</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">目前沒有借出中的器材。</div>'}</section>
+
+<section id="rv-sv" class="wb"><div class="spread"><h2>④ 歸還後問卷</h2><div class="row">
+<label class="choice" style="padding:6px 10px"><input type="checkbox" id="rv-only" ${onlyUnfilled?'checked':''}><span><b>只看未填</b></span></label>
+${unfilled.length?`<button class="small" data-act="copysv">複製未填名單</button>`:''}</div></div>
+<p class="meta" style="margin:0 0 8px">近 30 天歸還的學生借用：已填 ${ret.length-unfilled.length}、未填 ${unfilled.length}（教職員免填）。</p>
+${showRet.length?`<div class="tablewrap"><table><thead><tr><th>問卷</th><th>歸還日期</th><th>借用人</th><th>學號</th><th>電話</th><th>品項</th></tr></thead><tbody>${showRet.map(r=>`<tr><td>${r.surveyed?'<span class="chip ok">已填</span>':'<span class="chip warn">未填</span>'}</td><td class="mono">${h(r.returnedAt||'')}</td><td>${h(r.name)}</td><td class="mono">${h(r.no)}</td><td class="mono">${h(r.phone)}</td><td>${h(r.itemName)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${onlyUnfilled?'近 30 天歸還的學生都已填寫問卷。':'近 30 天沒有歸還紀錄。'}</div>`}</section>
+
+${release.length?`<section class="wb"><h2>已取消但仍占用時段</h2><div class="list">${release.map(r=>`<div class="card"><div class="spread"><span>${h(r.itemName)}　${when(r)}　${h(r.name)}　${chipFor(r.status)}</span><button class="small" data-act="release" data-id="${h(r.id)}">釋出時段</button></div></div>`).join('')}</div></section>`:''}`;
+    $('#rv-body').onclick=e=>{
+      const j=e.target.closest('[data-jump]');if(j){const sec=document.getElementById(j.dataset.jump);sec&&sec.scrollIntoView({behavior:'smooth',block:'start'});return}
+      const b=e.target.closest('button[data-act]');if(!b)return;const r=all.find(x=>x.id===b.dataset.id&&x.uid===b.dataset.u);
+      ({approve:()=>this.decide(r,'approved'),reject:()=>this.decide(r,'rejected'),checkout:()=>checkout(r),
+        noshow:()=>confirmBox('取消這筆預約？','申請人沒有到場領取，或已確定不借用。','取消預約',()=>this.decide(r,'cancelled')),
+        approveall:()=>confirmBox(`同意 ${okPend.length} 筆申請？`,'有衝突（活動日、時段重疊、數量不足）的申請不會一起同意，請個別處理。','全部同意',async()=>{for(const x of okPend)await this.decide(x,'approved',true);toast(`已同意 ${okPend.length} 筆申請`)}),
+        copyprep:()=>copyText(['【資源教室準備清單】',...groups.flatMap(d=>[``,`■ ${dayLabel(d).trim()}`,...prep.filter(r=>r.date===d).map(r=>`${r.prepared?'☑':'☐'} ${perText(r)||'整天'}｜${r.itemName}｜${r.name}（${r.dept}）${r.phone}`)])].join('\n'),'準備清單'),
+        copysv:()=>copyText(['【請填寫資源教室滿意度問卷】',`問卷網址：${(S.config.url||location.href).replace(/#.*$/,'')}#mine`,'',...unfilled.map(r=>`${r.name}（${r.no}）${r.phone}｜${r.itemName}｜${r.returnedAt||''} 歸還`)].join('\n'),'未填問卷名單'),
         return:()=>returnLoan(S.loans.find(l=>l.id===b.dataset.loan)),release:()=>S.db.doc('calendar/'+b.dataset.id).delete().then(()=>toast('已釋出時段'))}[b.dataset.act]||(()=>{}))()};
+    $('#rv-body').onchange=e=>{
+      if(e.target.id==='rv-only'){S.rvOnlyUnfilled=e.target.checked;this.paint();return}
+      const id=e.target.dataset.prep;if(id){editReq(e.target.dataset.u,id,{prepared:e.target.checked}).catch(()=>toast('更新失敗，請重試'))}};
   },
-  async decide(r,status){
+  async decide(r,status,quiet){
     try{
       await editReq(r.uid,r.id,{status,reviewNote:S.notes[r.id]||'',reviewedAt:nowStr()});
       if(status==='approved'&&(r.type==='space'||r.type==='leisure'))await S.db.doc('calendar/'+r.id).set({id:r.id,code:r.code,date:r.date,start:r.start,end:r.end,periods:r.periods||null});
       if(status!=='approved'&&S.calendar.some(c=>c.id===r.id))await S.db.doc('calendar/'+r.id).delete();
-      delete S.notes[r.id];toast(status==='approved'?'已同意，申請人會在「學生/職員申請」看到結果':status==='rejected'?'已標記為不同意':'已取消');
+      delete S.notes[r.id];if(!quiet)toast(status==='approved'?'已同意，申請人會在「學生/職員申請」看到結果':status==='rejected'?'已標記為不同意':'已取消');
     }catch(e){toast('更新失敗，請重試')}
   }
 };
