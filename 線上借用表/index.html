@@ -1237,6 +1237,19 @@ V.setup={
     $('#ev-list').innerHTML=ev.length?ev.map(e=>`<div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><span>${fmtDate(e.date)} <span class="mono">${e.date.slice(0,4)}</span>　${h(e.label)}</span><button class="small" data-rm="${e.date}">移除</button></div>`).join(''):'<p class="meta" style="margin:0">尚未設定活動日。</p>'}
 };
 
+/* 連線診斷：登入失敗時說明是哪裡出問題 */
+async function diagnoseApi(){
+  let r,txt;
+  try{r=await fetch(API_URL,{method:'GET'})}catch(e){return '連不上 Google Apps Script。可能原因：①網路或學校防火牆擋住 script.google.com（請改用手機網路試試）；②部署的「誰可以存取」不是「所有人」。'}
+  try{txt=await r.text()}catch(e){txt=''}
+  let j=null;try{j=JSON.parse(txt)}catch(e){}
+  if(!j)return /accounts\.google|ServiceLogin|signin/i.test(txt)||/<html/i.test(txt)?'Google 要求登入，代表部署設定不對：請到「部署 → 管理部署作業 → 編輯」，「執行身分」選「我」、「誰可以存取」選「所有人」，版本選「新版本」後部署。':`Google 回應異常（HTTP ${r.status}），請確認網址是「網頁應用程式」的 /exec 網址。`;
+  if(!j.ok)return 'Apps Script 有回應但回報錯誤，請確認貼上的是完整最新版程式後重新部署。';
+  try{const p=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'read',reads:[{kind:'doc',path:'config/site'}]})});const pj=JSON.parse(await p.text());
+    if(pj.ok)return '資料庫連線正常，剛才可能是網路短暫中斷，請再按一次登入。';
+    return `Apps Script 程式執行錯誤：${pj.message||pj.code||'未知'}。請確認貼上的是完整最新版程式，並在 Apps Script 執行一次「初始化」授權後，再部署「新版本」。`}
+  catch(e){return '讀取測試失敗：Apps Script 回傳的不是資料。請在 Apps Script 執行一次「初始化」並完成授權，再部署「新版本」。'}
+}
 /* ===== 資源教室登入 ===== */
 const PASS_HASH='9d6573f4edcc85a7d4693459d49732efd1539f14563508221b9b4e6d2572d985';
 const sess={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
@@ -1255,7 +1268,7 @@ V.login={
   bind(){$('#lg-form').addEventListener('submit',async e=>{e.preventDefault();const err=$('#lg-err');err.textContent='';
     if(Date.now()<lockUntil){err.textContent=`嘗試次數過多，請 ${Math.ceil((lockUntil-Date.now())/1000)} 秒後再試。`;return}
     let ok=false;const pw=$('#lg-pw').value;
-    if(S.gas){try{ok=await S.db.login(pw)}catch(x){err.textContent='連不上資料庫，請檢查網路後再試。';return}if(ok)sess.set('rr-pw',pw)}
+    if(S.gas){try{ok=await S.db.login(pw)}catch(x){err.textContent='連不上資料庫，正在檢查原因…';err.textContent=await diagnoseApi();return}if(ok)sess.set('rr-pw',pw)}
     else try{ok=(await sha('hk-resource-room:'+pw))===PASS_HASH}catch(x){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
     if(!ok){fails++;$('#lg-pw').value='';if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='密碼不正確。';return}
     fails=0;
