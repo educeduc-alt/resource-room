@@ -189,7 +189,7 @@ details.fullrules{margin-top:22px;border-top:1px solid var(--line);padding-top:1
 details.fullrules>summary{cursor:pointer;font-weight:700;color:var(--accent);padding:6px 0}
 .whocard{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:0 0 16px}
 .submitbar{position:sticky;bottom:0;z-index:4;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));margin-top:8px;box-shadow:0 -6px 18px rgba(0,0,0,.06)}
-.submitbar #a-count{font-weight:500}
+.submitbar button{flex:1;min-height:56px;font-size:1.15rem;font-weight:700}
 .sent{background:var(--ok-soft);border:1px solid var(--ok);border-radius:12px;padding:14px 18px;margin-bottom:14px}
 .sent b{color:var(--ok);font-size:1.05rem}.sent ol{margin:6px 0 0;padding-left:1.3em}
 .tally.jump{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -385,7 +385,7 @@ ${sec('伍、借用審核標準',['申請日與資源教室活動日有衝突則
 <section class="rule"><h2>陸、器材明細及借用辦法</h2>
 <div class="tablewrap"><table class="rtable"><thead><tr><th>項目</th><th>器材明細</th><th>可借用時間</th><th>可借用期限</th></tr></thead><tbody>
 <tr><td rowspan="2"><b>一般性器材借用</b></td><td class="wrap">筆記型電腦、投影機、平板、數位相機、攝影機、擴視機、簡報筆、放大滑鼠、錄音筆、護貝機、計算機、吹風機、裁紙刀（大／小）</td><td rowspan="2">星期一至星期五<br><span class="mono">08:00–20:00</span></td><td>當天</td></tr>
-<tr><td class="wrap">電子翻譯機、延長線、8 吋小電風扇、鍵盤、耳機、彩色筆、麥克筆、熱熔膠槍</td><td>3 天內</td></tr>
+<tr><td class="wrap">電子翻譯機、延長線、鍵盤、耳機、彩色筆、麥克筆、熱熔膠槍</td><td>3 天內</td></tr>
 <tr><td><b>休閒性器材借用</b></td><td class="wrap">1. 牌卡<br>2. 桌遊<br>3. 手眼協調訓練機（須配合家銘學長時間，以利協助架設器材）<br>4. 投影設備（限觀賞、遊戲借用）</td><td class="wrap">期中考：第 10、11 週 <span class="mono">18:00–20:00</span><br>期末考：第 19 週 <span class="mono">10:00–15:00</span></td><td>當天</td></tr>
 </tbody></table></div></section>
 <div class="row" style="margin-top:24px"><a class="btn primary" href="#apply">我已了解，開始借用 →</a><a class="btn" href="#items">查看器材一覽</a></div></details></article>`}
@@ -428,39 +428,37 @@ V.apply={
 V.borrow={
   deps:['catalog','config','calendar'],
   shell(){
-    const a=local.get('applicant')||{};const known=a.name&&a.phone&&(a.role==='教職員'||a.no);
     return `<h1>申請借用設備</h1>
 <p class="lede"><b>老師審核通過後，使用當日請攜帶學生證或教職員證領取。</b></p>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
-
+<fieldset id="a-who"><legend>申請人資料</legend><div class="grid">
+<label class="f">身分<select id="a-role"><option>學生</option><option>教職員</option></select></label>
+<label class="f" id="a-no-wrap">學號<input id="a-no" autocomplete="off" inputmode="latin"></label>
+<label class="f">姓名<input id="a-name" autocomplete="off"></label>
+<label class="f">系級／單位<input id="a-dept" autocomplete="off" placeholder="例：幼保系二甲"></label>
+<label class="f">聯絡電話<input id="a-phone" type="tel" autocomplete="off"></label>
+</div></fieldset>
 <fieldset><legend>借用類別</legend><div class="choices compact" id="a-types">
 ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借用'],['long','長期借用']].map(([k,t],i)=>`<label class="choice"><input type="radio" name="a-type" id="a-type-${k}" value="${k}" ${i===0?'checked':''}><span><b>${t}</b></span></label>`).join('')}
 </div></fieldset>
-<div id="a-detail"></div>
+<div id="a-when"></div>
 <fieldset><legend>用途說明 <small style="font-weight:400;color:var(--muted)">選填，長期借用必填</small></legend>
 <label class="f"><textarea id="a-purpose" placeholder="例如：課堂報告、讀書會" aria-label="用途說明" style="min-height:60px"></textarea></label></fieldset>
-${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</b>${a.no?`・<span class="mono">${h(a.no)}</span>`:''}・${h(a.dept)}・<span class="mono">${h(a.phone)}</span></span><button type="button" class="small" id="a-whoedit">修改</button></div>`:''}
-<fieldset id="a-who" ${known?'hidden':''}><legend>申請人資料 <small style="font-weight:400;color:var(--muted)">填一次，下次自動帶入</small></legend><div class="grid">
-<label class="f">身分<select id="a-role"><option>學生</option><option ${a.role==='教職員'?'selected':''}>教職員</option></select></label>
-<label class="f" id="a-no-wrap">學號<input id="a-no" autocomplete="off" value="${h(a.no)}" inputmode="latin"></label>
-<label class="f">姓名<input id="a-name" autocomplete="name" value="${h(a.name)}"></label>
-<label class="f">系級／單位<input id="a-dept" value="${h(a.dept)}" placeholder="例：幼保系二甲"></label>
-<label class="f">聯絡電話<input id="a-phone" type="tel" autocomplete="tel" value="${h(a.phone)}"></label>
-</div></fieldset>
+
+<div id="a-what"></div>
 <p class="err" id="a-err" role="alert"></p>
-<div class="submitbar"><span id="a-count">請先選擇要借的器材</span><button type="submit" class="primary" id="a-submit">送出申請</button></div>
+<div class="submitbar"><button type="submit" class="primary" id="a-submit">送出申請</button></div>
 </form>`;
   },
   bind(){
     const roleSync=()=>{const staff=$('#a-role').value==='教職員';$('#a-no-wrap').hidden=staff};$('#a-role').addEventListener('change',roleSync);roleSync();
     if(S.preselect){const it=item(S.preselect);if(it){const t=it.cat==='leisure'?'leisure':it.cat==='space'?'space':'item';$('#a-type-'+t).checked=true}}
     $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true);this.sum()});
-    const we=$('#a-whoedit');if(we)we.onclick=()=>{$('#a-who').hidden=false;$('#a-whocard').hidden=true;$('#a-name').focus()};
     $('#apply-form').addEventListener('change',()=>this.sum());$('#apply-form').addEventListener('click',()=>setTimeout(()=>this.sum(),0));
     $('#apply-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
-    $('#a-detail').addEventListener('change',e=>{if(this.type()==='space'&&e.target.name==='a-code'){if(S.spSel&&S.spSel.code!==e.target.value)S.spSel=null;this.spPaint()}if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
-    $('#a-detail').addEventListener('click',e=>{const b=e.target.closest('.cell');
+    $('#apply-form').addEventListener('change',e=>{if(this.type()==='space'&&e.target.name==='a-code'){if(S.spSel&&S.spSel.code!==e.target.value)S.spSel=null;this.spPaint()}if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
+    $('#apply-form').addEventListener('click',e=>{const b=e.target.closest('.cell');
       if(b){const {c,d,p}=b.dataset;let sl=S.spSel;if(!sl||sl.code!==c||sl.date!==d)sl=S.spSel={code:c,date:d,periods:new Set()};sl.periods.has(p)?sl.periods.delete(p):sl.periods.add(p);
         const r=document.querySelector(`input[name=a-code][value="${c}"]`);if(r)r.checked=true;this.spPaint();this.slots();return}
       if(e.target.id==='sp-prev'){S.spWeek=addDays(S.spWeek,-7);this.spPaint()}
@@ -485,8 +483,9 @@ ${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</
     const b=$('#a-qr-dl');if(b)b.onclick=async()=>saveFile('QR_apply_線上預借申請.png',await qrPng(url,'線上預借申請','掃描閱讀借用規定並申請'))},
   type(){return ($('input[name=a-type]:checked')||{}).value||'item'},
   detail(reset){
-    const box=$('#a-detail');if(!box)return;
-    const keep={};if(!reset)box.querySelectorAll('input,select,textarea').forEach(el=>{keep[el.id||el.name+':'+el.value]=el.type==='checkbox'||el.type==='radio'?el.checked:el.value});
+    const boxes=[$('#a-when'),$('#a-what')];if(!boxes[0])return;
+    const all=()=>boxes.flatMap(b=>[...b.querySelectorAll('input,select,textarea')]);
+    const keep={};if(!reset)all().forEach(el=>{keep[el.id||el.name+':'+el.value]=el.type==='checkbox'||el.type==='radio'?el.checked:el.value});
     const t=this.type(),min=today();
     const pre=S.preselect;
     let html='';
@@ -497,7 +496,7 @@ ${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</
       html=`<fieldset><legend>選擇器材（可複選）</legend><div class="stack">
 <h3>當天歸還</h3><div class="choices compact">${grp('general').map(opt).join('')}</div>
 <h3>3 天內歸還</h3><div class="choices compact">${grp('general3').map(opt).join('')}</div></div></fieldset>
-<fieldset><legend>使用日期</legend><div class="grid"><label class="f">使用日期 <input type="date" id="a-date" min="${min}" value="${[0,6].includes(dow(today()))?thisWeek():today()}"></label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+<fieldset data-slot="when"><legend>使用日期</legend><div class="grid"><label class="f">使用日期 <input type="date" id="a-date" min="${min}" value="${[0,6].includes(dow(today()))?thisWeek():today()}"></label></div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='leisure'){
       const list=S.catalog.filter(x=>x.cat==='leisure');
       let dateField;
@@ -506,21 +505,22 @@ ${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</
         dateField=opts.length?`<label class="f">開放日期與時段<select id="a-date"><option value="">請選擇</option>${opts.join('')}</select></label>`:`<p class="note">本學期已沒有可預約的休閒性器材開放時段（期中考第 10、11 週 18:00–20:00；期末考第 19 週 10:00–15:00）。</p>`;
       }else dateField=`<label class="f">使用日期<input type="date" id="a-date" min="${min}"></label>`;
       html=`<fieldset><legend>選擇器材</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
-<fieldset><legend>使用時段</legend><div class="grid">${dateField}</div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
+<fieldset data-slot="when"><legend>使用時段</legend><div class="grid">${dateField}</div><div id="a-slots" style="margin-top:10px"></div></fieldset>`;
     }else if(t==='space'){
       const list=S.catalog.filter(x=>x.cat==='space');
-      html=`<fieldset><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code||(S.spSel&&S.spSel.code===x.code)?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
-<fieldset><legend>點選日期與節次</legend><div class="spread" style="margin-bottom:8px"><button type="button" class="small" id="sp-prev">‹ 上一週</button><b id="sp-wk"></b><button type="button" class="small" id="sp-next">下一週 ›</button></div>
+      html=`<fieldset data-slot="when"><legend>選擇空間</legend><div class="choices">${list.map(x=>`<label class="choice"><input type="radio" name="a-code" value="${h(x.code)}" ${pre===x.code||(S.spSel&&S.spSel.code===x.code)?'checked':''}><span><b>${h(x.name)}</b></span></label>`).join('')}</div></fieldset>
+<fieldset data-slot="when"><legend>點選日期與節次</legend><div class="spread" style="margin-bottom:8px"><button type="button" class="small" id="sp-prev">‹ 上一週</button><b id="sp-wk"></b><button type="button" class="small" id="sp-next">下一週 ›</button></div>
 <div id="sp-grid"></div><div id="sp-sum" style="margin-top:10px"></div><input type="hidden" id="a-date"><div id="a-slots"></div></fieldset>`;
     }else if(t==='long'){
       const list=S.catalog.filter(x=>x.longOk);
-      html=`<fieldset><legend>長期借用（學習輔具）</legend><p class="note" style="margin-top:0">是否核准長期借用，會依當下借用數量評估。核准後於資源教室填寫『長期借用申請單』並領取。</p><div class="grid">
+      html=`<fieldset data-slot="when"><legend>長期借用（學習輔具）</legend><p class="note" style="margin-top:0">是否核准長期借用，會依當下借用數量評估。核准後於資源教室填寫『長期借用申請單』並領取。</p><div class="grid">
 <label class="f">輔具<select id="a-code"><option value="">請選擇</option>${list.map(x=>`<option value="${h(x.code)}" ${pre===x.code?'selected':''}>${h(x.name)}</option>`).join('')}</select></label>
 <label class="f">開始日期<input type="date" id="a-date" min="${today()}"></label>
 <label class="f">預計歸還日期<input type="date" id="a-end-date" min="${today()}"></label></div></fieldset>`;
     }
-    box.innerHTML=html;
-    if(!reset)box.querySelectorAll('input,select,textarea').forEach(el=>{const k=el.id||el.name+':'+el.value;if(k in keep){if(el.type==='checkbox'||el.type==='radio')el.checked=keep[k];else el.value=keep[k]}});
+    const tmp=document.createElement('div');tmp.innerHTML=html;boxes.forEach(b=>b.innerHTML='');
+    [...tmp.children].forEach(el=>(el.dataset.slot==='when'?boxes[0]:boxes[1]).appendChild(el));
+    if(!reset)all().forEach(el=>{const k=el.id||el.name+':'+el.value;if(k in keep){if(el.type==='checkbox'||el.type==='radio')el.checked=keep[k];else el.value=keep[k]}});
     {const ph=$('#a-purpose');if(ph)ph.placeholder=t==='long'?'必填：說明需要長期使用的原因':'例如：課堂報告、讀書會'}
     this.slots();
     if(t==='space')this.spPaint();
@@ -550,7 +550,6 @@ ${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</
     if(S.gas&&idKey&&ap.phone){const before=S.uid;await setIdentity(idKey,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
     if(!S.db||!S.uid)return fail(S.gas?(staffRole?'請先填寫姓名與聯絡電話。':'請先填寫學號與聯絡電話。'):'目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
     if(S.myReq.some(needSurvey))return fail('你有已歸還的借用尚未填寫滿意度問卷，請先到「學生/職員申請」填寫後再送出新的申請。');
-    if((!staffRole&&!ap.no)||!ap.name||!ap.dept||!ap.phone){const w=$('#a-who');if(w){w.hidden=false;const c=$('#a-whocard');if(c)c.hidden=true}}
     if((!staffRole&&!ap.no)||!ap.name||!ap.dept||!ap.phone)return fail(staffRole?'請填寫申請人的姓名、單位與聯絡電話。':'請填寫申請人的學號、姓名、系級與聯絡電話。');
     const purpose=v('a-purpose'),min=today();
     const base={...ap,type:t,purpose,createdAt:nowStr(),status:'pending'};
@@ -601,7 +600,7 @@ ${known?`<div class="whocard" id="a-whocard"><span>申請人：<b>${h(a.name)}</
         list.push(...reqs);
         await ref.set({list,updatedAt:nowStr()});
       });
-      local.set('applicant',ap);S.preselect=null;S.spSel=null;
+      S.preselect=null;S.spSel=null;
       toast(`已送出 ${reqs.length} 筆申請，請等候老師審核`);S.justSent=reqs.length;
       location.hash='mine';
     }catch(e){
@@ -619,7 +618,7 @@ V.mine={
   deps:['myReq','catalog'],
   shell(){return `<div id="m-gate"></div><div id="m-list" class="list"></div>`},
   paint(){
-    const id=local.get('rr-id');
+    const id=(()=>{try{return JSON.parse(sess.get('rr-id')||'null')}catch(e){return null}})();
     if(S.gas&&(!S.uid||!id||id.uid!==S.uid)){
       $('#m-gate').innerHTML=gateNotice();
       $('#m-list').innerHTML=`<form id="m-find" class="card" style="max-width:520px" novalidate><h3>查詢我的申請</h3><p class="meta" style="margin:0">學生請輸入學號，教職員請輸入姓名，再加上申請時填寫的聯絡電話。</p><div class="grid"><label class="f">學號（教職員填姓名）<input id="mf-no" autocomplete="off"></label><label class="f">聯絡電話<input id="mf-phone" type="tel"></label></div><p class="err" id="mf-err"></p><button class="primary" type="submit">查詢</button></form>`;
@@ -692,7 +691,7 @@ const devText=e=>[e.pc?`電腦 ${e.pc}`:'',e.print?'印表機（彩色）':'',e.
 const reasonText=e=>e.reason==='其他'?`其他：${e.reasonNote||''}`:e.reason;
 V.usage={
   deps:['config'],
-  shell(){const me=local.get('usage-me')||{},ap=local.get('applicant')||{};const dept=me.dept||ap.dept||'',name=me.name||ap.name||'';
+  shell(){const me={},dept='',name='';
     return `<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
 <form id="u-form" novalidate>
 <fieldset><legend>使用人</legend><div class="grid">
@@ -726,7 +725,6 @@ V.usage={
     try{
       await serial('use',async()=>{const ref=S.db.doc('usage/'+S.uid);if(S.gas){await ref.set({entries:[e],updatedAt:nowStr()});return}
         const snap=await ref.get();const list=snap.exists?[...(snap.data().entries||[])]:[];list.push(e);await ref.set({entries:list,updatedAt:nowStr()})});
-      local.set('usage-me',{shift:e.shift,dept:e.dept,name:e.name});
       $('#u-form').hidden=true;$('#u-done').hidden=false;
       $('#u-done').innerHTML=`<div class="note ok" style="padding:20px"><b>已完成登記</b><br><span class="mono">${h(e.at)}</span>　${h(e.name)}　${h(devText(e))}　${h(reasonText(e))}</div><p class="row"><button id="u-again">再登記一筆</button><a href="#rules">回到首頁</a></p>`;
       $('#u-again').onclick=()=>route();
@@ -1278,7 +1276,7 @@ function startAdmin(){
 }
 
 /* ---------- 展示版（GitHub Pages）：沒有 Claude 平台時，資料存在這台電腦的瀏覽器 ---------- */
-const DEMO_CATALOG=[{"code": "g01", "name": "筆記型電腦", "cat": "general", "qty": 8, "out": 0, "note": "部分規格與機型老舊，116 年預計增購 2 台", "longOk": false, "sort": 1}, {"code": "g02", "name": "投影機", "cat": "general", "qty": 2, "out": 0, "note": "單槍投影機", "longOk": false, "sort": 2}, {"code": "g03", "name": "平板", "cat": "general", "qty": 7, "out": 0, "note": "", "longOk": false, "sort": 3}, {"code": "g05", "name": "數位相機／單眼相機", "cat": "general", "qty": 2, "out": 0, "note": "", "longOk": false, "sort": 5}, {"code": "g06", "name": "攝影機／數位攝影機", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 6}, {"code": "g07", "name": "擴視機（桌上型／可攜式）", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 7}, {"code": "g08", "name": "簡報筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 8}, {"code": "g09", "name": "放大滑鼠", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 9}, {"code": "g10", "name": "錄音筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 10}, {"code": "g11", "name": "護貝機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 11}, {"code": "g12", "name": "計算機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 12}, {"code": "g13", "name": "吹風機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 13}, {"code": "g14", "name": "裁紙刀（大）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 14}, {"code": "g15", "name": "裁紙刀（小）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 15}, {"code": "t01", "name": "電子翻譯機（學習翻譯機）", "cat": "general3", "qty": 2, "out": 0, "note": "", "longOk": true, "sort": 16}, {"code": "t02", "name": "延長線", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 17}, {"code": "t03", "name": "8 吋小電風扇", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 18}, {"code": "t04", "name": "鍵盤", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 19}, {"code": "t05", "name": "耳機", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 20}, {"code": "t06", "name": "彩色筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 21}, {"code": "t07", "name": "麥克筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 22}, {"code": "t08", "name": "熱熔膠槍", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 23}, {"code": "l01", "name": "牌卡", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 24}, {"code": "l02", "name": "桌遊", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 25}, {"code": "l03", "name": "手眼協調訓練機", "cat": "leisure", "qty": 1, "out": 0, "note": "須配合家銘學長時間，以利協助架設器材", "longOk": false, "sort": 26}, {"code": "l04", "name": "投影設備（休閒用）", "cat": "leisure", "qty": 1, "out": 0, "note": "限觀賞、遊戲借用", "longOk": false, "sort": 27}, {"code": "s01", "name": "悅讀書房", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；使用後至資源教室告知完畢、領回證件並填寫滿意度問卷", "longOk": false, "sort": 28}, {"code": "s02", "name": "課輔室", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；借用當日由工讀生或老師協助開門", "longOk": false, "sort": 29}];
+const DEMO_CATALOG=[{"code": "g01", "name": "筆記型電腦", "cat": "general", "qty": 8, "out": 0, "note": "部分規格與機型老舊，116 年預計增購 2 台", "longOk": false, "sort": 1}, {"code": "g02", "name": "投影機", "cat": "general", "qty": 2, "out": 0, "note": "單槍投影機", "longOk": false, "sort": 2}, {"code": "g03", "name": "平板", "cat": "general", "qty": 7, "out": 0, "note": "", "longOk": false, "sort": 3}, {"code": "g05", "name": "數位相機／單眼相機", "cat": "general", "qty": 2, "out": 0, "note": "", "longOk": false, "sort": 5}, {"code": "g06", "name": "攝影機／數位攝影機", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 6}, {"code": "g07", "name": "擴視機（桌上型／可攜式）", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 7}, {"code": "g08", "name": "簡報筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 8}, {"code": "g09", "name": "放大滑鼠", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 9}, {"code": "g10", "name": "錄音筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 10}, {"code": "g11", "name": "護貝機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 11}, {"code": "g12", "name": "計算機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 12}, {"code": "g13", "name": "吹風機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 13}, {"code": "g14", "name": "裁紙刀（大）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 14}, {"code": "g15", "name": "裁紙刀（小）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 15}, {"code": "t01", "name": "電子翻譯機（學習翻譯機）", "cat": "general3", "qty": 2, "out": 0, "note": "", "longOk": true, "sort": 16}, {"code": "t02", "name": "延長線", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 17}, {"code": "t04", "name": "鍵盤", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 19}, {"code": "t05", "name": "耳機", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 20}, {"code": "t06", "name": "彩色筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 21}, {"code": "t07", "name": "麥克筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 22}, {"code": "t08", "name": "熱熔膠槍", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 23}, {"code": "l01", "name": "牌卡", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 24}, {"code": "l02", "name": "桌遊", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 25}, {"code": "l03", "name": "手眼協調訓練機", "cat": "leisure", "qty": 1, "out": 0, "note": "須配合家銘學長時間，以利協助架設器材", "longOk": false, "sort": 26}, {"code": "l04", "name": "投影設備（休閒用）", "cat": "leisure", "qty": 1, "out": 0, "note": "限觀賞、遊戲借用", "longOk": false, "sort": 27}, {"code": "s01", "name": "悅讀書房", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；使用後至資源教室告知完畢、領回證件並填寫滿意度問卷", "longOk": false, "sort": 28}, {"code": "s02", "name": "課輔室", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；借用當日由工讀生或老師協助開門", "longOk": false, "sort": 29}];
 function makeDemoDb(){
   const KEY='rr-demo-db';let data=local.get(KEY);
   if(!data){data={};DEMO_CATALOG.forEach(c=>data['catalog/'+c.code]={...c});data['config/site']={url:'',semesterStart:'',office:'',eventDays:[]}}
@@ -1309,7 +1307,7 @@ function makeGasDb(api){
   const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
   const cache={},loadedCols=new Set();
   try{const c=JSON.parse(localStorage.getItem('rr-cache')||'{}');Object.assign(cache,c.docs||{});(c.cols||[]).forEach(x=>loadedCols.add(x))}catch(e){}
-  const keep=k=>PUB.includes(k.split('/')[0])||(S.uid&&k==='requests/'+S.uid);
+  const keep=k=>PUB.includes(k.split('/')[0]);
   const persist=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{const docs={};for(const k in cache)if(keep(k))docs[k]=cache[k];
     try{localStorage.setItem('rr-cache',JSON.stringify({docs,cols:[...loadedCols].filter(c=>PUB.includes(c))}))}catch(e){}},300)};
   const call=async body=>{
@@ -1368,11 +1366,11 @@ function makeGasDb(api){
 const digits=s=>String(s||'').replace(/\D/g,'');
 async function setIdentity(no,phone,name){
   const uid='u'+await sha(String(no).toUpperCase().trim()+'|'+digits(phone));
-  local.set('rr-id',{uid,no:String(no).toUpperCase().trim(),name:name||''});
+  sess.set('rr-id',JSON.stringify({uid,no:String(no).toUpperCase().trim(),name:name||''}));
   if(uid!==S.uid){S.uid=uid;subMine()}
   return uid;
 }
-function clearIdentity(){try{localStorage.removeItem('rr-id')}catch(e){}if(S.db&&S.db.forget)S.db.forget('requests/');S.uid=null;S.myReq=[];if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}S.got.myReq=false;route()}
+function clearIdentity(){sess.set('rr-id',null);if(S.db&&S.db.forget)S.db.forget('requests/');S.uid=null;S.myReq=[];if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}S.got.myReq=false;route()}
 function anonUid(){let a=local.get('rr-anon');if(!a){const b=new Uint8Array(32);crypto.getRandomValues(b);a='u'+[...b].map(x=>x.toString(16).padStart(2,'0')).join('');local.set('rr-anon',a)}return a}
 function subMine(){
   if(S.mineUnsub){S.mineUnsub();S.mineUnsub=null}
@@ -1382,13 +1380,15 @@ function subMine(){
 }
 
 /* ---------- boot ---------- */
+['applicant','usage-me','rr-id'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+try{const c=JSON.parse(localStorage.getItem('rr-cache')||'null');if(c&&c.docs){Object.keys(c.docs).forEach(k=>{if(!/^(catalog|config|calendar)\//.test(k))delete c.docs[k]});localStorage.setItem('rr-cache',JSON.stringify(c))}}catch(e){}
 route();
 (async()=>{
   const C=window.claude;let db,user,dl;
   const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
   if(!C||!C.use){
     if(inFrame){S.noDb=true;S.ready=true;repaint(['config']);return}
-    if(API_URL){S.gas=true;db=makeGasDb(API_URL);dl=demoDownloads;const id=local.get('rr-id');user={id:async()=>id&&id.uid||null,canEdit:async()=>true}}
+    if(API_URL){S.gas=true;db=makeGasDb(API_URL);dl=demoDownloads;const id=(()=>{try{return JSON.parse(sess.get('rr-id')||'null')}catch(e){return null}})();user={id:async()=>id&&id.uid||null,canEdit:async()=>true}}
     else{S.demo=true;db=makeDemoDb();dl=demoDownloads;user={id:async()=>'demo-user',canEdit:async()=>true};demoBanner(db);
     db.doc('config/site').get().then(sn=>{const c=sn.data()||{};if(!c.url)db.doc('config/site').set({...c,url:location.origin+location.pathname})})}
   }else [db,user,dl]=await Promise.all([C.use('db'),C.use('user'),C.use('downloads')]);
