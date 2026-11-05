@@ -225,7 +225,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padd
   </div>
 </header>
 <main class="wrap" id="view" tabindex="-1"><p class="note">載入中…</p></main>
-<footer class="wrap">申請借用／歸還：星期一至星期五 08:00–20:00（寒暑假依學校辦公時間調整）。資源教室內電腦 4 台、印表機、影印機、掃描機可直接使用，不需申請，使用時請到<a href="#usage">設備使用登記</a>登記。<span id="office"></span></footer>
+<footer class="wrap">申請借用／歸還：星期一至星期五 08:00–20:00（寒暑假依學校辦公時間調整）。資源教室內電腦 4 台、印表機、影印機、掃描機可直接使用，不需申請，使用時請到<a href="#usage">現場設備使用登記</a>登記。<span id="office"></span></footer>
 <div id="modal" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
@@ -426,7 +426,7 @@ V.apply={
 V.borrow={
   deps:['catalog','config','calendar'],
   shell(){
-    return `<h1>申請借用設備</h1>
+    return `<h1>申請借用資源教室設備</h1>
 <p class="lede"><b>老師審核通過後，使用當日請攜帶學生證或教職員證領取。</b></p>
 <div id="a-gate"></div>
 <form id="apply-form" novalidate>
@@ -592,7 +592,8 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     }
     const btn=$('#a-submit');btn.disabled=true;btn.textContent='送出中…';
     try{
-      await serial('req',async()=>{
+      if(S.db.arr)for(const r of reqs)await S.db.arr('requests/'+S.uid,'list',{add:r});
+      else await serial('req',async()=>{
         const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();
         const list=snap.exists?[...(snap.data().list||[])]:[];
         list.push(...reqs);
@@ -650,7 +651,8 @@ ${S.openSurvey===r.id?`<form class="sv-form" data-for="${h(r.id)}" novalidate>${
       const b=f.querySelector('button[type=submit]');b.disabled=true;if(await submitSurveyBlock(f,r,'sv')){S.openSurvey=null;toast('已收到問卷，謝謝你的回饋！')}else b.disabled=false};
   },
   async setStatus(id,patch,msg){
-    try{await serial('req',async()=>{const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();if(!snap.exists)return;
+    try{if(S.db.arr){await S.db.arr('requests/'+S.uid,'list',{id,patch});toast(msg);return}
+      await serial('req',async()=>{const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();if(!snap.exists)return;
       const list=(snap.data().list||[]).map(r=>r.id===id?{...r,...patch}:r);await ref.set({list,updatedAt:nowStr()})});toast(msg)}
     catch(e){toast('更新失敗，請稍後再試')}
   }
@@ -690,7 +692,7 @@ const reasonText=e=>e.reason==='其他'?`其他：${e.reasonNote||''}`:e.reason;
 V.usage={
   deps:['config'],
   shell(){const me={},dept='',name='';
-    return `<h1>設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
+    return `<h1>現場設備使用登記</h1><p class="lede">使用資源教室的電腦、印表機、影印機或掃描機時，請在這裡登記。不需要老師審核，填完按「完成登記」即可。</p><div id="u-gate"></div>
 <form id="u-form" novalidate>
 <fieldset><legend>使用人</legend><div class="grid">
 <label class="f">學制<select id="u-shift"><option>日間部</option><option ${me.shift==='夜間部'?'selected':''}>夜間部</option></select></label>
@@ -747,7 +749,7 @@ V.usagelog={
 <div class="tablewrap" style="max-height:70vh"><table><thead><tr><th>序號</th><th>日期時間</th><th>學制</th><th>科系</th><th>姓名</th><th>使用設備</th><th>使用原因</th><th></th></tr></thead><tbody>
 ${r.map((e,i)=>`<tr><td class="mono">${i+1}</td><td class="mono">${h(e.at)}</td><td>${h(e.shift)}</td><td>${h(e.dept)}</td><td>${h(e.name)}</td><td class="wrap">${h(devText(e))}</td><td>${h(reasonText(e))}</td><td><button class="small" data-del="${h(e.uid)}|${h(e.id)}">刪除</button></td></tr>`).join('')}</tbody></table></div>`;
     $('#ul-body').onclick=ev=>{const d=ev.target.dataset.del;if(!d)return;const [uid,id]=d.split('|');const e=(S.usage||[]).find(x=>x.id===id);
-      confirmBox('刪除這筆使用紀錄？',`${e.at}・${e.name}・${devText(e)}`,'刪除',async()=>{try{await serial('use-'+uid,async()=>{const ref=S.db.doc('usage/'+uid);const sn=await ref.get();if(!sn.exists)return;await ref.set({...sn.data(),entries:(sn.data().entries||[]).filter(x=>x.id!==id)})});toast('已刪除')}catch(x){toast('刪除失敗，請重試')}})};
+      confirmBox('刪除這筆使用紀錄？',`${e.at}・${e.name}・${devText(e)}`,'刪除',async()=>{try{if(S.db.arr){await S.db.arr('usage/'+uid,'entries',{id,remove:true});toast('已刪除');return}await serial('use-'+uid,async()=>{const ref=S.db.doc('usage/'+uid);const sn=await ref.get();if(!sn.exists)return;await ref.set({...sn.data(),entries:(sn.data().entries||[]).filter(x=>x.id!==id)})});toast('已刪除')}catch(x){toast('刪除失敗，請重試')}})};
   }
 };
 
@@ -872,6 +874,7 @@ function reqFlags(r,all){
   return f.map(([t,c])=>`<span class="chip ${c}">${h(t)}</span>`).join('');
 }
 async function editReq(uid,id,patch){
+  if(S.db.arr)return S.db.arr('requests/'+uid,'list',{id,patch});
   await serial('req-'+uid,async()=>{const ref=S.db.doc('requests/'+uid);const snap=await ref.get();if(!snap.exists)throw new Error('missing');
     const list=(snap.data().list||[]).map(r=>r.id===id?{...r,...patch}:r);await ref.set({...snap.data(),list,updatedAt:nowStr()})});
 }
@@ -924,7 +927,7 @@ ${r.purpose||r.reason?`<div>${h([r.reason,r.purpose].filter(Boolean).join('・')
 ${prep.length?groups.map(d=>`<h3 class="dayhead ${d<t?'late':d===t?'today':''}">${dayLabel(d)}</h3><div class="tablewrap"><table class="prep"><thead><tr><th>已備妥</th><th>時段</th><th>品項</th><th>借用人</th><th>電話</th><th></th></tr></thead><tbody>
 ${prep.filter(r=>r.date===d).map(r=>`<tr class="${r.prepared?'ready':''}"><td><input type="checkbox" data-prep="${h(r.id)}" data-u="${h(r.uid)}" ${r.prepared?'checked':''} aria-label="已備妥"></td><td class="mono">${h(perText(r)||'整天')}</td><td>${h(r.itemName)}</td><td>${h(r.name)} <span class="meta">${h(r.dept)}</span></td><td class="mono">${h(r.phone)}</td>
 <td class="row" style="gap:6px;flex-wrap:nowrap"><button class="primary small" data-act="checkout" data-u="${h(r.uid)}" data-id="${h(r.id)}">${r.type==='space'?'開門登記':'領取點交'}</button><button class="small" data-act="noshow" data-u="${h(r.uid)}" data-id="${h(r.id)}">未到</button></td></tr>`).join('')}</tbody></table></div>`).join(''):'<div class="empty">今天和明天沒有要準備的借用。</div>'}
-${later.length?`<details class="later"><summary>之後的預約（${later.length} 筆）</summary><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>日期</th><th>時段</th><th>品項</th><th>借用人</th><th></th></tr></thead><tbody>${later.map(r=>`<tr><td>${fmtDate(r.date)}</td><td class="mono">${h(perText(r)||'整天')}</td><td>${h(r.itemName)}</td><td>${h(r.name)}</td><td><button class="small" data-act="noshow" data-u="${h(r.uid)}" data-id="${h(r.id)}">取消</button></td></tr>`).join('')}</tbody></table></div></details>`:''}</section>
+${later.length?`<details class="later"><summary>之後的預約（${later.length} 筆）</summary><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>日期</th><th>時段</th><th>品項</th><th>借用人</th><th></th></tr></thead><tbody>${later.map(r=>`<tr><td>${fmtDate(r.date)}</td><td class="mono">${h(perText(r)||'整天')}</td><td>${h(r.itemName)}</td><td>${h(r.name)}</td><td class="row" style="gap:6px;flex-wrap:nowrap"><button class="small" data-act="checkout" data-u="${h(r.uid)}" data-id="${h(r.id)}">提前領取</button><button class="small" data-act="noshow" data-u="${h(r.uid)}" data-id="${h(r.id)}">取消</button></td></tr>`).join('')}</tbody></table></div></details>`:''}</section>
 
 <section id="rv-out" class="wb"><h2>③ 借出中</h2>
 ${out.length?`<div class="tablewrap"><table><thead><tr><th>應還</th><th>借用人</th><th>品項</th><th>財產編號</th><th>出借</th><th></th></tr></thead><tbody>${out.map(l=>{const rq=all.find(x=>x.id===l.reqId)||{};return `<tr class="${l.due&&l.due<t?'late':''}"><td>${l.due?fmtDate(l.due):''} ${l.due&&l.due<t?'<span class="chip bad">逾期</span>':''}${rq.status==='returning'?' <span class="chip ok">已確認歸還</span>':''}</td><td>${h(l.name)} <span class="mono">${h(l.phone||'')}</span></td><td>${h(l.item)}</td><td class="mono">${h(l.assetNo)}</td><td class="mono">${h(l.outAt||l.date)}</td><td><button class="small primary" data-act="return" data-loan="${h(l.id)}">歸還點交</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">目前沒有借出中的器材。</div>'}</section>
@@ -1320,9 +1323,9 @@ function demoBanner(db){const b=document.createElement('div');b.className='demo-
 let useGet=false;
 async function apiSend(body){
   const json=JSON.stringify(body);
-  const viaGet=async()=>{const u=API_URL+'?q='+encodeURIComponent(json);if(u.length>7500)throw{code:'unavailable',message:'資料太長，無法用備援方式送出'};
-    const r=await fetch(u);return JSON.parse(await r.text())};
-  if(useGet&&json.length<6000){try{return await viaGet()}catch(e){if(e&&e.code)throw e;throw{code:'unavailable',message:'連不上資料庫'}}}
+  const u=API_URL+'?q='+encodeURIComponent(json),short=u.length<=7500;
+  const viaGet=async()=>{if(!short)throw{code:'unavailable',message:'資料太長，請稍後再試或改用其他網路'};const r=await fetch(u);return JSON.parse(await r.text())};
+  if(useGet&&short){try{return await viaGet()}catch(e){if(e&&e.code)throw e;throw{code:'unavailable',message:'連不上資料庫'}}}
   try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:json});
     const t=await r.text();try{return JSON.parse(t)}catch(e){throw{code:'unavailable',message:'伺服器回應不是資料'}}}
   catch(e){
@@ -1372,7 +1375,7 @@ function makeGasDb(api){
   const merge=(t,src)=>{for(const[k,v]of Object.entries(src)){if(v&&typeof v==='object'&&!Array.isArray(v)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))merge(t[k],v);else t[k]=clone(v)}return t};
   /* 先更新畫面，再送到 Google；失敗就還原 */
   /* 寫入依序送出、不擋畫面；失敗時提示並重新讀取 */
-  function send(body){pend++;chain=chain.then(()=>call(body)).then(()=>{persist()},e=>{toast(e&&e.message&&e.code!=='unavailable'?'儲存失敗：'+e.message:'有資料沒有存到資料庫，請檢查網路後重試');loadedCols.clear();Object.keys(cache).forEach(k=>delete cache[k])})
+  function send(body,legacy){pend++;chain=chain.then(()=>call(body).catch(e=>{if(legacy&&/unknown op/.test(e&&e.message||''))return call(legacy);throw e})).then(()=>{persist()},e=>{toast(e&&e.message&&e.code!=='unavailable'?'儲存失敗：'+e.message:'有資料沒有存到資料庫，請檢查網路後重試');loadedCols.clear();Object.keys(cache).forEach(k=>delete cache[k])})
     .finally(()=>{pend--;if(!pend)soon(150)});return chain}
   async function write(op,path,data){
     if(op==='update'&&cache[path]==null&&!(path in cache)){const d=(await call({op:'get',path})).data;cache[path]=d}
@@ -1390,7 +1393,13 @@ function makeGasDb(api){
     onSnapshot:(next,err)=>sub('col',p,next)});
   return{doc,collection:col,refresh,
     forget(prefix){Object.keys(cache).forEach(k=>{if(k.startsWith(prefix))delete cache[k]});persist()},
-    batch:async writes=>{writes.forEach(([path,data])=>cache[path]=clone(data));emitAll();await send({op:'batch',writes:writes.map(([path,data])=>({op:'set',path,data}))})},
+    batch:async writes=>{writes.forEach(([path,data])=>cache[path]=clone(data));emitAll();
+      let chunk=[],size=0;const flush=()=>{if(chunk.length){send({op:'batch',writes:chunk});chunk=[];size=0}};
+      for(const [path,data] of writes){const w={op:'set',path,data},n=encodeURIComponent(JSON.stringify(w)).length;if(size+n>6000)flush();chunk.push(w);size+=n}
+      flush();await chain},
+    arr(path,field,o){const cur=cache[path]?clone(cache[path]):{};const a=cur[field]||[];
+      if(o.add)a.push(clone(o.add));else{const i=a.findIndex(x=>x&&x.id===o.id);if(i>=0){if(o.remove)a.splice(i,1);else a[i]={...a[i],...o.patch}}}
+      cur[field]=a;cache[path]=cur;emitAll();const full=clone(cur);send({op:'arr',path,field,at:nowStr(),...o},{op:'set',path,data:full});return Promise.resolve()},
     login:async pw=>{const j=await apiSend({op:'login',pw});if(j.code&&j.code!=='denied'&&!j.ok)throw{code:j.code,message:j.message};return !!j.ok}};
 }
 const digits=s=>String(s||'').replace(/\D/g,'');

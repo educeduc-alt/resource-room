@@ -37,7 +37,7 @@ function handle(body) {
   const uid = /^u[0-9a-f]{64}$/.test(req.uid || '') ? req.uid : null;
   if (req.op === 'login') return out({ ok: admin, code: admin ? '' : 'denied' });
   if (req.pw && !admin) return out({ ok: false, code: 'denied', message: '管理密碼不正確' });
-  const write = ['set', 'update', 'delete', 'batch'].includes(req.op);
+  const write = ['set', 'update', 'delete', 'batch', 'arr'].includes(req.op);
   const lock = write ? LockService.getScriptLock() : null;
   if (write) lock.waitLock(25000);
   try {
@@ -48,6 +48,27 @@ function handle(body) {
         : { docs: listCol(st, r.path, admin, uid) }) });
     }
     if (req.op === 'get') return out({ ok: true, data: canRead(req.path, admin, uid) && st.m[req.path] !== undefined ? st.m[req.path] : null });
+    if (req.op === 'arr') {   // 只改陣列裡的一筆，傳送的資料量很小
+      const FIELD = { requests: 'list', surveys: 'responses', usage: 'entries' };
+      const root = String(req.path).split('/')[0], field = FIELD[root];
+      if (!field || !validPath(req.path)) return out({ ok: false, code: 'invalid_argument', message: 'bad path' });
+      if (!canWrite(req.path, admin, uid)) return out({ ok: false, code: 'invalid_argument', message: '沒有寫入權限' });
+      const old = st.m[req.path];
+      let doc = old ? JSON.parse(JSON.stringify(old)) : {};
+      const arr = doc[field] || [];
+      if (req.add) arr.push(req.add);
+      else {
+        const i = arr.findIndex(x => x && x.id === req.id);
+        if (i < 0) return out({ ok: false, code: 'invalid_argument', message: '找不到這筆資料' });
+        if (req.remove) { if (!admin) return out({ ok: false, code: 'invalid_argument', message: '沒有刪除權限' }); arr.splice(i, 1); }
+        else arr[i] = Object.assign({}, arr[i], req.patch || {});
+      }
+      doc[field] = arr; doc.updatedAt = req.at || '';
+      if (!admin) doc = sanitize(req.path, old, doc);
+      putDoc(st, req.path, doc);
+      SpreadsheetApp.flush(); rebuild(st, root);
+      return out({ ok: true });
+    }
     if (write) {
       const ops = req.op === 'batch' ? (req.writes || []) : [{ op: req.op, path: req.path, data: req.data }];
       const roots = {};
