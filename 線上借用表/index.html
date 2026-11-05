@@ -414,12 +414,10 @@ function cellWho(c,code,d,p){const all=allRequests();
 /* ===== 申請借用 ===== */
 function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
-  shell(){return `<div class="apply-head"><div><h1>今天要借設備，還是登記使用？</h1></div>
-<aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
-<div id="a-gate"></div>
+  shell(){return `<div id="a-gate"></div>
 <div class="pick">
-<a class="pickcard" href="#borrow"><b>申請借用設備</b><span class="go">我要借設備 →</span></a>
-<a class="pickcard" href="#usage"><b>設備使用登記</b><span class="go">我要登記使用 →</span></a>
+<a class="pickcard" href="#borrow"><b>申請借用資源教室設備</b><span class="go">我要借設備 →</span></a>
+<a class="pickcard" href="#usage"><b>現場設備使用登記</b><span class="go">我要登記使用 →</span></a>
 </div>
 <details class="inv" id="b-inv-box" style="margin-top:18px" ${S.openInv?'open':''}><summary>查看器材一覽表（資源教室目前剩餘數量與借用期限）</summary><div id="b-inv"></div></details>`},
   deps:['config','myReq','catalog'],
