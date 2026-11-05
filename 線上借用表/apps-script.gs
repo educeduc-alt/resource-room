@@ -16,17 +16,29 @@ const PUBLIC_READ = ['catalog', 'config', 'calendar'];
 const OWN = ['requests', 'surveys', 'usage'];   // 每人只能讀寫自己的
 const SEED_CATALOG = [{"code": "g01", "name": "筆記型電腦", "cat": "general", "qty": 8, "out": 0, "note": "部分規格與機型老舊，116 年預計增購 2 台", "longOk": false, "sort": 1}, {"code": "g02", "name": "投影機", "cat": "general", "qty": 2, "out": 0, "note": "單槍投影機", "longOk": false, "sort": 2}, {"code": "g03", "name": "平板", "cat": "general", "qty": 7, "out": 0, "note": "", "longOk": false, "sort": 3}, {"code": "g05", "name": "數位相機／單眼相機", "cat": "general", "qty": 2, "out": 0, "note": "", "longOk": false, "sort": 5}, {"code": "g06", "name": "攝影機／數位攝影機", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 6}, {"code": "g07", "name": "擴視機（桌上型／可攜式）", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 7}, {"code": "g08", "name": "簡報筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 8}, {"code": "g09", "name": "放大滑鼠", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 9}, {"code": "g10", "name": "錄音筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 10}, {"code": "g11", "name": "護貝機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 11}, {"code": "g12", "name": "計算機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 12}, {"code": "g13", "name": "吹風機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 13}, {"code": "g14", "name": "裁紙刀（大）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 14}, {"code": "g15", "name": "裁紙刀（小）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 15}, {"code": "t01", "name": "電子翻譯機（學習翻譯機）", "cat": "general3", "qty": 2, "out": 0, "note": "", "longOk": true, "sort": 16}, {"code": "t02", "name": "延長線", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 17}, {"code": "t04", "name": "鍵盤", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 19}, {"code": "t05", "name": "耳機", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 20}, {"code": "t06", "name": "彩色筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 21}, {"code": "t07", "name": "麥克筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 22}, {"code": "t08", "name": "熱熔膠槍", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 23}, {"code": "l01", "name": "牌卡", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 24}, {"code": "l02", "name": "桌遊", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 25}, {"code": "l03", "name": "手眼協調訓練機", "cat": "leisure", "qty": 1, "out": 0, "note": "須配合家銘學長時間，以利協助架設器材", "longOk": false, "sort": 26}, {"code": "l04", "name": "投影設備（休閒用）", "cat": "leisure", "qty": 1, "out": 0, "note": "限觀賞、遊戲借用", "longOk": false, "sort": 27}, {"code": "s01", "name": "悅讀書房", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；使用後至資源教室告知完畢、領回證件並填寫滿意度問卷", "longOk": false, "sort": 28}, {"code": "s02", "name": "課輔室", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；借用當日由工讀生或老師協助開門", "longOk": false, "sort": 29}];
 
-function doGet() { return out({ ok: true, service: '資源教室線上借用表', time: new Date() }); }
+function doGet(e) {
+  // 也可用 GET 呼叫：?q=<JSON>（POST 被擋時的備援）
+  if (e && e.parameter && e.parameter.q) return safe(() => handle(e.parameter.q));
+  return out({ ok: true, service: '資源教室線上借用表', time: new Date() });
+}
 
-function doPost(e) {
+function doPost(e) { return safe(() => handle(e && e.postData ? e.postData.contents : '')); }
+
+/* 不論哪裡出錯都回傳 JSON，避免瀏覽器只看到 CORS 錯誤 */
+function safe(fn) {
+  try { return fn(); }
+  catch (x) { return out({ ok: false, code: 'unavailable', message: '伺服器錯誤：' + (x && x.message ? x.message : String(x)) }); }
+}
+
+function handle(body) {
   let req;
-  try { req = JSON.parse(e.postData.contents); } catch (x) { return out({ ok: false, code: 'invalid_argument', message: 'bad json' }); }
+  try { req = JSON.parse(body); } catch (x) { return out({ ok: false, code: 'invalid_argument', message: 'bad json' }); }
   const admin = !!req.pw && req.pw === ADMIN_PASSWORD;
   const uid = /^u[0-9a-f]{64}$/.test(req.uid || '') ? req.uid : null;
   if (req.op === 'login') return out({ ok: admin, code: admin ? '' : 'denied' });
   if (req.pw && !admin) return out({ ok: false, code: 'denied', message: '管理密碼不正確' });
   const write = ['set', 'update', 'delete', 'batch'].includes(req.op);
-  const lock = LockService.getScriptLock();
+  const lock = write ? LockService.getScriptLock() : null;
   if (write) lock.waitLock(25000);
   try {
     const st = load();

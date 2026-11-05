@@ -1248,7 +1248,11 @@ async function diagnoseApi(){
   try{const p=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'read',reads:[{kind:'doc',path:'config/site'}]})});const pj=JSON.parse(await p.text());
     if(pj.ok)return '資料庫連線正常，剛才可能是網路短暫中斷，請再按一次登入。';
     return `Apps Script 程式執行錯誤：${pj.message||pj.code||'未知'}。請確認貼上的是完整最新版程式，並在 Apps Script 執行一次「初始化」授權後，再部署「新版本」。`}
-  catch(e){return '讀取測試失敗：Apps Script 回傳的不是資料。請在 Apps Script 執行一次「初始化」並完成授權，再部署「新版本」。'}
+  catch(e){
+    try{const g=await fetch(API_URL+'?q='+encodeURIComponent(JSON.stringify({op:'read',reads:[{kind:'doc',path:'config/site'}]})));const gj=JSON.parse(await g.text());
+      if('results' in gj)return '用備援方式可以連線，請再按一次登入。';
+      return 'Google Apps Script 的程式不是最新版：請把最新的 apps-script.gs 整份貼上、儲存，再「管理部署作業 → 編輯 → 版本：新版本 → 部署」。'}catch(x){}
+    return '網頁送資料給 Google 時被擋下（CORS）。請把最新的 apps-script.gs 整份貼上、儲存，在函式選單執行一次「初始化」並完成授權，再「管理部署作業 → 編輯 → 版本：新版本 → 部署」。'}
 }
 /* ===== 資源教室登入 ===== */
 const PASS_HASH='9d6573f4edcc85a7d4693459d49732efd1539f14563508221b9b4e6d2572d985';
@@ -1312,6 +1316,23 @@ function demoBanner(db){const b=document.createElement('div');b.className='demo-
   document.querySelector('header.top').after(b);b.querySelector('#demo-reset').onclick=()=>confirmBox('清除所有展示資料？','申請、借用紀錄、使用紀錄與問卷都會清空，器材清單恢復預設。','清除',()=>db.reset())}
 
 /* ---------- Google 試算表資料庫（GitHub Pages 正式版） ---------- */
+/* 先用 POST；被瀏覽器擋（CORS）時改用 GET 傳送，之後同一分頁都用 GET */
+let useGet=false;
+async function apiSend(body){
+  const json=JSON.stringify(body);
+  const viaGet=async()=>{const u=API_URL+'?q='+encodeURIComponent(json);if(u.length>7500)throw{code:'unavailable',message:'資料太長，無法用備援方式送出'};
+    const r=await fetch(u);return JSON.parse(await r.text())};
+  if(useGet&&json.length<6000){try{return await viaGet()}catch(e){if(e&&e.code)throw e;throw{code:'unavailable',message:'連不上資料庫'}}}
+  try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:json});
+    const t=await r.text();try{return JSON.parse(t)}catch(e){throw{code:'unavailable',message:'伺服器回應不是資料'}}}
+  catch(e){
+    if(e&&e.code)throw e;
+    let j=null;try{j=await viaGet()}catch(x){if(x&&x.code)throw x}
+    if(j&&j.service)throw{code:'unavailable',message:'Google Apps Script 不是最新版，請貼上最新 apps-script.gs 並部署新版本'};
+    if(j){useGet=true;return j}
+    throw{code:'unavailable',message:'連不上資料庫'};
+  }
+}
 function makeGasDb(api){
   const subs=new Set();let timer=null,inflight=false,again=false,saveT=null,pend=0,chain=Promise.resolve();
   const meta={fromCache:false,hasPendingWrites:false},PUB=['catalog','config','calendar'];
@@ -1321,9 +1342,7 @@ function makeGasDb(api){
   const keep=k=>PUB.includes(k.split('/')[0]);
   const persist=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{const docs={};for(const k in cache)if(keep(k))docs[k]=cache[k];
     try{localStorage.setItem('rr-cache',JSON.stringify({docs,cols:[...loadedCols].filter(c=>PUB.includes(c))}))}catch(e){}},300)};
-  const call=async body=>{
-    const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...body,uid:S.uid||'',pw:sess.get('rr-pw')||undefined})});
-    let j;try{j=await r.json()}catch(e){throw{code:'unavailable',message:'伺服器沒有回應'}}
+  const call=async body=>{const j=await apiSend({...body,uid:S.uid||'',pw:sess.get('rr-pw')||undefined});
     if(!j.ok)throw{code:j.code||'unavailable',message:j.message||''};return j};
   const snap=(path,data)=>({id:path.split('/').pop(),exists:data!=null,data:()=>clone(data)??undefined,metadata:meta});
   const colDocs=p=>{const n=p.split('/').length+1;return Object.keys(cache).filter(k=>k.startsWith(p+'/')&&k.split('/').length===n&&cache[k]!=null).sort().map(k=>snap(k,cache[k]))};
@@ -1372,7 +1391,7 @@ function makeGasDb(api){
   return{doc,collection:col,refresh,
     forget(prefix){Object.keys(cache).forEach(k=>{if(k.startsWith(prefix))delete cache[k]});persist()},
     batch:async writes=>{writes.forEach(([path,data])=>cache[path]=clone(data));emitAll();await send({op:'batch',writes:writes.map(([path,data])=>({op:'set',path,data}))})},
-    login:async pw=>{try{const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'login',pw})});return !!(await r.json()).ok}catch(e){throw{code:'unavailable'}}}};
+    login:async pw=>{const j=await apiSend({op:'login',pw});if(j.code&&j.code!=='denied'&&!j.ok)throw{code:j.code,message:j.message};return !!j.ok}};
 }
 const digits=s=>String(s||'').replace(/\D/g,'');
 async function setIdentity(no,phone,name){
