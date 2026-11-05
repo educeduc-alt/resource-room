@@ -358,7 +358,7 @@ const V={};
 V.rules={
   shell(){
     const sec=(t,items)=>`<section class="rule"><h2>${t}</h2><ol class="cn">${items.map(x=>`<li><div>${x}</div></li>`).join('')}</ol></section>`;
-    return `<article class="rules-doc"><p class="eyebrow">弘光科技大學・資源教室</p><h1>借用前，先看這 6 點</h1>
+    return `<article class="rules-doc"><h1>借用前，先看這 6 點</h1>
 <ol class="quick">
 <li><b>誰能借用</b><span>本校<b>領有鑑輔會證明的學生</b>優先；<b>教職員</b>因業務需要也可借用。</span></li>
 <li><b>時間</b><span><b>星期一至星期五 08:00–20:00</b> 申請、領取與歸還。</span></li>
@@ -414,12 +414,12 @@ function cellWho(c,code,d,p){const all=allRequests();
 /* ===== 申請借用 ===== */
 function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
-  shell(){return `<div class="apply-head"><div><p class="eyebrow">先選擇你的需求</p><h1>今天要借設備，還是登記使用？</h1></div>
+  shell(){return `<div class="apply-head"><div><h1>今天要借設備，還是登記使用？</h1></div>
 <aside class="qrcard apply-qr" id="a-qr" aria-label="申請借用 QR code"></aside></div>
 <div id="a-gate"></div>
 <div class="pick">
-<a class="pickcard" href="#borrow"><span class="eyebrow">帶離教室・需老師審核</span><b>申請借用設備</b><span class="go">我要借設備 →</span></a>
-<a class="pickcard" href="#usage"><span class="eyebrow">教室內使用・免審核</span><b>設備使用登記</b><span class="go">我要登記使用 →</span></a>
+<a class="pickcard" href="#borrow"><b>申請借用設備</b><span class="go">我要借設備 →</span></a>
+<a class="pickcard" href="#usage"><b>設備使用登記</b><span class="go">我要登記使用 →</span></a>
 </div>
 <details class="inv" id="b-inv-box" style="margin-top:18px" ${S.openInv?'open':''}><summary>查看器材一覽表（資源教室目前剩餘數量與借用期限）</summary><div id="b-inv"></div></details>`},
   deps:['config','myReq','catalog'],
