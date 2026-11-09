@@ -408,7 +408,25 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .k-hbtn{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
 #k-refresh{font-size:1.1rem;padding:6px 11px}
 .k-body{max-width:1100px;margin:0 auto;padding:12px 12px 0}
-.k-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.k-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+.k-back{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-family:inherit;font-size:.92rem;cursor:pointer;color:var(--ink)}
+.k-here{font-size:1.05rem;color:var(--primary);flex:1;white-space:nowrap}
+.k-bar .k-mode{flex:1 1 100%}
+@media (min-width:700px){ .k-bar .k-mode{flex:0 1 320px} }
+.k-land{max-width:720px;margin:10px auto 0;text-align:center}
+.k-land h2{font-size:1.1rem;color:var(--ink);margin:8px 0 16px}
+.k-locs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){ .k-locs{grid-template-columns:1fr} }
+.k-loc{display:flex;flex-direction:column;align-items:center;gap:4px;border:none;border-radius:18px;padding:28px 16px 22px;cursor:pointer;font-family:inherit;color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.12);transition:transform .12s}
+.k-loc:active{transform:scale(.97)}
+.k-loc.room{background:linear-gradient(135deg,#1F7A6F,#155C54)}
+.k-loc.wh{background:linear-gradient(135deg,#5B6B8C,#3E4A66)}
+.k-li{font-size:2.6rem;line-height:1.2}
+.k-ln{font-size:1.4rem;font-weight:800;letter-spacing:.08em}
+.k-ls{font-size:.85rem;opacity:.85}
+.k-lgo{margin-top:10px;background:rgba(255,255,255,.2);border-radius:999px;padding:6px 16px;font-size:.9rem}
+.k-more{grid-column:1/-1;border:1px dashed var(--line);background:#fff;border-radius:12px;padding:12px;font-family:inherit;font-size:.9rem;color:var(--ink-soft);cursor:pointer}
 .k-seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px;flex:1 1 240px}
 .k-seg button{flex:1;border:none;background:none;padding:10px 8px;border-radius:9px;font-family:inherit;font-size:1rem;color:var(--ink-soft);cursor:pointer}
 .k-mode button.on{background:var(--mode);color:#fff;font-weight:700}
@@ -446,6 +464,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .ksize .kst{text-align:right;padding-right:10px}
 .ksize .kstep{grid-column:1/-1;padding:4px 10px 8px}
 .ksize.none{opacity:.5}
+.k-cart[hidden]{display:none!important}
 .k-cart{position:fixed;left:0;right:0;bottom:0;z-index:45;background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08);
   display:flex;align-items:center;gap:10px;padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
 .k-cart .k-sum{flex:1;font-size:.95rem;color:var(--ink-soft)}
@@ -2666,7 +2685,7 @@ async function drawQr(text){
 
 /* ================= 外層：工讀生登記畫面（點餐式） ================= */
 const kioskEl = document.getElementById('kiosk');
-let kioskOn = false, kItems = null, kMode = -1, kFrom = 'room', kCat = '', kCart = new Map(), kBusy = false, kLoadedAt = null;
+let kioskOn = false, kItems = null, kMode = -1, kFrom = null, kCat = '', kAll = false, kCart = new Map(), kBusy = false, kLoadedAt = null;
 const kLocal = () => !cloudUrl();                       // 沒有雲端：這台裝置自己記
 const kList = () => kLocal() ? items : (kItems || []);
 const kKey = (id, size, from) => `${id}|${size ?? ''}|${from}`;
@@ -2720,10 +2739,27 @@ function kSetup(msg){
     kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); showKiosk();
   };
 }
+// 品項是否放在這個地點：該地點有庫存，或位置圖上標在這裡（yd-＝悅讀書房、q-＝Q棟倉庫）
+const kAtLoc = (it, from) => {
+  const has = it.sizes ? it.sizes.some((_,i)=>kStock(it,i,from) > 0) : kStock(it,null,from) > 0;
+  return has || (it.loc||[]).some(l => l.startsWith(from === 'wh' ? 'q-' : 'yd-'));
+};
+const kInStock = (it, from) => it.sizes ? it.sizes.some((_,i)=>kStock(it,i,from) > 0) : kStock(it,null,from) > 0;
+const LOCS = [{k:'room', name:'悅讀書房', sub:'資源教室', icon:'📚'}, {k:'wh', name:'Q棟倉庫', sub:'地下室倉庫', icon:'📦'}];
+function kLandingHtml(){
+  const list = kList();
+  return `<div class="k-land">
+    <h2>要到哪裡拿東西／放東西？</h2>
+    <div class="k-locs">${LOCS.map(L=>{
+      const n = list.filter(it=>kInStock(it, L.k)).length;
+      return `<button class="k-loc ${L.k}" data-kfrom="${L.k}"><span class="k-li">${L.icon}</span><span class="k-ln">${L.name}</span>
+        <span class="k-ls">${L.sub}・${(!kLocal() && !kItems) ? '載入中…' : n + ' 項有庫存'}</span><span class="k-lgo">進入 →</span></button>`; }).join('')}</div></div>`;
+}
 const kBodyHtml = () => `
   <div class="k-bar">
+    <button class="k-back" data-kback>← 換地點</button>
+    <div class="k-here" id="k-here"></div>
     <div class="k-seg k-mode"><button data-kmode="-1">📤 領出</button><button data-kmode="1">📥 補進</button></div>
-    <div class="k-seg k-from"><button data-kfrom="room">悅讀書房</button><button data-kfrom="wh">Q棟倉庫</button></div>
   </div>
   <div class="k-filter">
     <input type="search" id="k-q" placeholder="🔍 搜尋品名" autocomplete="off">
@@ -2734,12 +2770,22 @@ const kBodyHtml = () => `
 
 function renderKiosk(){
   const body = kioskEl.querySelector('.k-body');
+  if(!kFrom){
+    body.innerHTML = kLandingHtml(); kioskEl.querySelector('.k-cart').hidden = true;
+    kioskEl.classList.remove('restock'); kioskEl.querySelector('.k-sub').textContent = '先選擇地點';
+    return;
+  }
   if(!body.querySelector('#k-grid')) body.innerHTML = kBodyHtml();
   kioskEl.querySelector('.k-cart').hidden = false;
+  const L = LOCS.find(x=>x.k===kFrom);
+  document.getElementById('k-here').innerHTML = `${L.icon} <b>${L.name}</b>`;
+  kioskEl.querySelector('.k-sub').textContent = `${L.name}・${kMode < 0 ? '領出' : '補進'}`;
   kioskEl.classList.toggle('restock', kMode === 1);
   kioskEl.querySelectorAll('[data-kmode]').forEach(b=>b.classList.toggle('on', +b.dataset.kmode === kMode));
   kioskEl.querySelectorAll('[data-kfrom]').forEach(b=>b.classList.toggle('on', b.dataset.kfrom === kFrom));
-  const list = kList();
+  // 只列出這個地點的東西；領出時只列有庫存的，補進時可展開全部品項
+  const all = kList();
+  const list = all.filter(it => kMode < 0 ? kInStock(it, kFrom) : (kAll || kAtLoc(it, kFrom)));
   const cats = [...new Set(list.map(i=>i.cat).filter(Boolean))];
   if(kCat && !cats.includes(kCat)) kCat = '';
   document.getElementById('k-cats').innerHTML = ['', ...cats].map(c=>`<button class="${c===kCat?'on':''}" data-kcat="${esc(c)}">${c ? esc(c) : '全部'}</button>`).join('');
@@ -2747,8 +2793,9 @@ function renderKiosk(){
   const shown = list.filter(it => (!kCat || it.cat === kCat) && (!q || it.name.toLowerCase().includes(q)));
   const grid = document.getElementById('k-grid');
   if(!kLocal() && !kItems){ grid.innerHTML = '<div class="k-empty">載入中…</div>'; }
-  else if(!list.length){ grid.innerHTML = '<div class="k-empty">管理者還沒有把庫存資料放到雲端。</div>'; }
-  else grid.innerHTML = shown.length ? shown.map(kCardHtml).join('') : '<div class="k-empty">找不到符合的品項</div>';
+  else if(!all.length){ grid.innerHTML = '<div class="k-empty">管理者還沒有把庫存資料放到雲端。</div>'; }
+  else grid.innerHTML = (shown.length ? shown.map(kCardHtml).join('') : `<div class="k-empty">${list.length ? '找不到符合的品項' : (kMode < 0 ? '這裡目前沒有可領出的物品' : '這裡目前沒有物品')}</div>`)
+    + (kMode > 0 ? `<button class="k-more" data-kall>${kAll ? '只顯示放在這裡的品項' : '＋ 要補進的東西不在清單裡？顯示所有品項'}</button>` : '');
   kSetNote(kLocal() ? '這台裝置沒有連雲端，登記只會記在這台裝置。' :
     (kLoadedAt ? `庫存更新於 ${String(kLoadedAt.getHours()).padStart(2,'0')}:${String(kLoadedAt.getMinutes()).padStart(2,'0')}　登記人：${localStorage.getItem('rc-kiosk-name') || '（送出時填寫）'}` : '更新庫存中…'));
   kUpdateCart();
@@ -2769,7 +2816,8 @@ function kCardHtml(it){
   if(it.sizes){
     empty = kMode < 0 && it.sizes.every((_,i)=>kStock(it,i) === 0);
     inner = it.sizes.map((z,i)=>{ const st = kStock(it,i);
-      return `<div class="ksize ${kMode<0 && !st ? 'none' : ''}"><span class="kszn">${esc(z.s)}</span><span class="kst">${lbl} <b>${st}</b></span>${kStepHtml(it,i)}</div>`; }).join('');
+      if(kMode < 0 && !st) return '';
+      return `<div class="ksize"><span class="kszn">${esc(z.s)}</span><span class="kst">${lbl} <b>${st}</b></span>${kStepHtml(it,i)}</div>`; }).join('');
   }else{
     const st = kStock(it, null); empty = kMode < 0 && !st;
     inner = `<div class="kst">${lbl} <b>${st}</b> 件</div>${kStepHtml(it, null)}`;
@@ -2835,7 +2883,11 @@ kioskEl.addEventListener('click', e=>{
     if(kCart.size && !confirm('切換「領出／補進」會清空已選的物品，確定嗎？')) return;
     kMode = v; kCart.clear(); renderKiosk(); return; }
   const f = t.closest('[data-kfrom]');
-  if(f){ kFrom = f.dataset.kfrom; renderKiosk(); return; }
+  if(f){ kFrom = f.dataset.kfrom; kCat = ''; kAll = false; kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); renderKiosk(); window.scrollTo(0,0); return; }
+  if(t.closest('[data-kback]')){
+    if(kCart.size && !confirm('換地點會清空已選的物品，確定嗎？')) return;
+    kCart.clear(); kFrom = null; renderKiosk(); window.scrollTo(0,0); return; }
+  if(t.closest('[data-kall]')){ kAll = !kAll; renderKiosk(); return; }
   const c = t.closest('[data-kcat]');
   if(c){ kCat = c.dataset.kcat; renderKiosk(); return; }
   const im = t.closest('[data-kimg]');
