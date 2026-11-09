@@ -119,7 +119,7 @@ details.rules{font-size:.9rem;color:var(--muted)} details.rules summary{cursor:p
 details.rules ol{padding-left:1.3em;margin:6px 0}
 #modal{position:fixed;inset:0;z-index:20;background:rgba(10,16,13,.55);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
 #modal .box{background:var(--bg);border-radius:14px;max-width:640px;width:100%;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 50px rgba(0,0,0,.3)}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:8px;font-weight:500;max-width:calc(100% - 32px)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(110px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:8px;font-weight:500;max-width:calc(100% - 32px)}
 #toast:empty{display:none}
 .apply-head{display:flex;gap:20px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
 .apply-head>div{flex:1 1 320px;min-width:0}
@@ -212,6 +212,33 @@ details.later{margin-top:12px}details.later summary{cursor:pointer;color:var(--a
 .choices.compact .choice{padding:8px 10px;gap:8px}
 .choices.compact .choice .chip{font-size:.72rem;padding:1px 7px;margin-top:3px;white-space:normal}
 @media (max-width:520px){.choices.compact{grid-template-columns:1fr 1fr}}
+.modeseg{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:520px;margin:4px 0 16px;padding:4px;border-radius:14px;background:var(--sunk)}
+.modeseg button{min-height:52px;border:0;border-radius:10px;font-size:1.05rem;font-weight:700;background:transparent;color:var(--muted)}
+.modeseg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.modeseg[data-mode="out"] button[data-mode="out"][aria-pressed="true"]{color:var(--warn)}
+.modeseg[data-mode="in"] button[data-mode="in"][aria-pressed="true"]{color:var(--ok)}
+.pos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding-bottom:12px}
+.pos-item{display:flex;flex-direction:column;gap:10px;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--surface);min-width:0}
+.pos-item.on{border-color:var(--accent);background:var(--accent-soft)}
+.pi-name{display:flex;flex-direction:column;gap:2px}.pi-name b{font-size:1.08rem}
+.pi-stock{font-size:.88rem;color:var(--muted)}.pi-stock b{color:var(--fg)}
+.pi-warn:empty{display:none}
+.stepper{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center}
+.st-btn{min-height:56px;border-radius:12px;font-size:1.6rem;font-weight:700;padding:0;line-height:1;background:var(--sunk);border:1px solid var(--line)}
+.st-btn.plus{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.st-btn.plus:hover{filter:brightness(1.08);background:var(--accent)}
+.st-btn:disabled{opacity:.35}
+.stepper input{min-height:56px;text-align:center;font-size:1.5rem;font-weight:700;font-family:var(--font-mono);padding:4px}
+.stepper input::-webkit-inner-spin-button{-webkit-appearance:none}
+.posbar{position:sticky;bottom:0;z-index:4;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 18px rgba(0,0,0,.08)}
+.posbar #pos-sum{flex:1;min-width:180px;font-size:1.02rem}
+.posbar #pos-go{min-height:56px;min-width:150px;font-size:1.2rem;font-weight:700}
+.cf-table td{white-space:nowrap}.cf-table .qty{font-size:1.15rem}.cf-table .qty.out{color:var(--warn)}.cf-table .qty.in{color:var(--ok)}
+.big-btn{min-height:54px;font-size:1.1rem;font-weight:700;flex:1}
+.done-big{width:72px;height:72px;border-radius:50%;background:var(--ok);color:#fff;font-size:2.4rem;display:grid;place-items:center;margin:4px auto 0}
+.done-list{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+a.lowlink{display:block;text-decoration:none;color:var(--fg);margin-bottom:12px}
+@media (max-width:520px){.posbar #pos-go{flex:1 1 100%}}
 footer a{color:var(--accent)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padding-block:16px 28px}
 @media (max-width:520px){.bar{grid-template-columns:1fr 52px}.bar .track{grid-column:1/-1;grid-row:2}}
@@ -304,15 +331,16 @@ const allRequests=()=>S.allReq.flatMap(d=>(d.list||[]).map(r=>({...r,uid:d.id}))
 
 /* ---------- views ---------- */
 const STUDENT_TABS=[['rules','① 借用說明'],['apply','② 我要借／使用設備'],['mine','③ 查詢我的申請']];
-const ADMIN_TABS=[['review','今日工作台'],['records','設備紀錄'],['stats','滿意度統計'],['setup','設定']];
-const ADMIN_VIEWS=['review','records','ledger','usagelog','spaceweek','stats','roomstats','setup'];
+const ADMIN_TABS=[['review','今日工作台'],['records','設備紀錄'],['supplies','耗材管理'],['stats','滿意度統計'],['setup','設定']];
+const ADMIN_VIEWS=['review','records','ledger','usagelog','spaceweek','supplies','stats','roomstats','setup'];
 const isAdminView=v=>ADMIN_VIEWS.includes(v);
 let curView=null,curParam=null;
 function navHtml(){
   const r=['borrow','usage','items','item'].includes(curView)?'apply':curView==='survey'?'mine':['ledger','usagelog','spaceweek'].includes(curView)?'records':curView==='roomstats'?'stats':curView;
   let s=STUDENT_TABS.map(([k,t])=>`<a href="#${k}" ${r===k?'aria-current="page"':''}>${t}</a>`).join('');
   if(S.admin)s+=`<span class="sep"></span><span class="grp">資源教室</span>`+ADMIN_TABS.map(([k,t])=>`<a href="#${k}" ${r===k?'aria-current="page"':''}>${t}</a>`).join('')+`<a href="#logout">登出</a>`;
-  else s+=`<span class="sep"></span><a href="#login" ${r==='login'?'aria-current="page"':''}>資源教室登入</a>`;
+  else if(S.staff)s+=`<span class="sep"></span><span class="grp">工讀生</span><a href="#staff" ${r==='staff'?'aria-current="page"':''}>耗材登記</a><a href="#logout">登出</a>`;
+  else s+=`<span class="sep"></span><a href="#staff" ${r==='staff'?'aria-current="page"':''}>工讀生</a><a href="#login" ${r==='login'?'aria-current="page"':''}>資源教室登入</a>`;
   return s;
 }
 function route(){
@@ -685,6 +713,123 @@ V.spaceweek={
   paint(){$('#sw-wk').textContent=`${fmtDate(S.swWeek)} – ${fmtDate(addDays(S.swWeek,4))}`;
     $('#sw-grid').innerHTML=S.catalog.length?spaceGrid({codes:S.catalog.filter(x=>x.cat==='space').map(x=>x.code),mon:S.swWeek,who:cellWho}):'<p class="note">載入中…</p>'}
 };
+/* ===== 工讀生：耗材登記（點餐式） ===== */
+S.pos={mode:'out',qty:{}};S.cons=[];S.consLog=[];
+const CONS_T={out:'領用',in:'補貨',adjust:'盤點調整'};
+async function consume(o){
+  if(S.db.consume)return S.db.consume(o);
+  const items=[];
+  for(const it of o.items){const c=S.cons.find(x=>x.code===it.code);if(!c)continue;const b=Number(c.stock)||0,a=o.type==='out'?b-it.qty:o.type==='in'?b+it.qty:it.qty;
+    await S.db.doc('consumables/'+it.code).update({stock:a});items.push({code:it.code,name:c.name,unit:c.unit,qty:it.qty,before:b,after:a})}
+  await S.db.doc('cons_log/'+o.id).set({id:o.id,type:o.type,items,by:o.by,note:o.note,at:o.at,role:S.admin?'老師':'工讀生'});return items;
+}
+const isLow=c=>(Number(c.stock)||0)<=(Number(c.low)||0);
+V.staff={
+  deps:['cons','config'],
+  shell(){if(!S.staff)return loginForm('工讀生登入','登入後可以登記耗材的領用與補貨。','工讀生密碼');
+    return `<div class="spread"><h1>耗材登記</h1>${S.admin?'<a href="#supplies">← 回耗材管理</a>':''}</div>
+<div class="modeseg" role="radiogroup" aria-label="登記類型"><button type="button" data-mode="out">領用（用掉）</button><button type="button" data-mode="in">補貨（新進）</button></div>
+<div id="pos-grid" class="pos"></div>
+<div class="posbar"><span id="pos-sum"></span><button type="button" class="small" id="pos-clear">清空</button><button type="button" class="primary" id="pos-go">確認</button></div>`},
+  bind(){
+    if(!S.staff){bindLogin(()=>route());return}
+    const v=$('#view');
+    v.onclick=e=>{const t=e.target.closest('button');if(!t)return;
+      if(t.dataset.mode){S.pos.mode=t.dataset.mode;this.paint();return}
+      const inc=t.dataset.inc,dec=t.dataset.dec;
+      if(inc||dec){const c=inc||dec;S.pos.qty[c]=Math.max(0,(S.pos.qty[c]||0)+(inc?1:-1));this.cell(c);this.sum();return}
+      if(t.id==='pos-clear'){S.pos.qty={};this.paint();return}
+      if(t.id==='pos-go')this.confirm()};
+    v.oninput=e=>{const c=e.target.dataset.q;if(!c)return;S.pos.qty[c]=Math.max(0,parseInt(e.target.value)||0);this.cell(c,true);this.sum()};
+  },
+  paint(){
+    if(!S.staff)return;
+    $$('.modeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===S.pos.mode));
+    $('.modeseg').dataset.mode=S.pos.mode;
+    const g=$('#pos-grid');
+    g.innerHTML=S.cons.length?S.cons.map(c=>`<div class="pos-item" data-code="${h(c.code)}">
+<div class="pi-name"><b>${h(c.name)}</b><span class="pi-stock">庫存 <b class="mono">${Number(c.stock)||0}</b> ${h(c.unit)}${isLow(c)?' <span class="chip warn">快用完</span>':''}</span></div>
+<div class="stepper"><button type="button" class="st-btn" data-dec="${h(c.code)}" aria-label="減少 ${h(c.name)}">−</button><input type="number" min="0" inputmode="numeric" data-q="${h(c.code)}" aria-label="${h(c.name)} 數量"><button type="button" class="st-btn plus" data-inc="${h(c.code)}" aria-label="增加 ${h(c.name)}">＋</button></div>
+<span class="pi-warn"></span></div>`).join(''):'<div class="empty">耗材清單載入中…</div>';
+    S.cons.forEach(c=>this.cell(c.code));this.sum();
+  },
+  cell(code,typing){const el=document.querySelector(`.pos-item[data-code="${code}"]`);if(!el)return;const q=S.pos.qty[code]||0,c=S.cons.find(x=>x.code===code)||{};
+    const inp=el.querySelector('input');if(!typing)inp.value=q||'';inp.placeholder='0';
+    el.classList.toggle('on',q>0);el.querySelector('[data-dec]').disabled=!q;
+    el.querySelector('.pi-warn').innerHTML=S.pos.mode==='out'&&q>(Number(c.stock)||0)?'<span class="chip bad">超過目前庫存</span>':''},
+  sum(){const sel=S.cons.filter(c=>S.pos.qty[c.code]>0),n=sel.reduce((a,c)=>a+S.pos.qty[c.code],0);
+    $('#pos-sum').innerHTML=sel.length?`${S.pos.mode==='out'?'領用':'補貨'} <b>${sel.length}</b> 項・共 <b>${n}</b> 件`:`請按「＋」選擇要${S.pos.mode==='out'?'領用':'補貨'}的數量`;
+    $('#pos-go').disabled=!sel.length;$('#pos-clear').hidden=!sel.length},
+  confirm(){
+    const m=S.pos.mode,sel=S.cons.filter(c=>S.pos.qty[c.code]>0);if(!sel.length)return;
+    const rows=sel.map(c=>{const q=S.pos.qty[c.code],b=Number(c.stock)||0,a=m==='out'?b-q:b+q;return{c,q,b,a}});
+    const neg=rows.some(r=>r.a<0);
+    openModal(`<div><p class="eyebrow">請核對後送出</p><h2 style="margin:4px 0 0">確認${m==='out'?'領用':'補貨'} ${rows.length} 項</h2></div>
+<div class="tablewrap"><table class="cf-table"><thead><tr><th>品項</th><th>數量</th><th>庫存變化</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${h(r.c.name)}</td><td><b class="qty ${m}">${m==='out'?'−':'＋'}${r.q}</b> ${h(r.c.unit)}</td><td class="mono">${r.b} → <b>${r.a}</b>${r.a<0?' <span class="chip bad">庫存不足</span>':''}</td></tr>`).join('')}</tbody></table></div>
+<label class="f">登記人（工讀生姓名）<input id="pos-by" autocomplete="off" value="${h(sess.get('pos-by')||'')}"></label>
+<label class="f">備註（選填）<input id="pos-note" autocomplete="off" placeholder="例如：印製講義、補充印表機"></label>
+${neg?`<label class="choice"><input type="checkbox" id="pos-force"><span><b>庫存數字可能不正確，仍要送出</b><small>送出後請告知老師盤點</small></span></label>`:''}
+<p class="err" id="pos-err" role="alert"></p>
+<div class="row"><button class="primary big-btn" id="pos-ok">確認送出</button><button data-close>返回修改</button></div>`,mm=>{
+      mm.querySelector('#pos-ok').onclick=async()=>{const err=$('#pos-err');const by=$('#pos-by').value.trim();
+        if(!by){err.textContent='請填寫登記人姓名。';$('#pos-by').focus();return}
+        if(neg&&!$('#pos-force').checked){err.textContent='有品項的數量超過目前庫存，請確認數量，或勾選上方選項後送出。';return}
+        sess.set('pos-by',by);$('#pos-ok').disabled=true;
+        try{const items=await consume({id:newId(),type:m,items:rows.map(r=>({code:r.c.code,qty:r.q})),by,note:$('#pos-note').value.trim(),at:nowStr()});
+          S.pos.qty={};
+          mm.querySelector('.box').innerHTML=`<div class="done-big">✓</div><h2 style="margin:0;text-align:center">已完成${m==='out'?'領用':'補貨'}登記</h2>
+<ul class="done-list">${rows.map(r=>`<li>${h(r.c.name)}　<b>${m==='out'?'−':'＋'}${r.q}</b> ${h(r.c.unit)}　（庫存 ${r.a}）</li>`).join('')}</ul>
+<button class="primary big-btn" data-close>繼續登記</button>`;
+          this.paint();
+        }catch(x){$('#pos-ok').disabled=false;err.textContent='送出失敗，請稍後再試。'}};
+    });
+  }
+};
+
+/* ===== 老師：耗材管理 ===== */
+V.supplies={
+  deps:['cons','consLog'],
+  shell(){return `<div class="spread"><h1>耗材管理</h1><div class="row"><a class="btn" href="#staff">開啟耗材登記畫面</a><button id="sp-add">新增耗材</button><button id="sp-export">匯出 Excel</button></div></div>
+<p class="lede">工讀生在「耗材登記」登記的領用與補貨，會即時更新這裡的庫存。工讀生用工讀生密碼登入，只看得到耗材登記一頁。</p>
+<div id="sp-tally" class="tally"></div><h2>庫存</h2><div id="sp-stock"></div>
+<div class="spread"><h2>登記紀錄</h2><div class="row"><select id="sp-type" aria-label="類型"><option value="">全部類型</option><option value="out">領用</option><option value="in">補貨</option><option value="adjust">盤點調整</option></select><input type="month" id="sp-m" value="${today().slice(0,7)}" aria-label="月份"></div></div><div id="sp-log"></div>`},
+  bind(){['sp-type','sp-m'].forEach(id=>$('#'+id).addEventListener('input',()=>this.paint()));
+    $('#sp-add').onclick=()=>consDialog();
+    $('#sp-export').onclick=()=>{const L=this.logs();saveFile(`資源教室耗材_${$('#sp-m').value||today()}.xlsx`,xlsxBlob([
+      ['庫存',[['名稱','單位','目前庫存','安全庫存','本月用量','狀態'],...S.cons.map(c=>[c.name,c.unit,Number(c.stock)||0,Number(c.low)||0,this.used(c.code),isLow(c)?'快用完':''])],[18,6,10,10,10,10]],
+      ['登記紀錄',[['時間','類型','品項','數量','單位','登記前','登記後','登記人','身分','備註'],...L.flatMap(l=>(l.items||[]).map(i=>[l.at,CONS_T[l.type]||l.type,i.name,i.qty,i.unit,i.before,i.after,l.by,l.role||'',l.note||'']))],[17,9,18,7,6,8,8,10,7,24]]]))};
+    $('#view').addEventListener('click',e=>{const a=e.target.dataset.adj,ed=e.target.dataset.edit;if(a)adjustDialog(S.cons.find(c=>c.code===a));if(ed)consDialog(S.cons.find(c=>c.code===ed))});
+  },
+  logs(){const t=$('#sp-type').value,m=$('#sp-m').value;return (S.consLog||[]).filter(l=>(!t||l.type===t)&&(!m||(l.at||'').startsWith(m)))},
+  used(code){const m=$('#sp-m').value;return (S.consLog||[]).filter(l=>l.type==='out'&&(!m||(l.at||'').startsWith(m))).reduce((a,l)=>a+(l.items||[]).filter(i=>i.code===code).reduce((x,i)=>x+i.qty,0),0)},
+  paint(){
+    const low=S.cons.filter(isLow),m=$('#sp-m').value,inM=(S.consLog||[]).filter(l=>!m||(l.at||'').startsWith(m));
+    $('#sp-tally').innerHTML=`<div><b>${S.cons.length}</b><span>耗材品項</span></div><div><b style="color:${low.length?'var(--bad)':'inherit'}">${low.length}</b><span>快用完（≤ 安全庫存）</span></div><div><b>${inM.filter(l=>l.type==='out').length}</b><span>本月領用次數</span></div><div><b>${inM.filter(l=>l.type==='in').length}</b><span>本月補貨次數</span></div>`;
+    $('#sp-stock').innerHTML=S.cons.length?`<div class="tablewrap"><table><thead><tr><th>名稱</th><th>目前庫存</th><th>安全庫存</th><th>本月用量</th><th>狀態</th><th></th></tr></thead><tbody>${S.cons.map(c=>`<tr class="${isLow(c)?'late':''}"><td>${h(c.name)}</td><td class="mono"><b>${Number(c.stock)||0}</b> ${h(c.unit)}</td><td class="mono">${Number(c.low)||0} ${h(c.unit)}</td><td class="mono">${this.used(c.code)} ${h(c.unit)}</td><td>${isLow(c)?'<span class="chip bad">快用完，請補貨</span>':'<span class="chip ok">足夠</span>'}</td><td class="row" style="gap:6px;flex-wrap:nowrap"><button class="small" data-adj="${h(c.code)}">盤點</button><button class="small" data-edit="${h(c.code)}">編輯</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">尚未建立耗材。按「新增耗材」加入第一項。</div>';
+    if(!S.got.consLog){$('#sp-log').innerHTML='<p class="note">載入中…</p>';return}
+    const L=this.logs();
+    $('#sp-log').innerHTML=L.length?`<div class="tablewrap" style="max-height:60vh"><table><thead><tr><th>時間</th><th>類型</th><th>明細</th><th>登記人</th><th>備註</th></tr></thead><tbody>${L.map(l=>`<tr><td class="mono">${h(l.at)}</td><td><span class="chip ${l.type==='out'?'warn':l.type==='in'?'ok':'info'}">${CONS_T[l.type]||l.type}</span></td><td class="wrap">${(l.items||[]).map(i=>`${h(i.name)} <b>${l.type==='out'?'−':l.type==='in'?'＋':'→'}${i.qty}</b> ${h(i.unit)}（${i.before}→${i.after}）`).join('<br>')}</td><td>${h(l.by)} <span class="meta">${h(l.role||'')}</span></td><td class="wrap">${h(l.note||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">這個月份沒有登記紀錄。</div>';
+  }
+};
+function adjustDialog(c){if(!c)return;
+  openModal(`<h2 style="margin:0">盤點：${h(c.name)}</h2><p class="meta" style="margin:0">輸入實際清點的數量，系統會記錄成「盤點調整」。</p>
+<div class="grid"><label class="f">系統庫存<input value="${Number(c.stock)||0} ${h(c.unit)}" disabled></label><label class="f">實際數量（${h(c.unit)}）<input type="number" min="0" id="adj-q" value="${Number(c.stock)||0}"></label></div>
+<p class="err" id="adj-err"></p><div class="row"><button class="primary" id="adj-ok">確認調整</button><button data-close>取消</button></div>`,m=>{
+    m.querySelector('#adj-ok').onclick=async()=>{const q=parseInt($('#adj-q').value);if(!(q>=0)){$('#adj-err').textContent='請輸入 0 以上的數量。';return}
+      try{await consume({id:newId(),type:'adjust',items:[{code:c.code,qty:q}],by:'老師',note:'盤點',at:nowStr()});closeModal();toast('已更新庫存')}catch(x){$('#adj-err').textContent='更新失敗，請重試。'}}})}
+function consDialog(c){const isNew=!c;c=c||{name:'',unit:'個',low:0,stock:0};
+  openModal(`<h2 style="margin:0">${isNew?'新增耗材':'編輯：'+h(c.name)}</h2><div class="grid">
+<label class="f">名稱<input id="cs-name" value="${h(c.name)}"></label><label class="f">單位<input id="cs-unit" value="${h(c.unit)}" placeholder="包、盒、張"></label>
+<label class="f">安全庫存 <small>低於等於這個數量會提醒補貨</small><input type="number" min="0" id="cs-low" value="${Number(c.low)||0}"></label>
+${isNew?`<label class="f">目前庫存<input type="number" min="0" id="cs-stock" value="0"></label>`:''}</div>
+<p class="err" id="cs-err"></p><div class="spread"><div class="row"><button class="primary" id="cs-ok">儲存</button><button data-close>取消</button></div>${isNew?'':'<button class="danger" id="cs-del">刪除此耗材</button>'}</div>`,m=>{
+    m.querySelector('#cs-ok').onclick=async()=>{const name=$('#cs-name').value.trim(),unit=$('#cs-unit').value.trim()||'個',low=Math.max(0,parseInt($('#cs-low').value)||0);
+      if(!name){$('#cs-err').textContent='請填寫名稱。';return}
+      const code=isNew?'c'+Date.now().toString(36):c.code,sort=isNew?Math.max(0,...S.cons.map(x=>x.sort||0))+1:(c.sort||0);
+      try{await S.db.doc('consumables/'+code).set({code,name,unit,low,sort,stock:isNew?Math.max(0,parseInt($('#cs-stock').value)||0):(Number(c.stock)||0)});closeModal();toast('已儲存')}catch(x){$('#cs-err').textContent='儲存失敗，請重試。'}};
+    const d=m.querySelector('#cs-del');if(d)d.onclick=()=>confirmBox('刪除這項耗材？','過去的登記紀錄會保留。','刪除',async()=>{await S.db.doc('consumables/'+c.code).delete();toast('已刪除')});
+  })}
+
 /* ===== 設備使用登記（取代紙本「資源教室設備借用登記簿」） ===== */
 const PCS=['01','02','03','04'];
 const devText=e=>[e.pc?`電腦 ${e.pc}`:'',e.print?'印表機（彩色）':'',e.copy?'影印機（黑白）':'',e.scan?'掃描資料':'',e.paper?`紙張 ${e.paper} 張`:''].filter(Boolean).join('、');
@@ -824,7 +969,7 @@ async function submitSurveyBlock(root,r,px){
 /* 借用完成（老師點收）後自動跳出問卷 */
 const popShown={};
 function maybeSurveyPopup(){
-  if(!S.ready||curView==='survey'||curView==='mine'||curView==='login'||isAdminView(curView)||!$('#modal').hidden)return;
+  if(!S.ready||S.staff&&!S.admin||curView==='staff'||curView==='survey'||curView==='mine'||curView==='login'||isAdminView(curView)||!$('#modal').hidden)return;
   const r=S.myReq.find(x=>needSurvey(x)&&!popShown[x.id]);if(!r)return;popShown[r.id]=true;
   openModal(`<div><p class="eyebrow">借用完成</p><h2 style="margin:4px 0 0">謝謝使用！請填寫${r.type==='space'?'悅讀書房問卷':'滿意度問卷'}</h2><p class="meta" style="margin:6px 0 0">${h(r.itemName)}・${fmtDate(r.date)}・歸還於 <span class="mono">${h(r.returnedAt||'')}</span>。大約 1 分鐘，只有資源教室老師看得到。</p></div>
 <form id="pp-form" novalidate>${surveyFormFor(r,'pp')}<div class="row"><button class="primary" type="submit" id="pp-ok">送出問卷</button><button type="button" data-close>稍後再填</button></div></form>`,m=>{
@@ -886,7 +1031,7 @@ function copyText(text,label){
 }
 const blocked=(r,all)=>/chip bad/.test(reqFlags(r,all));
 V.review={
-  deps:['allReq','loans','roster','calendar','catalog','config'],
+  deps:['allReq','loans','roster','calendar','catalog','config','cons'],
   shell(){return `<div class="spread"><h1>今日工作台</h1><button id="rv-walk">現場登記借出</button></div><div id="rv-body"><p class="note">載入中…</p></div>`},
   bind(){$('#rv-walk').onclick=()=>walkIn();
     $('#view').addEventListener('input',e=>{if(e.target.dataset.note)S.notes[e.target.dataset.note]=e.target.value})},
@@ -908,7 +1053,8 @@ V.review={
     const groups=[...new Set(prep.map(r=>r.date))];
     const onlyUnfilled=S.rvOnlyUnfilled!==false;
     const showRet=onlyUnfilled?unfilled:ret;
-    $('#rv-body').innerHTML=`<div class="tally jump">
+    const lowC=(S.cons||[]).filter(isLow);
+    $('#rv-body').innerHTML=`${lowC.length?`<a class="note warn lowlink" href="#supplies">有 <b>${lowC.length}</b> 項耗材快用完：${lowC.map(c=>h(c.name)).join('、')} →</a>`:''}<div class="tally jump">
 <button data-jump="rv-pend"><b class="${pend.length?'n-warn':''}">${pend.length}</b><span>① 待審核</span></button>
 <button data-jump="rv-prep"><b class="${prep.length?'n-ok':''}">${prep.length}</b><span>② 今明兩天要準備</span></button>
 <button data-jump="rv-out"><b>${out.length}</b><span>③ 借出中${over.length?`・<em>逾期 ${over.length}</em>`:''}</span></button>
@@ -1259,31 +1405,53 @@ async function diagnoseApi(){
 }
 /* ===== 資源教室登入 ===== */
 const PASS_HASH='9d6573f4edcc85a7d4693459d49732efd1539f14563508221b9b4e6d2572d985';
+const STAFF_HASH='06698d348e276c9fa9f40b49a47edf9bee0eed5146b264758f0e14dcc615d90f';
 const sess={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 let fails=0,lockUntil=0;
-function logout(){S.admin=false;sess.set('rr-unlock',null);sess.set('rr-pw',null);
+function logout(){S.admin=false;S.staff=false;sess.set('rr-unlock',null);sess.set('rr-pw',null);sess.set('rr-role',null);sess.set('rr-staff',null);
+  staffUnsubs.forEach(u=>{try{u()}catch(e){}});staffUnsubs=[];staffStarted=false;S.consLog=[];delete S.got.consLog;
   adminUnsubs.forEach(u=>{try{u()}catch(e){}});adminUnsubs=[];adminStarted=false;
   S.allReq=[];S.loans=[];S.roster=[];S.surveys=[];S.usage=[];['allReq','loans','roster','surveys','usage'].forEach(k=>delete S.got[k]);S.notes={};
   closeModal();toast('已登出資源教室管理');
   if(location.hash==='#apply')route();else location.hash='apply'}
-V.login={
-  shell(){return `<div style="max-width:420px"><h1>資源教室登入</h1><p class="lede">審核、設備借用紀錄、設備使用紀錄與統計僅供資源教室老師使用。</p>
-<form id="lg-form" novalidate><fieldset><legend>管理密碼</legend><div class="stack"><label class="f">密碼<input type="password" id="lg-pw" autocomplete="current-password"></label>
+/* 共用登入：老師密碼 → 全部功能；工讀生密碼 → 只有耗材登記 */
+async function doLogin(pw){
+  if(S.gas){const j=await apiSend({op:'login',pw});
+    if(j.service)throw{code:'unavailable',message:'old'};
+    if(!j.ok){if(j.code&&j.code!=='denied')throw{code:j.code};return ''}
+    const role=j.role||'admin';sess.set('rr-pw',pw);sess.set('rr-role',role);return role}
+  const hv=await sha('hk-resource-room:'+pw);
+  if(hv===PASS_HASH){if(!S.editor)return 'noeditor';sess.set('rr-unlock',PASS_HASH);return 'admin'}
+  if(hv===STAFF_HASH){sess.set('rr-staff','1');return 'staff'}
+  return '';
+}
+function applyRole(role){if(role==='admin'){S.admin=true;S.staff=true;startAdmin();startStaff()}else if(role==='staff'){S.staff=true;startStaff()}}
+function loginForm(title,lede,label){return `<div style="max-width:420px"><h1>${title}</h1><p class="lede">${lede}</p>
+<form id="lg-form" novalidate><fieldset><legend>${label}</legend><div class="stack"><label class="f">密碼<input type="password" id="lg-pw" autocomplete="current-password"></label>
 <p class="err" id="lg-err" role="alert"></p><button class="primary" type="submit" id="lg-ok">登入</button></div></fieldset></form>
-<p class="meta">登入狀態只保留到關閉這個分頁為止。</p></div>`},
-  bind(){$('#lg-form').addEventListener('submit',async e=>{e.preventDefault();const err=$('#lg-err');err.textContent='';
+<p class="meta">登入狀態只保留到關閉這個分頁為止。</p></div>`}
+function bindLogin(after){
+  $('#lg-form').addEventListener('submit',async e=>{e.preventDefault();const err=$('#lg-err');err.textContent='';
     if(Date.now()<lockUntil){err.textContent=`嘗試次數過多，請 ${Math.ceil((lockUntil-Date.now())/1000)} 秒後再試。`;return}
-    let ok=false;const pw=$('#lg-pw').value;
-    if(S.gas){try{ok=await S.db.login(pw)}catch(x){err.textContent='連不上資料庫，正在檢查原因…';err.textContent=await diagnoseApi();return}if(ok)sess.set('rr-pw',pw)}
-    else try{ok=(await sha('hk-resource-room:'+pw))===PASS_HASH}catch(x){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
-    if(!ok){fails++;$('#lg-pw').value='';if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='密碼不正確。';return}
-    fails=0;
-    if(!S.editor){err.textContent='密碼正確，但你的帳號在這個頁面沒有「編輯者」權限，無法讀取借用與使用紀錄。請請頁面擁有者在「分享」中把你設為編輯者。';return}
-    sess.set('rr-unlock',PASS_HASH);S.admin=true;startAdmin();toast('已登入資源教室管理');
-    const to=S.after&&S.after!=='login'?S.after:'review';S.after=null;if(location.hash==='#'+to)route();else location.hash=to})}
+    const pw=$('#lg-pw').value;let role='';
+    try{role=await doLogin(pw)}catch(x){
+      if(x&&x.code==='unavailable'&&x.message==='old'){err.textContent='Google Apps Script 不是最新版：請貼上最新的 apps-script.gs，再「管理部署作業 → 編輯 → 新版本 → 部署」。';return}
+      if(!S.gas){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
+      err.textContent='連不上資料庫，正在檢查原因…';err.textContent=await diagnoseApi();return}
+    if(role==='noeditor'){err.textContent='密碼正確，但你的帳號在這個頁面沒有「編輯者」權限，無法讀取借用與使用紀錄。';return}
+    if(!role){fails++;$('#lg-pw').value='';if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='密碼不正確。';return}
+    fails=0;applyRole(role);toast(role==='admin'?'已登入資源教室管理':'已登入工讀生耗材登記');after(role)});
+}
+V.login={
+  shell(){return loginForm('資源教室登入','審核、設備紀錄、耗材管理與統計僅供資源教室老師使用。','管理密碼')},
+  bind(){bindLogin(role=>{const to=role==='staff'?'staff':(S.after&&S.after!=='login'?S.after:'review');S.after=null;if(location.hash==='#'+to)route();else location.hash=to})}
 };
-let adminStarted=false,adminUnsubs=[];
+let adminStarted=false,adminUnsubs=[],staffStarted=false,staffUnsubs=[];
+function startStaff(){
+  if(staffStarted||!S.db)return;staffStarted=true;
+  staffUnsubs.push(S.db.collection('cons_log').onSnapshot(s=>{S.consLog=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.at||'')<(a.at||'')?-1:1);S.got.consLog=true;repaint(['consLog'])},()=>{S.got.consLog=true;repaint(['consLog'])}));
+}
 function startAdmin(){
   if(adminStarted||!S.db)return;adminStarted=true;const db=S.db;
   const done=k=>{S.got[k]=true;repaint([k])},fail=k=>()=>{S.got[k]=true;repaint([k])};
@@ -1295,9 +1463,11 @@ function startAdmin(){
 
 /* ---------- 展示版（GitHub Pages）：沒有 Claude 平台時，資料存在這台電腦的瀏覽器 ---------- */
 const DEMO_CATALOG=[{"code": "g01", "name": "筆記型電腦", "cat": "general", "qty": 8, "out": 0, "note": "部分規格與機型老舊，116 年預計增購 2 台", "longOk": false, "sort": 1}, {"code": "g02", "name": "投影機", "cat": "general", "qty": 2, "out": 0, "note": "單槍投影機", "longOk": false, "sort": 2}, {"code": "g03", "name": "平板", "cat": "general", "qty": 7, "out": 0, "note": "", "longOk": false, "sort": 3}, {"code": "g05", "name": "數位相機／單眼相機", "cat": "general", "qty": 2, "out": 0, "note": "", "longOk": false, "sort": 5}, {"code": "g06", "name": "攝影機／數位攝影機", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 6}, {"code": "g07", "name": "擴視機（桌上型／可攜式）", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 7}, {"code": "g08", "name": "簡報筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 8}, {"code": "g09", "name": "放大滑鼠", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 9}, {"code": "g10", "name": "錄音筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 10}, {"code": "g11", "name": "護貝機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 11}, {"code": "g12", "name": "計算機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 12}, {"code": "g13", "name": "吹風機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 13}, {"code": "g14", "name": "裁紙刀（大）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 14}, {"code": "g15", "name": "裁紙刀（小）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 15}, {"code": "t01", "name": "電子翻譯機（學習翻譯機）", "cat": "general3", "qty": 2, "out": 0, "note": "", "longOk": true, "sort": 16}, {"code": "t02", "name": "延長線", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 17}, {"code": "t04", "name": "鍵盤", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 19}, {"code": "t05", "name": "耳機", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 20}, {"code": "t06", "name": "彩色筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 21}, {"code": "t07", "name": "麥克筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 22}, {"code": "t08", "name": "熱熔膠槍", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 23}, {"code": "l01", "name": "牌卡", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 24}, {"code": "l02", "name": "桌遊", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 25}, {"code": "l03", "name": "手眼協調訓練機", "cat": "leisure", "qty": 1, "out": 0, "note": "須配合家銘學長時間，以利協助架設器材", "longOk": false, "sort": 26}, {"code": "l04", "name": "投影設備（休閒用）", "cat": "leisure", "qty": 1, "out": 0, "note": "限觀賞、遊戲借用", "longOk": false, "sort": 27}, {"code": "s01", "name": "悅讀書房", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；使用後至資源教室告知完畢、領回證件並填寫滿意度問卷", "longOk": false, "sort": 28}, {"code": "s02", "name": "課輔室", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；借用當日由工讀生或老師協助開門", "longOk": false, "sort": 29}];
+const DEMO_CONS=[{"code": "c01", "name": "A4 影印紙", "unit": "包", "stock": 0, "low": 5, "sort": 1}, {"code": "c02", "name": "彩色印表機墨水", "unit": "盒", "stock": 0, "low": 1, "sort": 2}, {"code": "c03", "name": "影印機碳粉", "unit": "支", "stock": 0, "low": 1, "sort": 3}, {"code": "c04", "name": "護貝膠膜 A4", "unit": "張", "stock": 0, "low": 20, "sort": 4}, {"code": "c05", "name": "3 號電池", "unit": "顆", "stock": 0, "low": 4, "sort": 5}, {"code": "c06", "name": "4 號電池", "unit": "顆", "stock": 0, "low": 4, "sort": 6}, {"code": "c07", "name": "原子筆", "unit": "支", "stock": 0, "low": 5, "sort": 7}, {"code": "c08", "name": "便利貼", "unit": "本", "stock": 0, "low": 3, "sort": 8}];
 function makeDemoDb(){
   const KEY='rr-demo-db';let data=local.get(KEY);
   if(!data){data={};DEMO_CATALOG.forEach(c=>data['catalog/'+c.code]={...c});data['config/site']={url:'',semesterStart:'',office:'',eventDays:[]}}
+  if(!Object.keys(data).some(k=>k.startsWith('consumables/')))DEMO_CONS.forEach(c=>data['consumables/'+c.code]={...c});
   const L=new Set(),clone=o=>o===undefined?undefined:JSON.parse(JSON.stringify(o));
   const save=()=>{local.set(KEY,data);setTimeout(()=>L.forEach(f=>f()),0)};
   const meta={fromCache:false,hasPendingWrites:false};
@@ -1397,6 +1567,9 @@ function makeGasDb(api){
       let chunk=[],size=0;const flush=()=>{if(chunk.length){send({op:'batch',writes:chunk});chunk=[];size=0}};
       for(const [path,data] of writes){const w={op:'set',path,data},n=encodeURIComponent(JSON.stringify(w)).length;if(size+n>6000)flush();chunk.push(w);size+=n}
       flush();await chain},
+    consume(o){const items=[];for(const it of o.items){const pth='consumables/'+it.code,c=cache[pth];if(!c)continue;const b=Number(c.stock)||0,a=o.type==='out'?b-it.qty:o.type==='in'?b+it.qty:it.qty;
+        cache[pth]={...c,stock:a};items.push({code:it.code,name:c.name,unit:c.unit,qty:it.qty,before:b,after:a})}
+      cache['cons_log/'+o.id]={id:o.id,type:o.type,items,by:o.by,note:o.note,at:o.at,role:S.admin?'老師':'工讀生'};emitAll();send({op:'consume',...o});return Promise.resolve(items)},
     arr(path,field,o){const cur=cache[path]?clone(cache[path]):{};const a=cur[field]||[];
       if(o.add)a.push(clone(o.add));else{const i=a.findIndex(x=>x&&x.id===o.id);if(i>=0){if(o.remove)a.splice(i,1);else a[i]={...a[i],...o.patch}}}
       cur[field]=a;cache[path]=cur;emitAll();const full=clone(cur);send({op:'arr',path,field,at:nowStr(),...o},{op:'set',path,data:full});return Promise.resolve()},
@@ -1434,16 +1607,20 @@ route();
   DL=dl;S.db=db;S.user=user;
   if(!db){S.noDb=true;S.ready=true;repaint(['config','myReq']);route();return}
   if(user){try{S.uid=await user.id()}catch(e){} try{S.editor=!!(await user.canEdit())}catch(e){}}
-  S.admin=S.gas?!!sess.get('rr-pw'):S.editor&&sess.get('rr-unlock')===PASS_HASH;
+  const gRole=S.gas&&sess.get('rr-pw')?(sess.get('rr-role')||'admin'):null;
+  S.admin=S.gas?gRole==='admin':S.editor&&sess.get('rr-unlock')===PASS_HASH;
+  S.staff=S.admin||(S.gas?gRole==='staff':sess.get('rr-staff')==='1');
   S.ready=true;
   const timer=setTimeout(()=>{if(!S.got.catalog){S.stale=true;repaint(['config','catalog','myReq'])}},10000);
   const done=k=>{S.got[k]=true;if(k==='catalog'){clearTimeout(timer);S.stale=false}repaint([k])};
   const fail=k=>e=>{S.got[k]=true;repaint([k])};
+  db.collection('consumables').onSnapshot(s=>{S.cons=s.docs.map(d=>d.data()).sort((a,b)=>(a.sort||0)-(b.sort||0));done('cons')},fail('cons'));
   db.collection('catalog').onSnapshot(s=>{S.catalog=s.docs.map(d=>d.data()).sort((a,b)=>(a.sort||0)-(b.sort||0));if(!s.metadata.fromCache)done('catalog');else repaint(['catalog'])},fail('catalog'));
   db.doc('config/site').onSnapshot(s=>{S.config=s.exists?{...s.data()}:{};done('config')},fail('config'));
   db.collection('calendar').onSnapshot(s=>{S.calendar=s.docs.map(d=>({id:d.id,...d.data()}));done('calendar')},fail('calendar'));
   subMine();
   if(S.admin)startAdmin();
+  if(S.staff)startStaff();
   route();
 })();
 </script>
