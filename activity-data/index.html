@@ -72,14 +72,15 @@ h2.sec{font-size:1.05rem;margin:24px 0 10px}
 .outgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .outcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
 .outcard b{font-size:1rem}.outcard p{margin:3px 0 8px;color:var(--muted);font-size:.84rem}.outcard .btns{display:flex;gap:8px;flex-wrap:wrap}.outcard.dim{background:#fafcfb}.outcard.dim b{color:var(--muted)}
-body.simple .shell{grid-template-columns:1fr}body.simple aside{display:none}body.simple main{max-width:1100px;margin:0 auto;width:100%}
-#advBtn{display:none}body.simple #advBtn{display:inline-block}
+body.simple main>*{max-width:1100px}
+.grp{display:grid;gap:3px}.grp-h{display:flex;justify-content:space-between;align-items:center;border:0;background:transparent;color:#f3c77e;font-weight:800;font-size:.8rem;letter-spacing:.08em;padding:12px 12px 4px;cursor:pointer;text-align:left}.grp-h i{font-style:normal;transition:transform .15s}.grp.closed .grp-h i{transform:rotate(-90deg)}.grp-b{display:grid;gap:3px}.grp.closed .grp-b{display:none}.grp-b .nav{padding:8px 12px 8px 20px}
+aside{overflow-y:auto;max-height:100vh;position:sticky;top:0}
 
 .staffcard{text-align:left;cursor:pointer;font:inherit;color:inherit}.staffcard.on{border-color:var(--brand2);background:var(--soft);box-shadow:inset 0 0 0 1px var(--brand2)}
 .dutygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.duty{background:#f7faf9;border:1px solid var(--line);border-radius:10px;padding:10px 14px}.duty h3{margin:0 0 6px;font-size:.88rem;color:var(--brand)}.duty ul{margin:0;padding-left:18px;font-size:.85rem}.duty li{margin:2px 0}
 .notice{position:fixed;right:22px;bottom:22px;background:var(--ink);color:#fff;border-radius:10px;padding:11px 16px;display:none;z-index:20;max-width:80vw}
 h3{font-size:.95rem;margin:16px 0 8px}
-@media(max-width:900px){.shell{grid-template-columns:1fr}aside{padding:12px 16px;flex-direction:row;align-items:center;overflow:auto;gap:14px}nav{display:flex}.nav small,.aside-foot{display:none}main{padding:16px}.grid2{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.shell{grid-template-columns:1fr}aside{padding:12px 16px;gap:8px;position:static;max-height:none}.nav small,.aside-foot{display:none}.grp-b{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}main{padding:16px}.grid2{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -87,15 +88,32 @@ h3{font-size:.95rem;margin:16px 0 8px}
 <aside>
   <div class="brand"><span class="mark">資</span><span>資源教室資料台</span></div>
   <nav>
-    <button class="nav" data-tab="home">← 回簡易畫面</button>
-    <button class="nav active" data-tab="src">① 匯入資料<small>總表＋活動辦理列表</small></button>
-    <button class="nav" data-tab="staff">② 業務分工<small>依分工表歸屬承辦人</small></button>
-    <button class="nav" data-tab="cls">③ 活動分類<small>7 類指標／生涯轉銜</small></button>
-    <button class="nav" data-tab="sem">④ 學期報告<small>特推會附件二／附件四</small></button>
-    <button class="nav" data-tab="t74">⑤ table7_4<small>活動填報 xls</small></button>
-    <button class="nav" data-tab="life">⑥ 生命教育指標<small>學年度場次／人次</small></button>
-    <button class="nav" data-tab="conv">⑦ 學期末總表<small>列表 → 總表格式</small></button>
-    <button class="nav" data-tab="csv">⑧ 自選欄位 CSV</button>
+    <button class="nav" data-tab="home">首頁<small>丟檔案、複製／下載表單</small></button>
+    <div class="grp" data-grp="act">
+      <button class="grp-h" type="button"><span>活動場次</span><i>▾</i></button>
+      <div class="grp-b">
+        <button class="nav" data-tab="src">匯入資料<small>總表＋活動辦理列表</small></button>
+        <button class="nav" data-tab="cls">活動分類<small>7 類指標／生涯轉銜</small></button>
+        <button class="nav" data-tab="sem">學期報告<small>特推會附件二／附件四</small></button>
+        <button class="nav" data-tab="t74">table7_4<small>活動填報 xls</small></button>
+        <button class="nav" data-tab="life">生命教育指標<small>學年度場次／人次</small></button>
+        <button class="nav" data-tab="conv">學期末總表<small>列表 → 總表格式</small></button>
+        <button class="nav" data-tab="csv">自選欄位 CSV</button>
+      </div>
+    </div>
+    <div class="grp" data-grp="duty">
+      <button class="grp-h" type="button"><span>業務分工</span><i>▾</i></button>
+      <div class="grp-b">
+        <button class="nav" data-tab="staff" data-owner="">全部承辦人<small>活動歸屬、學年度輪值</small></button>
+        <button class="nav" data-tab="staff" data-owner="雨欣">雨欣<small>老福、環安</small></button>
+        <button class="nav" data-tab="staff" data-owner="曉臻">曉臻<small>護理、營養、動保</small></button>
+        <button class="nav" data-tab="staff" data-owner="微姍">微姍<small>餐旅、健管</small></button>
+        <button class="nav" data-tab="staff" data-owner="梅青">梅青<small>幼保、食科</small></button>
+        <button class="nav" data-tab="staff" data-owner="心榆">心榆<small>多遊、文創、妝品、國英、運休</small></button>
+        <button class="nav" data-tab="staff" data-owner="望謙">望謙<small>醫材、智科、物治、語聽、美髮</small></button>
+        <button class="nav" data-tab="staff" data-owner="家銘">家銘<small>行政彙整</small></button>
+      </div>
+    </div>
   </nav>
   <div class="aside-foot">活動辦完只填「中心活動辦理列表」，<br>其他表單都從這裡產出。<br>資料只存在這台電腦的瀏覽器。</div>
 </aside>
@@ -103,7 +121,6 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <header class="top">
     <div><h1 id="title">匯入資料</h1><p id="subtitle">活動資料只 key 一次，其他表單自動產出。</p></div>
     <div class="ctl">
-      <button class="btn ghost" id="advBtn">進階</button>
       <label>範圍<select id="scope"><option value="rc">只看資源教室</option><option value="all">全中心（含諮輔）</option></select></label>
       <label id="ownerWrap">承辦人<select id="owner"><option value="">全部</option><option>雨欣</option><option>曉臻</option><option>微姍</option><option>梅青</option><option>心榆</option><option>望謙</option><option>家銘</option><option>未分類</option></select></label>
       <label id="semWrap">學期<select id="sem"></select></label>
@@ -119,7 +136,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
     <div class="outgrid" id="homeCopy"></div>
     <h2 class="sec">可下載完整表單</h2>
     <div class="outgrid" id="homeDl"></div>
-    <p class="sub" style="margin-top:22px">要逐筆檢查、修改活動分類或承辦人，請按右上「進階」。</p>
+    <p class="sub" style="margin-top:22px">要逐筆檢查、修改活動分類或承辦人，請用左側選單。</p>
   </section>
 
   <!-- ① 匯入 -->
@@ -776,7 +793,7 @@ function renderHome(){
 /* ---------- 選單／分頁 ---------- */
 const TITLES={home:['資源教室資料台','丟進總表，需要的表單直接複製或下載。'],cls:['活動分類','依資源教室「活動分類指標」自動分 7 類與適應生活／生涯轉銜。'],staff:['業務分工','依 115.02.23 業務分工表，自動把活動歸到承辦人。'],src:['匯入資料','活動資料只 key 一次，其他表單自動產出。'],sem:['學期報告','特推會業務報告文字與附件二、附件四。'],t74:['table7_4 活動填報','選學期後下載 xls，上傳填報系統。'],life:['生命教育指標','114 學年度起，依學年度彙整場次與人次。'],conv:['學期末總表','把活動辦理列表轉成活動總表的欄位格式。'],csv:['自選欄位 CSV','依學期與範圍匯出任意欄位。']};
 let TAB=store.get('rcTab','home');
-function setTab(t){TAB=t;document.body.classList.toggle('simple',t==='home');if(t==='home'){$('#owner').value='';store.set('rcOwner','')}store.set('rcTab',t);$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));$$('.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+t));
+function setTab(t){TAB=t;document.body.classList.toggle('simple',t==='home');if(t==='home'){$('#owner').value='';store.set('rcOwner','')}store.set('rcTab',t);markNav();$$('.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+t));
   $('#title').textContent=TITLES[t][0];$('#subtitle').textContent=TITLES[t][1];$('#semWrap').style.display=t==='life'||t==='src'?'none':'';$('#yearWrap').style.display=t==='life'?'':'none';$('#ownerWrap').style.display=t==='src'||t==='staff'||t==='home'||$('#scope').value!=='rc'?'none':'';refresh()}
 function fillSelectors(){
   const sems=allSems(),s=$('#sem'),cur=s.value||store.get('rcSem','');
@@ -786,7 +803,9 @@ function fillSelectors(){
 }
 function refresh(){fillSelectors();renderSrc();if(TAB==='sem')renderSem();if(TAB==='t74')renderT74();if(TAB==='life')renderLife();if(TAB==='conv')renderConv();if(TAB==='staff')renderStaff();if(TAB==='cls')renderCls();if(TAB==='home')renderHome();$('#ownerWrap').style.display=TAB==='src'||TAB==='staff'||TAB==='home'||$('#scope').value!=='rc'?'none':''}
 
-$$('.nav').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+function markNav(){const o=$('#owner').value;$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===TAB&&(TAB!=='staff'||(b.dataset.owner||'')===o)))}
+$$('.nav').forEach(b=>b.onclick=()=>{if(b.dataset.owner!==undefined){$('#owner').value=b.dataset.owner;store.set('rcOwner',b.dataset.owner)}setTab(b.dataset.tab)});
+const GRP=store.get('rcGrp',{});$$('.grp').forEach(g=>{if(GRP[g.dataset.grp])g.classList.add('closed');g.querySelector('.grp-h').onclick=()=>{g.classList.toggle('closed');GRP[g.dataset.grp]=g.classList.contains('closed');store.set('rcGrp',GRP)}});
 $('#sem').onchange=()=>{store.set('rcSem',$('#sem').value);refresh()};
 $('#year').onchange=()=>{store.set('rcYear',$('#year').value);refresh()};
 $('#scope').value=store.get('rcScope','rc');$('#scope').onchange=()=>{store.set('rcScope',$('#scope').value);refresh()};
@@ -810,9 +829,9 @@ $('#t74File').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(
   const h=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1})[0]||[];if(!h.some(x=>String(x).includes('活動主題')))throw Error('第一列找不到「活動主題」欄');writeT74(wb,wb.Sheets[sn])}catch(err){toast('無法套用：'+err.message)}};
 $('#convMake').onclick=()=>{const rows=convRows();if(!rows.length)return toast('這個學期沒有活動辦理列表資料');const ws=XLSX.utils.aoa_to_sheet([MASTER_COLS,...rows]);ws['!cols']=MASTER_COLS.map((c,i)=>({wch:[5,22].includes(i)?40:12}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${$('#sem').value}學期`);XLSX.writeFile(wb,`${$('#sem').value}學期_活動總表格式.xlsx`);toast(`已下載 ${rows.length} 筆`)};
-$('#owner').value=store.get('rcOwner','');$('#owner').onchange=()=>{store.set('rcOwner',$('#owner').value);refresh()};
-document.addEventListener('click',e=>{const b=e.target.closest('.staffcard');if(!b)return;$('#owner').value=b.dataset.owner;store.set('rcOwner',b.dataset.owner);renderStaff()});
-$('#staffXlsx').onclick=staffExport;$('#advBtn').onclick=()=>setTab('src');
+$('#owner').value=store.get('rcOwner','');$('#owner').onchange=()=>{store.set('rcOwner',$('#owner').value);refresh();markNav()};
+document.addEventListener('click',e=>{const b=e.target.closest('.staffcard');if(!b)return;$('#owner').value=b.dataset.owner;store.set('rcOwner',b.dataset.owner);renderStaff();markNav()});
+$('#staffXlsx').onclick=staffExport;
 const dh=$('#dropHome');dh.onclick=()=>$('#file').click();['dragenter','dragover'].forEach(x=>dh.addEventListener(x,e=>{e.preventDefault();dh.classList.add('drag')}));['dragleave','drop'].forEach(x=>dh.addEventListener(x,e=>{e.preventDefault();dh.classList.remove('drag')}));dh.addEventListener('drop',e=>e.dataTransfer.files.length&&importFiles([...e.dataTransfer.files]));$('#clsXlsx').onclick=clsExport;
 setTab(TAB);
 </script>
