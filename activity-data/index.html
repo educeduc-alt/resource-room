@@ -65,6 +65,8 @@ tr.off td{opacity:.4}
 .src{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.82rem;background:#fff}
 .src b{display:block;font-size:.95rem}
 .tab{display:none}.tab.active{display:block}
+.staffcard{text-align:left;cursor:pointer;font:inherit;color:inherit}.staffcard.on{border-color:var(--brand2);background:var(--soft);box-shadow:inset 0 0 0 1px var(--brand2)}
+.dutygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.duty{background:#f7faf9;border:1px solid var(--line);border-radius:10px;padding:10px 14px}.duty h3{margin:0 0 6px;font-size:.88rem;color:var(--brand)}.duty ul{margin:0;padding-left:18px;font-size:.85rem}.duty li{margin:2px 0}
 .notice{position:fixed;right:22px;bottom:22px;background:var(--ink);color:#fff;border-radius:10px;padding:11px 16px;display:none;z-index:20;max-width:80vw}
 h3{font-size:.95rem;margin:16px 0 8px}
 @media(max-width:900px){.shell{grid-template-columns:1fr}aside{padding:12px 16px;flex-direction:row;align-items:center;overflow:auto;gap:14px}nav{display:flex}.nav small,.aside-foot{display:none}main{padding:16px}.grid2{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
@@ -76,11 +78,12 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <div class="brand"><span class="mark">資</span><span>資源教室資料台</span></div>
   <nav>
     <button class="nav active" data-tab="src">① 匯入資料<small>總表＋活動辦理列表</small></button>
-    <button class="nav" data-tab="sem">② 學期報告<small>特推會附件二／附件四</small></button>
-    <button class="nav" data-tab="t74">③ table7_4<small>活動填報 xls</small></button>
-    <button class="nav" data-tab="life">④ 生命教育指標<small>學年度場次／人次</small></button>
-    <button class="nav" data-tab="conv">⑤ 學期末總表<small>列表 → 總表格式</small></button>
-    <button class="nav" data-tab="csv">⑥ 自選欄位 CSV</button>
+    <button class="nav" data-tab="staff">② 業務分工<small>依分工表歸屬承辦人</small></button>
+    <button class="nav" data-tab="sem">③ 學期報告<small>特推會附件二／附件四</small></button>
+    <button class="nav" data-tab="t74">④ table7_4<small>活動填報 xls</small></button>
+    <button class="nav" data-tab="life">⑤ 生命教育指標<small>學年度場次／人次</small></button>
+    <button class="nav" data-tab="conv">⑥ 學期末總表<small>列表 → 總表格式</small></button>
+    <button class="nav" data-tab="csv">⑦ 自選欄位 CSV</button>
   </nav>
   <div class="aside-foot">活動辦完只填「中心活動辦理列表」，<br>其他表單都從這裡產出。<br>資料只存在這台電腦的瀏覽器。</div>
 </aside>
@@ -89,6 +92,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
     <div><h1 id="title">匯入資料</h1><p id="subtitle">活動資料只 key 一次，其他表單自動產出。</p></div>
     <div class="ctl">
       <label>範圍<select id="scope"><option value="rc">只看資源教室</option><option value="all">全中心（含諮輔）</option></select></label>
+      <label id="ownerWrap">承辦人<select id="owner"><option value="">全部</option><option>雨欣</option><option>曉臻</option><option>微姍</option><option>梅青</option><option>心榆</option><option>望謙</option><option>家銘</option><option>未分類</option></select></label>
       <label id="semWrap">學期<select id="sem"></select></label>
       <label id="yearWrap" style="display:none">學年度<select id="year"></select></label>
     </div>
@@ -115,7 +119,23 @@ h3{font-size:.95rem;margin:16px 0 8px}
     </div>
   </section>
 
-  <!-- ② 學期報告 -->
+  <!-- ② 業務分工 -->
+  <section class="tab" id="tab-staff">
+    <div class="card">
+      <h2>依業務分工表自動歸屬</h2>
+      <p class="sub">列表有填承辦人就用承辦人；總表沒有承辦人時，依分工表規則判斷（ISP 依個管系所、聯誼活動→微姍、志工會議→望謙…）。點卡片只看那個人，其他頁的特推會、table7_4、總表也會跟著只算那個人。</p>
+      <div class="srcgrid" id="staffCards"></div>
+    </div>
+    <div class="card" id="staffDuty"></div>
+    <div class="card">
+      <h2>活動清單</h2>
+      <div class="row"><span class="sub" id="staffCount" style="margin:0"></span><button class="btn" id="staffXlsx">下載分工清單 .xlsx</button></div>
+      <p class="sub">「依分工表」與實際承辦人不同時會標「不同」，可在「歸屬」欄手動改（會記住）。選「全部」下載時，每位承辦人各一個工作表。</p>
+      <div class="scroll" id="staffTable"></div>
+    </div>
+  </section>
+
+  <!-- ③ 學期報告 -->
   <section class="tab" id="tab-sem">
     <div class="card">
       <div class="stats" id="semStats"></div>
@@ -190,7 +210,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
     <div class="card">
       <h2>學期末：把「活動辦理列表」轉成「活動總表」格式</h2>
       <p class="sub">寒暑假要填總表時，不用重打。下載後整段貼到總表新學期工作表第 8 列起（欄位順序與 114.2 學期相同，25 欄）。</p>
-      <div class="hint">活動辦理列表沒有男女／教師學生的分項人數。若在 ③ table7_4 表格填了男女人數，這裡會一起帶入「校內學生男／女」，其餘分項請在總表補齊。具體成效會先帶入「參與人次總計…，整體活動滿意度…%」開頭句。</div>
+      <div class="hint">活動辦理列表沒有男女／教師學生的分項人數。若在 ④ table7_4 表格填了男女人數，這裡會一起帶入「校內學生男／女」，其餘分項請在總表補齊。具體成效會先帶入「參與人次總計…，整體活動滿意度…%」開頭句。</div>
       <div class="row"><button class="btn" id="convMake">下載總表格式 .xlsx</button><span class="sub" id="convNote" style="margin:0"></span></div>
       <div class="scroll" id="convTable"></div>
     </div>
@@ -317,10 +337,10 @@ function isRC(r,staff){
   if(r.承辦人&&r.承辦人.split(/[、,，\/\s]+/).some(x=>staff.has(x)))return true;
   return false;
 }
-function effective(){ // 每學期擇一來源：總表優先
+function effective(ignoreOwner){ // 每學期擇一來源：總表優先
   const masterSems=new Set(DB.rows.filter(r=>r.src==='總表').map(r=>r.sem));
-  const staff=rcStaff(),scope=$('#scope').value;
-  return DB.rows.filter(r=>(r.src==='總表'||!masterSems.has(r.sem))&&(scope==='all'||isRC(r,staff)));
+  const staff=rcStaff(),scope=$('#scope').value,own=ignoreOwner||scope!=='rc'?'':$('#owner').value;
+  return DB.rows.filter(r=>(r.src==='總表'||!masterSems.has(r.sem))&&(scope==='all'||isRC(r,staff))&&(!own||(ownerOf(r).k||'未分類')===own));
 }
 const bySem=(rows,sem)=>rows.filter(r=>r.sem===sem).sort((a,b)=>(a.start||'9').localeCompare(b.start||'9'));
 function allSems(){return [...new Set(DB.rows.map(r=>r.sem))].sort((a,b)=>Number(b)-Number(a))}
@@ -471,18 +491,146 @@ $('#csvChecks').innerHTML=CSV_FIELDS.map(f=>`<label class="src"><input type="che
 $('#csvMake').onclick=()=>{const cols=$$('#csvChecks input:checked').map(x=>x.value);if(!cols.length)return toast('請至少選一個欄位');const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=bySem(effective(),$('#sem').value);
   download(new Blob(['﻿'+[cols.map(q).join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\r\n')],{type:'text/csv'}),`${$('#sem').value}活動資料.csv`);toast(`已匯出 ${rows.length} 筆`)};
 
+/* ---------- 業務分工（依 115.02.23 業務分工表） ---------- */
+const STAFF=[
+ {k:'雨欣',full:'林雨欣',college:'工學院＋人文',depts:['老福','環安'],duty:{
+  '經費':['教育部補助大專校院招收及輔導身心障礙學生工作計畫編列、申請、結報','輔導人員工作費申請與控管','整體經費控管','行政事務及教學設備費採購（5萬元）'],
+  '例行性業務':['每學期身心障礙學生個別化支持服務計畫完成率調查','年度校務發展計畫','學生置物櫃申請','中教大聯繫窗口'],
+  '公文':['教育部：年度輔導、招收經費申請','教育部：特教辦法或作業異動通知','中教大：特教生提報鑑定'],
+  '會議及活動':['特殊教育推行委員會議（含家長代表、身障學生代表遴選）','特教生與弘光有約座談會議','學生 ISP 期末檢討會議'],
+  '特通網主責':[],
+  '成果摘要表':['召開會議：特推會、ISP 檢討會議','彙整經費摘要表','學生意見調查處理情形']}},
+ {k:'曉臻',full:'劉曉臻',college:'醫護＋人文',depts:['護理','營養','動保'],duty:{
+  '經費':['助理人員（協助同學）工作費申請與控管'],
+  '例行性業務':['資源教室學生名單彙整：特通網新生接收、舊生升級、休退學管理','教務處每學期學生異動名單、休退學名冊（含成績、未繳費）','校基庫 4-2-2 學雜費減免統整（3、10月），合併年報表 7-4','甄試入學身障生報到','台積電、康寧服務代表管理（含招募）','確認經費核銷內容'],
+  '公文':['高中端：身心障礙學生生涯轉銜會議'],
+  '會議及活動':['新生轉銜會議（含甄試生報到）','資源教室助理人員工作會議及教育訓練'],
+  '特通網主責':['系統接收新安置學生（新生、重新鑑定、舊生升級、學生異動）'],
+  '成果摘要表':['召開會議：新生轉銜輔導會議','協助同學工作服務概況','學生輔導／宣導活動','輔導鑑定轉銜服務','學生學習情形（休退延）','學生意見調查處理情形']}},
+ {k:'微姍',full:'陳微姍',college:'管理學院＋人文',depts:['餐旅','健管'],duty:{
+  '經費':['教育部特殊教育學生獎補助金申請與核發','學生輔導活動費申請與控管'],
+  '例行性業務':['個資盤點與管理','確認經費核銷內容'],
+  '公文':['教育部：獎補助學金申請'],
+  '會議及活動':['身障體驗週活動','聯誼性質活動：期中進補、期末聚餐、慶生會、FUN假趣戶外活動'],
+  '特通網主責':['教育部獎補助金申請'],
+  '成果摘要表':['學生輔導／宣導活動','教育部獎補助金申請','學生意見調查處理情形']}},
+ {k:'梅青',full:'廖梅青',college:'民生',depts:['幼保','食科'],duty:{
+  '經費':['課業輔導鐘點費申請與控管'],
+  '例行性業務':['資源教室財產（含物品）盤點與管理','中教大：工作協調會議'],
+  '公文':[],
+  '會議及活動':[],
+  '特通網主責':[],
+  '成果摘要表':['課業輔導服務概況','學生意見調查處理情形']}},
+ {k:'心榆',full:'賴心榆',college:'民生＋管理學院＋人文',depts:['多遊','文創','文設','妝品','國英','溝通英語','運休'],duty:{
+  '經費':['資源教室學生交通費申請、核銷','學生輔導活動費'],
+  '例行性業務':['特教生對資源教室服務滿意度調查'],
+  '公文':['教育部：畢業生追蹤調查（含學雜費減免）','勞工局：聯繫會報、轉銜、就業資訊'],
+  '會議及活動':['畢業生轉銜會議，辦理就業相關活動、工作坊','資源教室交通費補助審查會議'],
+  '特通網主責':['畢業生轉銜相關'],
+  '成果摘要表':['召開會議：畢業生轉銜輔導會議','學生輔導／宣導活動','輔具借用','特教生交通補助費申請表','學生意見調查處理情形']}},
+ {k:'望謙',full:'施望謙',college:'工學院＋醫護＋民生',depts:['醫材','智科','物治','語聽','美髮'],duty:{
+  '經費':['學生輔導活動費'],
+  '例行性業務':['學生學習輔具借用申請與管理','協助總務處年度無障礙計畫、無障礙設備會勘','資源教室志工申請作業與管理'],
+  '公文':['教育部：學生學習輔具'],
+  '會議及活動':['教師輔導知能研習（含年度教職員工教育訓練開課申請）','資源教室志工會議（期初、期末）','資源教室生涯探索活動','資源教室心理成長工作坊'],
+  '特通網主責':[],
+  '成果摘要表':['學生輔導／宣導活動','學生意見調查處理情形']}},
+ {k:'家銘',full:'家銘',college:'',depts:[],duty:{
+  '經費':['教材耗材費控管（含影片、書籍購買、特教文宣品製作）'],
+  '例行性業務':['資源教室網頁更新、管理、交叉檢核','電腦、資訊設備維護與管理','圖書與影片管理','每月處主管會議、行政會議資料；校務相關（新生資料、新生導師、新生定向、空間名稱、年報、校基庫 7-4）彙整','每學期活動總表彙整／資源教室行事曆彙整（含摺頁）','物品借用管理（紙本）','張貼訊息、網站公告（含公佈欄）','各系老師四項評量','NAS 硬碟資料備份管理','活動照片彙整','總務報修','內控文件稽核（含外來文件更新）','CSR 校園永續報告','申訴會議','協助總務處年度無障礙計畫、無障礙設備會勘'],
+  '公文':['研習：校外特教研習、各單位協請公告宣導、工作協調會收文、教育部行政類收文','「身心障礙者權利公約」報部資料回覆'],
+  '會議及活動':[],
+  '特通網主責':['教材耗材費填寫'],
+  '成果摘要表':[]}},
+];
+const SEN_COMMON=['特殊生提報鑑定','填寫轉銜表／異動學生：休、退、畢業、轉學','確定個案：列管學生基本資料填寫','學生追蹤（學雜費減免名單）','畢業學生就業追蹤'];
+const ROTATION=[
+ {item:'帶領中心實習生',by:{113:'雨欣',114:'梅青',115:'曉臻',116:'微姍',117:'心榆',118:'望謙'}},
+ {item:'高中端參訪接洽',by:{114:'心榆',115:'望謙',116:'梅青',117:'雨欣',118:'曉臻',119:'微姍',120:'心榆',121:'望謙'}},
+ {item:'特教評鑑',by:{107:'家銘',111:'望謙',115:'梅青'},note:'年度'},
+ {item:'各系老師四項評量',fixed:'家銘'},
+];
+const RULES=[
+ [/特殊教育推行委員會|特推會|家長代表遴選|學生代表遴選/,'雨欣','特推會'],
+ [/弘光有約/,'雨欣','弘光有約座談'],
+ [/ISP.*(期末|檢討)/i,'雨欣','ISP 期末檢討'],
+ [/新生轉銜|甄試/,'曉臻','新生轉銜會議'],
+ [/助理人員|協助同學/,'曉臻','助理人員會議／訓練'],
+ [/畢業.*轉銜|畢業生/,'心榆','畢業生轉銜'],
+ [/交通費/,'心榆','交通費補助審查'],
+ [/就業|職場|職涯|職人|一日體驗|餐飲|橫槓/,'心榆','就業相關活動'],
+ [/身心障礙體驗|身障體驗|校園無礙/,'微姍','身障體驗週'],
+ [/進補|聚餐|慶生|FUN假趣|聯誼|聖誕|迎新春|招財/i,'微姍','聯誼活動'],
+ [/志工/,'望謙','志工會議'],
+ [/輔導知能|特教.{0,6}研習|教職員工教育訓練/,'望謙','教師輔導知能研習'],
+ [/生涯|探索/,'望謙','生涯探索活動'],
+ [/心理成長|情緒|團體|工作坊/,'望謙','心理成長工作坊'],
+ [/課業輔導|課輔/,'梅青','課業輔導'],
+];
+const staffBy=k=>STAFF.find(s=>s.k===k);
+function expectedOwner(r){
+  const s=r.活動名稱+' '+r.活動方式+' '+r.主題類別;
+  if(isISP(r)&&!/期末|檢討/.test(r.活動名稱)){
+    const hit=STAFF.find(p=>p.depts.some(d=>r.活動名稱.includes(d)));
+    return hit?{k:hit.k,label:'ISP 個管（'+hit.depts.find(d=>r.活動名稱.includes(d))+'）'}:{k:'',label:'ISP（系所未對到）'};
+  }
+  for(const [re,k,label] of RULES)if(re.test(s))return {k,label};
+  return {k:'',label:'—'};
+}
+function actualOwner(r){if(!r.承辦人)return '';const p=STAFF.find(p=>r.承辦人.includes(p.full)||r.承辦人.includes(p.k));return p?p.k:''}
+function ownerOf(r){
+  const ov=(OV[r.id]||{}).owner,exp=expectedOwner(r),act=actualOwner(r);
+  const k=ov||act||exp.k||'';
+  return {k,label:exp.label,exp:exp.k,act,src:ov?'手動指定':act?'列表承辦人':exp.k?'分工表規則':'未分類',mismatch:!!(act&&exp.k&&act!==exp.k)};
+}
+function curYear(){const t=new Date();return semOf([t.getFullYear(),t.getMonth()+1,t.getDate()]).split('.')[0]}
+function rotationFor(k,y){return ROTATION.map(x=>({item:x.item,who:x.fixed||x.by[y]||'',note:x.note})).filter(x=>!k||x.who===k)}
+function renderStaff(){
+  const sem=$('#sem').value,base=bySem(effective(true),sem),sel=$('#owner').value,y=sem?sem.split('.')[0]:curYear();
+  if($('#scope').value!=='rc'){$('#staffCards').innerHTML='<div class="empty" style="grid-column:1/-1">業務分工只適用資源教室，請把「範圍」切回「只看資源教室」。</div>';$('#staffDuty').innerHTML='';$('#staffTable').innerHTML='';return}
+  const groups={};base.forEach(r=>{const o=ownerOf(r).k||'未分類';(groups[o]=groups[o]||[]).push(r)});
+  const card=(k,name,sub)=>{const rs=groups[k]||[],isp=rs.filter(isISP).length,mis=rs.filter(r=>ownerOf(r).mismatch).length;
+    return `<button class="src staffcard ${sel===k?'on':''}" data-owner="${k}"><b>${name}</b>${rs.reduce((a,r)=>a+r.場次,0)} 場｜${rs.reduce((a,r)=>a+r.參與總計,0)} 人次<br><span class="sub" style="margin:0">ISP ${isp} 場${mis?`　<span class="pill warn">${mis} 筆待確認</span>`:''}</span>${sub?`<br><span class="sub" style="margin:0;font-size:.74rem">${sub}</span>`:''}</button>`};
+  $('#staffCards').innerHTML=`<button class="src staffcard ${sel===''?'on':''}" data-owner=""><b>全部</b>${base.reduce((a,r)=>a+r.場次,0)} 場｜${base.length} 筆</button>`+STAFF.map(p=>card(p.k,p.k,p.depts.length?'ISP：'+p.depts.filter(d=>d!=='文設'&&d!=='溝通英語').join('、'):'')).join('')+(groups['未分類']?card('未分類','未分類','需手動指定'):'');
+  // 職責
+  const p=staffBy(sel);
+  if(p){
+    const rot=rotationFor(p.k,y);
+    $('#staffDuty').innerHTML=`<h2>${p.full} 的業務</h2><p class="sub">${p.college?`個管學院：${p.college}｜`:''}依 115.02.23 業務分工表</p><div class="dutygrid">${Object.entries(p.duty).filter(([,v])=>v.length).map(([g,v])=>`<div class="duty"><h3>${g}</h3><ul>${v.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+      ${p.k!=='家銘'?`<div class="duty"><h3>特通網共同業務</h3><ul>${SEN_COMMON.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      <div class="duty"><h3>${y} 學年度輪值</h3>${rot.length?`<ul>${rot.map(x=>`<li>${x.item}${x.note?'（'+x.note+'）':''}</li>`).join('')}</ul>`:'<p class="sub">本學年度沒有輪值項目</p>'}</div></div>`;
+  }else{
+    $('#staffDuty').innerHTML=`<h2>${y} 學年度輪值</h2><p class="sub">點上方人名卡片可看個人業務清單與活動。</p><table><thead><tr><th>項目</th><th>負責人</th></tr></thead><tbody>${rotationFor('',y).map(x=>`<tr><td>${x.item}${x.note?'（'+x.note+'）':''}</td><td>${x.who||'<span class="pill warn">分工表未列</span>'}</td></tr>`).join('')}</tbody></table>`;
+  }
+  const rows=sel===''?base:base.filter(r=>(ownerOf(r).k||'未分類')===sel);
+  $('#staffCount').textContent=`${sem} 學期｜${rows.length} 筆｜${rows.reduce((a,r)=>a+r.場次,0)} 場｜${rows.reduce((a,r)=>a+r.參與總計,0)} 人次`;
+  $('#staffTable').innerHTML=rows.length?`<table><thead><tr><th>日期</th><th>活動名稱</th><th>業務類別</th><th>列表承辦人</th><th>依分工表</th><th>歸屬</th><th class="n">人次</th></tr></thead><tbody>${rows.map(r=>{const o=ownerOf(r);
+    return `<tr><td>${esc(rocText(r.日期原文))}</td><td>${esc(r.活動名稱)}</td><td>${esc(o.label)}</td><td>${esc(r.承辦人||'—')}</td><td>${o.exp||'—'}${o.mismatch?' <span class="pill warn">不同</span>':''}</td>
+    <td><select data-ov="owner" data-id="${esc(r.id)}"><option value="">${o.act||o.exp?'自動（'+(o.act||o.exp)+'）':'未分類'}</option>${STAFF.map(s=>`<option value="${s.k}" ${(OV[r.id]||{}).owner===s.k?'selected':''}>${s.k}</option>`).join('')}</select></td><td class="n">${r.參與總計}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">'+(DB.rows.length?'這個學期沒有活動':'請先匯入資料')+'</div>';
+}
+function staffExport(){
+  const sem=$('#sem').value,sel=$('#owner').value,rows=bySem(effective(),sem);if(!rows.length)return toast('沒有資料');
+  const head=['學期','活動日期','活動名稱','業務類別','歸屬承辦','列表承辦人','活動對象','活動方式','場次','參與人次','滿意度(%)','活動地點','講師','資料來源'];
+  const aoa=[head,...rows.map(r=>{const o=ownerOf(r);return [r.sem,rocText(r.日期原文),r.活動名稱,o.label,o.k||'未分類',r.承辦人,r.活動對象,r.活動方式,r.場次,r.參與總計,r.滿意度,r.活動地點,r.講師,r.src]})];
+  const wb=XLSX.utils.book_new();
+  const add=(name,data)=>{const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=head.map((h,i)=>({wch:i===2?40:12}));XLSX.utils.book_append_sheet(wb,ws,name)};
+  add(sel||'全部',aoa);
+  if(!sel){STAFF.forEach(p=>{const rs=aoa.slice(1).filter(x=>x[4]===p.k);if(rs.length)add(p.k,[head,...rs])});const un=aoa.slice(1).filter(x=>x[4]==='未分類');if(un.length)add('未分類',[head,...un])}
+  XLSX.writeFile(wb,`${sem}學期_活動分工_${sel||'全部'}.xlsx`);toast('已下載');
+}
+
 /* ---------- 選單／分頁 ---------- */
-const TITLES={src:['匯入資料','活動資料只 key 一次，其他表單自動產出。'],sem:['學期報告','特推會業務報告文字與附件二、附件四。'],t74:['table7_4 活動填報','選學期後下載 xls，上傳填報系統。'],life:['生命教育指標','114 學年度起，依學年度彙整場次與人次。'],conv:['學期末總表','把活動辦理列表轉成活動總表的欄位格式。'],csv:['自選欄位 CSV','依學期與範圍匯出任意欄位。']};
+const TITLES={staff:['業務分工','依 115.02.23 業務分工表，自動把活動歸到承辦人。'],src:['匯入資料','活動資料只 key 一次，其他表單自動產出。'],sem:['學期報告','特推會業務報告文字與附件二、附件四。'],t74:['table7_4 活動填報','選學期後下載 xls，上傳填報系統。'],life:['生命教育指標','114 學年度起，依學年度彙整場次與人次。'],conv:['學期末總表','把活動辦理列表轉成活動總表的欄位格式。'],csv:['自選欄位 CSV','依學期與範圍匯出任意欄位。']};
 let TAB=store.get('rcTab','src');
 function setTab(t){TAB=t;store.set('rcTab',t);$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));$$('.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+t));
-  $('#title').textContent=TITLES[t][0];$('#subtitle').textContent=TITLES[t][1];$('#semWrap').style.display=t==='life'||t==='src'?'none':'';$('#yearWrap').style.display=t==='life'?'':'none';refresh()}
+  $('#title').textContent=TITLES[t][0];$('#subtitle').textContent=TITLES[t][1];$('#semWrap').style.display=t==='life'||t==='src'?'none':'';$('#yearWrap').style.display=t==='life'?'':'none';$('#ownerWrap').style.display=t==='src'||t==='staff'||$('#scope').value!=='rc'?'none':'';refresh()}
 function fillSelectors(){
   const sems=allSems(),s=$('#sem'),cur=s.value||store.get('rcSem','');
   s.innerHTML=sems.map(x=>`<option value="${x}">${x} 學期</option>`).join('')||'<option value="">（尚無資料）</option>';s.value=sems.includes(cur)?cur:(sems[0]||'');
   const years=[...new Set(sems.map(x=>x.split('.')[0]))],y=$('#year'),cy=y.value||store.get('rcYear','');
   y.innerHTML=years.map(x=>`<option value="${x}">${x} 學年度</option>`).join('')||'<option value="">（尚無資料）</option>';y.value=years.includes(cy)?cy:(years.includes('114')?'114':years[0]||'');
 }
-function refresh(){fillSelectors();renderSrc();if(TAB==='sem')renderSem();if(TAB==='t74')renderT74();if(TAB==='life')renderLife();if(TAB==='conv')renderConv()}
+function refresh(){fillSelectors();renderSrc();if(TAB==='sem')renderSem();if(TAB==='t74')renderT74();if(TAB==='life')renderLife();if(TAB==='conv')renderConv();if(TAB==='staff')renderStaff();$('#ownerWrap').style.display=TAB==='src'||TAB==='staff'||$('#scope').value!=='rc'?'none':''}
 
 $$('.nav').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 $('#sem').onchange=()=>{store.set('rcSem',$('#sem').value);refresh()};
@@ -499,7 +647,7 @@ $('#copyA2').onclick=()=>a2Export((t,h,x)=>copyHTML(h,x));$('#docA2').onclick=()
 $('#copyA4').onclick=()=>a4Export((t,h,x)=>copyHTML(h,x));$('#docA4').onclick=()=>a4Export((t,h)=>downloadDoc(t,h));
 document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset.ov){const o=OV[el.dataset.id]=OV[el.dataset.id]||{},k=el.dataset.ov;
-    if(k==='t74off')o.t74off=!el.checked;else if(k==='cat')o.cat=el.value;else o[k]=el.value===''?null:num(el.value);save();renderT74()}
+    if(k==='t74off')o.t74off=!el.checked;else if(k==='cat')o.cat=el.value;else if(k==='owner')o.owner=el.value||null;else o[k]=el.value===''?null:num(el.value);save();k==='owner'?renderStaff():renderT74()}
   if(el.dataset.life){const o=OV[el.dataset.id]=OV[el.dataset.id]||{};o[el.dataset.life]=!el.checked;save();renderLife()}
 });
 $('#t74Make').onclick=()=>{if(!t74Data().length)return toast('這個學期沒有可填報的活動');makeT74()};
@@ -508,6 +656,9 @@ $('#t74File').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(
   const h=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1})[0]||[];if(!h.some(x=>String(x).includes('活動主題')))throw Error('第一列找不到「活動主題」欄');writeT74(wb,wb.Sheets[sn])}catch(err){toast('無法套用：'+err.message)}};
 $('#convMake').onclick=()=>{const rows=convRows();if(!rows.length)return toast('這個學期沒有活動辦理列表資料');const ws=XLSX.utils.aoa_to_sheet([MASTER_COLS,...rows]);ws['!cols']=MASTER_COLS.map((c,i)=>({wch:[5,22].includes(i)?40:12}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${$('#sem').value}學期`);XLSX.writeFile(wb,`${$('#sem').value}學期_活動總表格式.xlsx`);toast(`已下載 ${rows.length} 筆`)};
+$('#owner').value=store.get('rcOwner','');$('#owner').onchange=()=>{store.set('rcOwner',$('#owner').value);refresh()};
+document.addEventListener('click',e=>{const b=e.target.closest('.staffcard');if(!b)return;$('#owner').value=b.dataset.owner;store.set('rcOwner',b.dataset.owner);renderStaff()});
+$('#staffXlsx').onclick=staffExport;
 setTab(TAB);
 </script>
 </body>
