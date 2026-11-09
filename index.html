@@ -393,11 +393,122 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 footer.note{
   max-width:1080px;margin:10px auto 0;padding:0 14px;font-size:.74rem;color:var(--ink-soft);
 }
+
+/* ===== 外層：工讀生登記（點餐式） ===== */
+body.kiosk-mode > header, body.kiosk-mode > main, body.kiosk-mode > footer{display:none}
+body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
+.kiosk[hidden]{display:none}
+.kiosk{--mode:var(--accent);--mode-soft:var(--accent-soft);min-height:100vh;min-height:100dvh;padding-bottom:96px}
+.kiosk.restock{--mode:var(--ok);--mode-soft:#E1F1E7}
+.k-head{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;display:flex;align-items:center;gap:8px;
+  padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top));box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.k-head>div{flex:1;min-width:0}
+.k-title{font-size:1.12rem;font-weight:700;letter-spacing:.06em}
+.k-sub{font-size:.74rem;opacity:.8}
+.k-hbtn{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
+#k-refresh{font-size:1.1rem;padding:6px 11px}
+.k-body{max-width:1100px;margin:0 auto;padding:12px 12px 0}
+.k-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.k-seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px;flex:1 1 240px}
+.k-seg button{flex:1;border:none;background:none;padding:10px 8px;border-radius:9px;font-family:inherit;font-size:1rem;color:var(--ink-soft);cursor:pointer}
+.k-mode button.on{background:var(--mode);color:#fff;font-weight:700}
+.k-from button.on{background:var(--primary);color:#fff;font-weight:700}
+.k-filter{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.k-filter input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:16px;background:#fff}
+.k-cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.k-cats button{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-family:inherit;font-size:.9rem;cursor:pointer;color:var(--ink)}
+.k-cats button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.k-note{font-size:.76rem;color:var(--ink-soft);margin:4px 2px 10px}
+.k-note.bad{color:var(--accent)}
+.k-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+@media (max-width:420px){ .k-grid{grid-template-columns:1fr 1fr;gap:8px} }
+.k-empty{grid-column:1/-1;text-align:center;color:var(--ink-soft);padding:40px 10px}
+.kcard{background:#fff;border:2px solid transparent;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s}
+.kcard.picked{border-color:var(--mode)}
+.kcard.empty{opacity:.55}
+.kimg{aspect-ratio:4/3;background:#EEF1F0;display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden}
+.kimg img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.kname{font-size:.92rem;font-weight:600;line-height:1.35;padding:8px 10px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
+.kst{font-size:.78rem;color:var(--ink-soft);padding:0 10px}
+.kst b{color:var(--ink);font-size:.95rem}
+.kst.none{padding:8px 10px 12px;color:var(--accent)}
+.kstep{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:8px 10px 10px;margin-top:auto}
+.kstep button{width:44px;height:44px;flex:0 0 44px;border-radius:50%;font-size:1.5rem;line-height:1;cursor:pointer;font-family:inherit;
+  border:2px solid var(--mode);background:#fff;color:var(--mode);touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+.kstep .kplus{background:var(--mode);color:#fff}
+.kstep button:disabled{border-color:#D5DBD9;background:#F1F3F2;color:#B7C0BD;cursor:default}
+.kstep button:not(:disabled):active{transform:scale(.92)}
+.kq{width:100%;min-width:0;text-align:center;font-size:1.25rem;font-weight:700;border:none;background:none;font-family:inherit;color:var(--ink-soft);padding:0}
+.kstep.has .kq{color:var(--mode)}
+.ksize{display:grid;grid-template-columns:auto 1fr;align-items:center;border-top:1px dashed var(--line);padding:4px 0 0 10px}
+.ksize:first-of-type{border-top:none}
+.ksize .kszn{font-weight:700;font-size:.9rem}
+.ksize .kst{text-align:right;padding-right:10px}
+.ksize .kstep{grid-column:1/-1;padding:4px 10px 8px}
+.ksize.none{opacity:.5}
+.k-cart{position:fixed;left:0;right:0;bottom:0;z-index:45;background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08);
+  display:flex;align-items:center;gap:10px;padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.k-cart .k-sum{flex:1;font-size:.95rem;color:var(--ink-soft)}
+.k-cart.on .k-sum{color:var(--ink)}
+.k-cart .k-sum b{color:var(--mode);font-size:1.15rem}
+.kbig{border:none;background:var(--mode,var(--primary));color:#fff;font-family:inherit;font-size:1.05rem;font-weight:700;padding:13px 22px;border-radius:12px;cursor:pointer;white-space:nowrap}
+.kbig:disabled{background:#C9D0CD;cursor:default}
+.k-setup{max-width:360px;margin:40px auto;text-align:center;display:flex;flex-direction:column;gap:12px;background:#fff;border-radius:16px;padding:26px 20px}
+.k-setup h2{color:var(--primary)}
+.k-setup p{font-size:.9rem;color:var(--ink-soft)}
+.k-setup .bad{color:var(--accent)}
+.k-setup input{padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;text-align:center}
+.k-setup .kbig{background:var(--primary)}
+/* 確認視窗 */
+.kconf{--mode:var(--accent)}
+.kconf.in{--mode:var(--ok)}
+.kconf h2{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:var(--mode)!important;font-size:1.15rem!important}
+.kconf h2 span{font-size:.85rem;color:var(--ink-soft);font-weight:400}
+.kc-list{border:1px solid var(--line);border-radius:12px;margin:6px 0 14px;max-height:38vh;overflow:auto}
+.kc-row{display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.kc-row:last-child{border-bottom:none}
+.kc-name{font-size:.95rem;font-weight:600;line-height:1.35}
+.kc-name small{display:block;font-weight:400;font-size:.74rem;color:var(--ink-soft)}
+.kc-qty{font-size:1.25rem;font-weight:800;color:var(--mode)}
+.kc-chg{font-size:.8rem;color:var(--ink-soft);white-space:nowrap}
+.kc-chg b{color:var(--ink)}
+.kc-err{background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:10px 12px;font-size:.88rem;margin-bottom:10px}
+.kc-actions{display:flex;gap:10px;margin-top:6px}
+.kc-actions .btn{flex:0 0 auto;padding:12px 16px;font-size:.95rem}
+.kc-actions .kbig{flex:1;background:var(--mode)}
+.sheet .field input{font-size:16px}
+.kdone{text-align:center;padding:10px 4px}
+.kdone-ok{width:76px;height:76px;border-radius:50%;background:var(--ok);color:#fff;font-size:2.6rem;line-height:76px;margin:6px auto 12px;animation:kpop .35s ease-out}
+@keyframes kpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.kdone h2{color:var(--ok)!important;font-size:1.25rem!important}
+.kdone p{color:var(--ink-soft);font-size:.86rem;margin-bottom:12px}
+.kdone ul{list-style:none;text-align:left;border:1px solid var(--line);border-radius:12px;margin-bottom:16px;max-height:34vh;overflow:auto}
+.kdone li{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:.9rem}
+.kdone li:last-child{border-bottom:none}
+.kdone li span{color:var(--ink-soft);white-space:nowrap}
+.kdone .kbig{width:100%;background:var(--primary)}
+/* 內部：右上角按鈕與雲端設定 */
+.hdr-actions{position:absolute;top:12px;right:14px;display:flex;gap:6px}
+.hdr-actions button{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 12px;font-family:inherit;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.hdr-actions button.bad{background:var(--accent)}
+@media (max-width:640px){ header h1{padding-right:0} .hdr-actions{position:static;margin-top:8px} }
+.cs-status{font-size:.85rem;color:var(--ok)}
+.cs-status.bad{color:var(--accent)}
+.cs-link{display:flex;gap:6px;margin:6px 0}
+.cs-link input{flex:1;min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:.8rem}
+#cs-qr{display:flex;justify-content:center;padding:8px}
 </style>
 </head>
 <body>
 
+<div id="kiosk" class="kiosk" hidden>
+  <div class="k-head"><div><div class="k-title">資源教室 物品登記</div><div class="k-sub">宣導品・文具・團體服 領出／補進</div></div>
+    <button class="k-hbtn" id="k-refresh" title="更新庫存">⟳</button><button class="k-hbtn" id="k-admin">🔒 管理</button></div>
+  <div class="k-body"></div>
+  <div class="k-cart" hidden><button class="btn" id="k-clear" hidden>清空</button><div class="k-sum"></div><button class="kbig" id="k-go" disabled>確認領出 →</button></div>
+</div>
 <header>
+  <div class="hdr-actions"><button id="cloudBtn" title="雲端同步設定">☁ 未設定</button><button id="lockBtn" title="切換到工讀生登記畫面">🔒 工讀生畫面</button></div>
   <h1>資源教室宣導品倉庫管理</h1>
   <div class="sub">114-2 學期庫存 ・ 115.01.22 統計基準 ・ 資＝悅讀書房(資源教室)、倉＝Q棟地下室倉庫</div>
   <nav class="tabs">
@@ -598,7 +709,7 @@ footer.note{
 </section>
 </main>
 
-<footer class="note">修改會自動存在<b>這台電腦的這個瀏覽器</b>裡，換電腦或換瀏覽器不會同步。請定期在庫存總覽按「匯出備份」保存 JSON 檔（含圖書位置），到另一台電腦按「匯入備份」即可接續使用。</footer>
+<footer class="note">修改會自動存在<b>這台電腦的這個瀏覽器</b>裡；設定右上角「☁ 雲端同步」後，工讀生手機的登記與其他電腦都會同步。請定期在庫存總覽按「匯出備份」保存 JSON 檔（含圖書位置），到另一台電腦按「匯入備份」即可接續使用。</footer>
 
 <!-- 位置編輯 / 區域檢視 modal -->
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -777,7 +888,7 @@ function scheduleSave(){
   saveTimer = setTimeout(async ()=>{
     try{
       await store.set(STORE_KEY, JSON.stringify({items, log, savedAt:new Date().toISOString()}));
-      toast('已自動儲存');
+      toast('已自動儲存'); markCloudChange();
     }catch(e){ toast('⚠ 儲存失敗，請使用「匯出備份」保存'); }
   }, 800);
 }
@@ -1418,7 +1529,7 @@ function renderLog(){
   const list = [];
   for(let i=0;i<log.length;i++){
     const e = log[i];
-    if(q && !(e.name+' '+(e.person||'')+' '+(e.purpose||'')).toLowerCase().includes(q)) continue;
+    if(q && !(e.name+' '+(e.person||'')+' '+(e.purpose||'')+' '+(e.by||'')).toLowerCase().includes(q)) continue;
     list.push(i);
   }
   if(!list.length){
@@ -1435,7 +1546,7 @@ function renderLog(){
       <td class="${e.dir<0?'logact-out':'logact-in'}">${e.dir<0?'領用':'入庫'}</td>
       <td class="num">${e.qty}</td>
       <td class="num"><b>${e.remain}</b></td>
-      <td>${esc(e.person||'—')}</td>
+      <td>${esc(e.person||'—')}${e.by?`<div class="itemnote">${e.src==='staff'?'工讀生 ':''}${esc(e.by)} 登記</div>`:''}</td>
       <td>${esc(e.purpose||'—')}</td>
       <td><button class="rowdel" data-undo="${i}" title="復原此筆並還原庫存">↩</button></td>
     </tr>`;
@@ -1454,11 +1565,11 @@ $t('t-submit').onclick = ()=>doTake(-1);
 $t('t-restock').onclick = ()=>doTake(+1);
 $t('t-logq').addEventListener('input', debounce(()=>{ logLimit = LOG_PAGE; renderLog(); }, 150));
 $t('t-logcsv').onclick = ()=>{
-  const rows=[['時間','品名','地點','動作','數量','剩餘(該地點)','領用人','用途']];
+  const rows=[['時間','品名','地點','動作','數量','剩餘(該地點)','領用人','用途','登記人']];
   for(const e of log){
     rows.push([new Date(e.ts).toLocaleString('zh-TW'), e.name,
       e.from==='room'?'悅讀書房':'Q棟倉庫', e.dir<0?'領用':'入庫',
-      e.qty, e.remain, e.person||'', e.purpose||'']);
+      e.qty, e.remain, e.person||'', e.purpose||'', e.by||'']);
   }
   download(`領用紀錄_${today()}.csv`, toCsv(rows), 'text/csv');
 };
@@ -1566,7 +1677,7 @@ async function loadLib(){
 function saveLib(){
   clearTimeout(libSaveTimer);
   libSaveTimer = setTimeout(async ()=>{
-    try{ await store.set(LIB_KEY, JSON.stringify(lib)); toast('圖書位置已儲存'); }
+    try{ await store.set(LIB_KEY, JSON.stringify(lib)); toast('圖書位置已儲存'); markCloudChange(); }
     catch(_){ toast('⚠ 圖書資料儲存失敗'); }
   }, 600);
 }
@@ -2408,10 +2519,435 @@ async function importCatalogFile(file){
 lib = normalizeLib(JSON.parse(JSON.stringify(DEFAULT_LIB)));
 function renderLib(){ renderLibMap(); renderLibResults(); renderLibBatches(); renderLibDetail(); renderPool(); loadCatalog(); }
 
-// 先用預設資料立即畫出畫面，再讀取已儲存的資料
+
+/* ================= 雲端同步（Google Apps Script） ================= */
+const CLOUD_URL_DEFAULT = '';   // 部署好的 Apps Script 網址；填好後每台裝置都會自動使用
+const CLOUD_KEY = 'rc-cloud-1142';
+let cloud = (()=>{ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY)) || {}; }catch(_){ return {}; } })();
+function saveCloud(){ try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud)); }catch(_){} }
+// 工讀生連結：?c=雲端網址&s=工讀生代碼 → 記在這支手機後，從網址列移除
+(()=>{
+  const u = new URL(location.href), c = u.searchParams.get('c'), s = u.searchParams.get('s');
+  if(c || s){
+    if(c) cloud.url = c; if(s) cloud.code = s; saveCloud();
+    u.searchParams.delete('c'); u.searchParams.delete('s');
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+  }
+})();
+const cloudUrl = () => cloud.url || CLOUD_URL_DEFAULT;
+const isAdmin = () => !!cloud.admin;
+const adminCloud = () => !!(cloudUrl() && cloud.key && isAdmin());
+async function api(op, data={}, auth={}){
+  const url = cloudUrl(); if(!url) throw new Error('尚未設定雲端網址');
+  const body = JSON.stringify({op, code: auth.code ?? cloud.code, key: auth.key ?? cloud.key, ...data});
+  let r, j;
+  try{ r = await fetch(url, {method:'POST', body}); }catch(_){ throw new Error('連不上雲端，請檢查網路'); }
+  try{ j = await r.json(); }catch(_){ throw new Error('雲端回應格式不對（網址是否正確、是否設定「所有人」可存取？）'); }
+  if(!j.ok){ const e = new Error(j.err || '雲端錯誤'); e.res = j; throw e; }
+  return j;
+}
+
+/* ---- 管理者：改了就自動上傳；每 30 秒拉一次工讀生的登記 ---- */
+let cloudVer = +(localStorage.getItem('rc-cloud-ver') || 0);
+let cloudDirty = localStorage.getItem('rc-cloud-dirty') === '1';
+let changeSeq = 0, pushing = false, pushTimer = null;
+const setCloudVer = v => { cloudVer = v; try{ localStorage.setItem('rc-cloud-ver', v); }catch(_){} };
+const setCloudDirty = d => { cloudDirty = d; try{ localStorage.setItem('rc-cloud-dirty', d ? '1' : ''); }catch(_){} };
+function setCloudStatus(txt, bad){
+  const b = document.getElementById('cloudBtn'); if(!b) return;
+  b.textContent = '☁ ' + txt; b.classList.toggle('bad', !!bad);
+  const st = document.getElementById('cs-status'); if(st){ st.textContent = txt; st.className = 'cs-status ' + (bad ? 'bad' : ''); }
+}
+function markCloudChange(){
+  if(!adminCloud()) return;
+  changeSeq++; setCloudDirty(true);
+  clearTimeout(pushTimer); pushTimer = setTimeout(pushCloud, 1500);
+  setCloudStatus('等待同步…');
+}
+async function pushCloud(){
+  if(!adminCloud() || !stateReady) return;
+  if(pushing){ clearTimeout(pushTimer); pushTimer = setTimeout(pushCloud, 1500); return; }
+  pushing = true; const seq = changeSeq; setCloudStatus('同步中…');
+  try{
+    const j = await api('save', {baseVer: cloudVer, state: {items, log, lib}});
+    setCloudVer(j.ver);
+    if(seq === changeSeq){ setCloudDirty(false); if(j.merged){ adoptState(j.state); toast(`已合併 ${j.merged} 筆工讀生登記`); } }
+    setCloudStatus('已同步 ' + hhmm());
+  }catch(err){ setCloudStatus('同步失敗', true); toast('⚠ 雲端同步失敗：' + err.message); }
+  finally{ pushing = false; }
+}
+async function pullCloud(){
+  if(!adminCloud() || pushing || !stateReady) return;
+  if(cloudDirty) return pushCloud();
+  try{
+    const j = await api('get');
+    if(!j.state.items){ setCloudVer(0); setCloudDirty(true); changeSeq++; await pushCloud(); toast('雲端是空的，已把這台裝置的資料上傳'); return; }
+    if(j.ver !== cloudVer){
+      const before = log.length; adoptState(j.state); setCloudVer(j.ver);
+      const n = log.length - before; if(n > 0) toast(`收到 ${n} 筆新的登記`);
+    }
+    setCloudStatus('已同步 ' + hhmm());
+  }catch(err){ setCloudStatus('同步失敗', true); }
+}
+// 套用雲端資料（不觸發上傳）
+function adoptState(s){
+  if(Array.isArray(s.items)) items = s.items;
+  if(Array.isArray(s.log)) log = s.log;
+  if(s.lib && Array.isArray(s.lib.cabinets)){ lib = normalizeLib(s.lib); store.set(LIB_KEY, JSON.stringify(lib)).catch(()=>{}); }
+  store.set(STORE_KEY, JSON.stringify({items, log, savedAt: new Date().toISOString()})).catch(()=>{});
+  invalidate('all'); dirty.lib = true; flush();
+  if(currentTab === 'take'){ renderTakeForm(true); }
+}
+const hhmm = () => { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
+setInterval(()=>{ if(document.visibilityState === 'visible'){ kioskOn ? kRefresh(true) : pullCloud(); } }, 30000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible'){ kioskOn ? kRefresh(true) : pullCloud(); } });
+
+/* ---- 雲端設定（管理者） ---- */
+function openCloudSettings(){
+  const link = studentLink(cloud.code || '');
+  openSheet(`<h2>☁ 雲端同步設定</h2>
+    <div class="hint" style="margin-bottom:10px">設定後，工讀生用自己的手機登記，你這邊會自動收到；你在任何電腦登入管理也會是同一份資料（存在你的 Google 雲端硬碟）。
+      第一次設定請照 <a href="https://github.com/educeduc-alt/resource-room#雲端同步設定" target="_blank" rel="noopener">安裝說明</a> 建立 Google Apps Script（約 5 分鐘）。
+      <button class="btn" id="cs-copy" style="margin-top:6px">📋 複製 Apps Script 程式碼</button></div>
+    <div class="field"><label>Apps Script 網址</label><input id="cs-url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(cloudUrl())}"></div>
+    <div class="field"><label>管理密碼（Apps Script 裡的 ADMIN_KEY）</label><input id="cs-key" type="password" value="${esc(cloud.key||'')}"></div>
+    <div class="actions" style="justify-content:flex-start">
+      <button class="btn primary" id="cs-save">連線並同步</button>
+      ${cloudUrl() ? '<button class="btn" id="cs-now">立即同步</button><button class="btn" id="cs-off">停止同步</button>' : ''}
+      <span id="cs-status" class="cs-status"></span>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--line);margin:14px 0">
+    <h2>📱 給工讀生的連結</h2>
+    <div class="hint">工讀生用手機掃 QR code（或打開連結）就會自動設定好，只會看到登記畫面。</div>
+    <div class="field"><label>工讀生代碼（Apps Script 裡的 STAFF_CODE）</label><input id="cs-code" value="${esc(cloud.code||'')}" placeholder="例：1234"></div>
+    <div id="cs-link">${link ? linkBox(link) : '<div class="hint">填好雲端網址和工讀生代碼後會產生連結。</div>'}</div>`);
+  const $ = id => sheet.querySelector(id);
+  $('#cs-copy').onclick = async ()=>{
+    try{ const t = await (await fetch('apps-script.gs', {cache:'no-cache'})).text(); await navigator.clipboard.writeText(t); toast('已複製程式碼，到 Apps Script 貼上即可'); }
+    catch(_){ window.open('apps-script.gs', '_blank'); }
+  };
+  $('#cs-save').onclick = async ()=>{
+    const url = $('#cs-url').value.trim(), key = $('#cs-key').value;
+    if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){ setCloudStatus('網址應該是 https://script.google.com/macros/s/…/exec', true); return; }
+    setCloudStatus('連線中…');
+    const keepUrl = cloud.url; cloud.url = url;
+    try{
+      const j = await api('auth', {}, {key});
+      if(j.role !== 'admin') throw new Error('這是工讀生代碼，請輸入管理密碼');
+      cloud.key = key; cloud.admin = true; saveCloud();
+      setCloudVer(0); setCloudDirty(false);
+      const g = await api('get');
+      if(!g.state.items){ setCloudDirty(true); changeSeq++; await pushCloud(); toast('已把這台裝置的資料上傳到雲端'); }
+      else { adoptState(g.state); setCloudVer(g.ver); setCloudStatus('已同步 ' + hhmm()); toast('已連線，資料已從雲端更新'); }
+      refreshLink();
+    }catch(err){ cloud.url = keepUrl; saveCloud(); setCloudStatus(err.message, true); }
+  };
+  const now = $('#cs-now'); if(now) now.onclick = ()=>{ cloudDirty ? pushCloud() : pullCloud(); };
+  const off = $('#cs-off'); if(off) off.onclick = ()=>{
+    if(!confirm('停止這台裝置的雲端同步？（雲端上的資料不會被刪除）')) return;
+    delete cloud.url; delete cloud.key; saveCloud(); closeSheet(); setCloudStatus('未設定'); };
+  const refreshLink = ()=>{ cloud.code = $('#cs-code').value.trim(); saveCloud(); const l = studentLink(cloud.code); $('#cs-link').innerHTML = l ? linkBox(l) : ''; if(l) drawQr(l); };
+  $('#cs-code').addEventListener('input', debounce(refreshLink, 300));
+  if(link) drawQr(link);
+}
+const studentLink = code => cloudUrl() && code ? `${location.origin}${location.pathname}?c=${encodeURIComponent(cloudUrl())}&s=${encodeURIComponent(code)}` : '';
+const linkBox = l => `<div class="cs-link"><input readonly value="${esc(l)}" onclick="this.select()"><button class="btn" data-copylink>複製</button></div><div id="cs-qr"></div>`;
+sheet.addEventListener('click', e=>{
+  const b = e.target.closest('[data-copylink]'); if(!b) return;
+  const v = b.previousElementSibling.value; navigator.clipboard.writeText(v).then(()=>toast('已複製連結')).catch(()=>{ b.previousElementSibling.select(); });
+});
+async function drawQr(text){
+  const box = document.getElementById('cs-qr'); if(!box) return;
+  try{
+    if(!window.QRCode) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    box.innerHTML = ''; new QRCode(box, {text, width:200, height:200, correctLevel: QRCode.CorrectLevel.L});
+  }catch(_){ box.innerHTML = '<div class="hint">QR code 產生失敗，請改用上面的連結。</div>'; }
+}
+
+/* ================= 外層：工讀生登記畫面（點餐式） ================= */
+const kioskEl = document.getElementById('kiosk');
+let kioskOn = false, kItems = null, kMode = -1, kFrom = 'room', kCat = '', kCart = new Map(), kBusy = false, kLoadedAt = null;
+const kLocal = () => !cloudUrl();                       // 沒有雲端：這台裝置自己記
+const kList = () => kLocal() ? items : (kItems || []);
+const kKey = (id, size, from) => `${id}|${size ?? ''}|${from}`;
+const kObj = (it, size) => size != null && it.sizes ? it.sizes[size] : it;
+const kStock = (it, size, from=kFrom) => +((kObj(it,size)||{})[from]) || 0;
+const fromName = f => f === 'wh' ? 'Q棟倉庫' : '悅讀書房';
+
+function showKiosk(){
+  kioskOn = true; document.body.classList.add('kiosk-mode'); kioskEl.hidden = false;
+  window.scrollTo(0,0);
+  if(!kLocal() && !cloud.code && !cloud.key){ kSetup(); return; }
+  try{ const c = JSON.parse(localStorage.getItem('rc-kiosk-cache') || 'null'); if(c && !kItems) kItems = c; }catch(_){}
+  renderKiosk(); kRefresh();
+}
+function showInner(){
+  kioskOn = false; document.body.classList.remove('kiosk-mode'); kioskEl.hidden = true;
+  setCloudStatus(cloudUrl() ? (cloud.key ? '同步中…' : '未登入') : '未設定');
+  invalidate('all'); flush(); pullCloud();
+}
+async function kRefresh(quiet){
+  if(kLocal()){ renderKiosk(); return; }
+  if(kBusy) return;
+  try{
+    const j = await api('get');
+    kItems = j.state.items || [];
+    kLoadedAt = new Date();
+    try{ localStorage.setItem('rc-kiosk-cache', JSON.stringify(kItems)); }catch(_){}
+    kClampCart(); renderKiosk();
+  }catch(err){
+    if(/代碼錯誤/.test(err.message)){ delete cloud.code; saveCloud(); kSetup('代碼不正確，請重新輸入'); return; }
+    if(!quiet) toast('⚠ ' + err.message);
+    kSetNote('⚠ 無法更新庫存：' + err.message, true);
+  }
+}
+function kSetNote(t, bad){ const n = document.getElementById('k-note'); if(n){ n.textContent = t; n.classList.toggle('bad', !!bad); } }
+function kSetup(msg){
+  kioskEl.querySelector('.k-body').innerHTML = `<div class="k-setup">
+    <div style="font-size:2.4rem">👋</div>
+    <h2>第一次使用</h2>
+    <p>請輸入管理者給你的<b>工讀生代碼</b>（或直接掃管理者提供的 QR code）。</p>
+    ${msg ? `<p class="bad">${esc(msg)}</p>` : ''}
+    <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off">
+    <input id="k-name" placeholder="你的名字（登記人）" value="${esc(localStorage.getItem('rc-kiosk-name')||'')}">
+    <button class="kbig" id="k-start">開始使用</button></div>`;
+  kioskEl.querySelector('.k-cart').hidden = true;
+  kioskEl.querySelector('#k-start').onclick = async ()=>{
+    const code = kioskEl.querySelector('#k-code').value.trim(), name = kioskEl.querySelector('#k-name').value.trim();
+    if(!code){ toast('請輸入工讀生代碼'); return; }
+    try{ await api('auth', {}, {code}); }catch(err){ toast('⚠ ' + err.message); return; }
+    cloud.code = code; saveCloud(); if(name) localStorage.setItem('rc-kiosk-name', name);
+    kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); showKiosk();
+  };
+}
+const kBodyHtml = () => `
+  <div class="k-bar">
+    <div class="k-seg k-mode"><button data-kmode="-1">📤 領出</button><button data-kmode="1">📥 補進</button></div>
+    <div class="k-seg k-from"><button data-kfrom="room">悅讀書房</button><button data-kfrom="wh">Q棟倉庫</button></div>
+  </div>
+  <div class="k-filter">
+    <input type="search" id="k-q" placeholder="🔍 搜尋品名" autocomplete="off">
+    <div class="k-cats" id="k-cats"></div>
+  </div>
+  <div class="k-note" id="k-note"></div>
+  <div class="k-grid" id="k-grid"></div>`;
+
+function renderKiosk(){
+  const body = kioskEl.querySelector('.k-body');
+  if(!body.querySelector('#k-grid')) body.innerHTML = kBodyHtml();
+  kioskEl.querySelector('.k-cart').hidden = false;
+  kioskEl.classList.toggle('restock', kMode === 1);
+  kioskEl.querySelectorAll('[data-kmode]').forEach(b=>b.classList.toggle('on', +b.dataset.kmode === kMode));
+  kioskEl.querySelectorAll('[data-kfrom]').forEach(b=>b.classList.toggle('on', b.dataset.kfrom === kFrom));
+  const list = kList();
+  const cats = [...new Set(list.map(i=>i.cat).filter(Boolean))];
+  if(kCat && !cats.includes(kCat)) kCat = '';
+  document.getElementById('k-cats').innerHTML = ['', ...cats].map(c=>`<button class="${c===kCat?'on':''}" data-kcat="${esc(c)}">${c ? esc(c) : '全部'}</button>`).join('');
+  const q = (document.getElementById('k-q').value || '').trim().toLowerCase();
+  const shown = list.filter(it => (!kCat || it.cat === kCat) && (!q || it.name.toLowerCase().includes(q)));
+  const grid = document.getElementById('k-grid');
+  if(!kLocal() && !kItems){ grid.innerHTML = '<div class="k-empty">載入中…</div>'; }
+  else if(!list.length){ grid.innerHTML = '<div class="k-empty">管理者還沒有把庫存資料放到雲端。</div>'; }
+  else grid.innerHTML = shown.length ? shown.map(kCardHtml).join('') : '<div class="k-empty">找不到符合的品項</div>';
+  kSetNote(kLocal() ? '這台裝置沒有連雲端，登記只會記在這台裝置。' :
+    (kLoadedAt ? `庫存更新於 ${String(kLoadedAt.getHours()).padStart(2,'0')}:${String(kLoadedAt.getMinutes()).padStart(2,'0')}　登記人：${localStorage.getItem('rc-kiosk-name') || '（送出時填寫）'}` : '更新庫存中…'));
+  kUpdateCart();
+}
+function kStepHtml(it, size){
+  const key = kKey(it.id, size, kFrom), q = kCart.get(key) || 0, st = kStock(it, size);
+  const max = kMode < 0 ? st : 9999;
+  return `<div class="kstep ${q ? 'has' : ''}" data-key="${key}">
+    <button class="kminus" data-kd="-1" ${q ? '' : 'disabled'} aria-label="減少">−</button>
+    <input class="kq" data-kq value="${q}" inputmode="numeric" aria-label="數量">
+    <button class="kplus" data-kd="1" ${q >= max ? 'disabled' : ''} aria-label="增加">＋</button></div>`;
+}
+function kCardHtml(it){
+  const src = getImg(it);
+  const img = src ? `<img src="${src}" alt="" loading="lazy" decoding="async" data-kimg="${it.id}">` : '<span>📦</span>';
+  const lbl = kMode < 0 ? '剩' : '現有';
+  let inner, empty;
+  if(it.sizes){
+    empty = kMode < 0 && it.sizes.every((_,i)=>kStock(it,i) === 0);
+    inner = it.sizes.map((z,i)=>{ const st = kStock(it,i);
+      return `<div class="ksize ${kMode<0 && !st ? 'none' : ''}"><span class="kszn">${esc(z.s)}</span><span class="kst">${lbl} <b>${st}</b></span>${kStepHtml(it,i)}</div>`; }).join('');
+  }else{
+    const st = kStock(it, null); empty = kMode < 0 && !st;
+    inner = `<div class="kst">${lbl} <b>${st}</b> 件</div>${kStepHtml(it, null)}`;
+  }
+  const picked = [...kCart.keys()].some(k=>k.startsWith(it.id + '|') && k.endsWith('|' + kFrom));
+  return `<div class="kcard ${empty ? 'empty' : ''} ${picked ? 'picked' : ''}" data-kid="${it.id}">
+    <div class="kimg">${img}</div>
+    <div class="kname">${esc(it.name)}</div>
+    ${empty ? `<div class="kst none">${fromName(kFrom)}沒有庫存</div>` : inner}</div>`;
+}
+function kFind(key){ const [id, size, from] = key.split('|'); const it = kList().find(x=>String(x.id) === id); return {it, size: size === '' ? null : +size, from}; }
+function kSet(key, q){
+  const {it, size, from} = kFind(key); if(!it) return;
+  const max = kMode < 0 ? kStock(it, size, from) : 9999;
+  q = Math.max(0, Math.min(max, Math.floor(+q || 0)));
+  if(kMode < 0 && +q >= max && max > 0) kHint(`${it.name}${size!=null&&it.sizes?'（'+it.sizes[size].s+'）':''} 只剩 ${max} 件`);
+  q ? kCart.set(key, q) : kCart.delete(key);
+  const box = kioskEl.querySelector(`.kstep[data-key="${CSS.escape(key)}"]`);
+  if(box){
+    box.querySelector('.kq').value = q; box.classList.toggle('has', q > 0);
+    box.querySelector('.kminus').disabled = !q; box.querySelector('.kplus').disabled = q >= max;
+    const card = box.closest('.kcard'); card.classList.toggle('picked', !!card.querySelector('.kstep.has'));
+  }
+  kUpdateCart();
+}
+let kHintT = 0;
+function kHint(t){ const now = Date.now(); if(now - kHintT > 1500){ kHintT = now; toast(t); } }
+function kClampCart(){
+  for(const [key, q] of [...kCart]){
+    const {it, size, from} = kFind(key);
+    if(!it){ kCart.delete(key); continue; }
+    if(kMode < 0){ const st = kStock(it, size, from); if(q > st) st ? kCart.set(key, st) : kCart.delete(key); }
+  }
+}
+function kUpdateCart(){
+  const n = kCart.size, tot = [...kCart.values()].reduce((a,b)=>a+b, 0);
+  const bar = kioskEl.querySelector('.k-cart');
+  bar.classList.toggle('on', n > 0);
+  bar.querySelector('.k-sum').innerHTML = n ? `已選 <b>${n}</b> 項・共 <b>${tot}</b> 件` : (kMode < 0 ? '按 ＋ 選擇要領出的物品' : '按 ＋ 選擇要補進的物品');
+  bar.querySelector('#k-go').textContent = kMode < 0 ? '確認領出 →' : '確認補進 →';
+  bar.querySelector('#k-go').disabled = !n;
+  bar.querySelector('#k-clear').hidden = !n;
+}
+
+// ＋／－：按一下加減 1，按住會連續加減
+let kHold = null;
+kioskEl.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('[data-kd]'); if(!b || b.disabled) return;
+  e.preventDefault();
+  const key = b.closest('.kstep').dataset.key, d = +b.dataset.kd;
+  const step = ()=>{ if(b.disabled){ stopHold(); return; } kSet(key, (kCart.get(key) || 0) + d); };
+  step();
+  kHold = {t: setTimeout(function rep(){ step(); kHold.t = setTimeout(rep, 80); }, 450)};
+});
+const stopHold = ()=>{ if(kHold){ clearTimeout(kHold.t); kHold = null; } };
+['pointerup','pointercancel','pointerleave'].forEach(t=>kioskEl.addEventListener(t, stopHold));
+kioskEl.addEventListener('click', e=>{
+  const t = e.target;
+  const kd = t.closest('[data-kd]');
+  if(kd){ if(e.detail === 0){ const key = kd.closest('.kstep').dataset.key; kSet(key, (kCart.get(key)||0) + (+kd.dataset.kd)); } return; }   // 鍵盤操作
+  const m = t.closest('[data-kmode]');
+  if(m){ const v = +m.dataset.kmode; if(v === kMode) return;
+    if(kCart.size && !confirm('切換「領出／補進」會清空已選的物品，確定嗎？')) return;
+    kMode = v; kCart.clear(); renderKiosk(); return; }
+  const f = t.closest('[data-kfrom]');
+  if(f){ kFrom = f.dataset.kfrom; renderKiosk(); return; }
+  const c = t.closest('[data-kcat]');
+  if(c){ kCat = c.dataset.kcat; renderKiosk(); return; }
+  const im = t.closest('[data-kimg]');
+  if(im){ const it = kList().find(x=>String(x.id) === im.dataset.kimg); if(!it) return;
+    const ps = itemPhotos(it);
+    ps.length ? openViewer(ps.map(k=>({src:photoFull(k), thumb:photoThumb(k)})), 0, {cap: it.name}) : openLightbox(getImg(it), it.name); return; }
+  if(t.id === 'k-go'){ kConfirm(); return; }
+  if(t.id === 'k-clear'){ if(confirm('清空已選的物品？')){ kCart.clear(); renderKiosk(); } return; }
+  if(t.id === 'k-refresh'){ kRefresh(); toast('更新庫存中…'); return; }
+  if(t.id === 'k-admin'){ kUnlock(); return; }
+});
+kioskEl.addEventListener('change', e=>{ if(e.target.matches('[data-kq]')) kSet(e.target.closest('.kstep').dataset.key, e.target.value); });
+kioskEl.addEventListener('focusin', e=>{ if(e.target.matches('[data-kq]')) e.target.select(); });
+kioskEl.addEventListener('keydown', e=>{ if(e.target.matches('[data-kq]') && e.key === 'Enter') e.target.blur(); });
+kioskEl.addEventListener('input', debounce(e=>{ if(e.target.id === 'k-q') renderKiosk(); }, 150));
+
+/* ---- 確認視窗 ---- */
+function kLines(){
+  return [...kCart].map(([key, qty])=>{ const {it, size, from} = kFind(key);
+    return it && {key, it, size, from, qty, label: it.name + (size != null && it.sizes ? '（' + it.sizes[size].s + '）' : ''), cur: kStock(it, size, from)}; }).filter(Boolean);
+}
+function kConfirm(){
+  const lines = kLines(); if(!lines.length) return;
+  const out = kMode < 0, tot = lines.reduce((a,l)=>a+l.qty, 0);
+  openSheet(`<div class="kconf ${out ? 'out' : 'in'}">
+    <h2>${out ? '📤 確認領出' : '📥 確認補進'}　<span>共 ${lines.length} 項、${tot} 件</span></h2>
+    <div class="kc-list">${lines.map(l=>`<div class="kc-row">
+        <div class="kc-name">${esc(l.label)}<small>${fromName(l.from)}</small></div>
+        <div class="kc-qty">${out ? '−' : '＋'}${l.qty}</div>
+        <div class="kc-chg">${l.cur} → <b>${l.cur + (out ? -l.qty : l.qty)}</b></div></div>`).join('')}</div>
+    <div class="field"><label>登記人（你的名字）＊</label><input id="kc-by" value="${esc(localStorage.getItem('rc-kiosk-name') || '')}" placeholder="例：王小明"></div>
+    ${out ? `<div class="field"><label>領用人／單位（可留空）</label><input id="kc-person" placeholder="例：陳老師、新生輔導活動"></div>` : ''}
+    <div class="field"><label>${out ? '用途' : '備註'}（可留空）</label><input id="kc-purpose" placeholder="${out ? '例：身心障礙宣導週發放' : '例：新進貨、活動退回'}"></div>
+    <div class="kc-err" id="kc-err" hidden></div>
+    <div class="kc-actions"><button class="btn" id="kc-back">← 返回修改</button><button class="kbig" id="kc-ok">確認送出</button></div></div>`);
+  sheet.querySelector('#kc-back').onclick = closeSheet;
+  sheet.querySelector('#kc-ok').onclick = kSubmit;
+}
+async function kSubmit(){
+  const by = sheet.querySelector('#kc-by').value.trim();
+  const errBox = sheet.querySelector('#kc-err');
+  if(!by){ errBox.hidden = false; errBox.textContent = '請填寫登記人（你的名字）'; sheet.querySelector('#kc-by').focus(); return; }
+  localStorage.setItem('rc-kiosk-name', by);
+  const person = sheet.querySelector('#kc-person')?.value.trim() || '', purpose = sheet.querySelector('#kc-purpose').value.trim();
+  const lines = kLines(), dir = kMode;
+  const ok = sheet.querySelector('#kc-ok'); ok.disabled = true; ok.textContent = '送出中…'; kBusy = true;
+  try{
+    if(kLocal()) kApplyLocal(lines, dir, {by, person, purpose});
+    else {
+      const j = await api('order', {dir, by, person, purpose, lines: lines.map(l=>({id:l.it.id, size:l.size, from:l.from, qty:l.qty}))});
+      kItems = j.state.items; kLoadedAt = new Date();
+      try{ localStorage.setItem('rc-kiosk-cache', JSON.stringify(kItems)); }catch(_){}
+    }
+    kDone(lines, dir);
+  }catch(err){
+    if(err.res && err.res.state){ kItems = err.res.state.items; kClampCart(); renderKiosk(); }
+    errBox.hidden = false; errBox.innerHTML = '⚠ ' + esc(err.message).replace(/\n/g, '<br>') + (err.res && err.res.state ? '<br>（數量已依最新庫存調整，請確認後再送出）' : '');
+    ok.disabled = false; ok.textContent = '再送一次';
+    if(err.res && err.res.state){ ok.textContent = '重新確認'; ok.onclick = ()=>{ closeSheet(); kConfirm(); }; }
+  }finally{ kBusy = false; }
+}
+function kApplyLocal(lines, dir, meta){
+  for(const l of lines){ if(dir < 0 && l.qty > kStock(l.it, l.size, l.from)) throw new Error(`${l.label} 只剩 ${kStock(l.it, l.size, l.from)} 件`); }
+  const ts = new Date().toISOString();
+  for(const l of lines){
+    const obj = kObj(l.it, l.size); obj[l.from] = (+obj[l.from] || 0) + dir * l.qty;
+    log.unshift({ts, itemId:l.it.id, name:l.label, size:l.size, from:l.from, qty:l.qty, dir, person:meta.person, purpose:meta.purpose, by:meta.by, src:'staff', remain:obj[l.from]});
+  }
+  scheduleSave(); invalidate('stats','table','maps','log','take');
+}
+function kDone(lines, dir){
+  const out = dir < 0, tot = lines.reduce((a,l)=>a+l.qty, 0);
+  sheet.innerHTML = `<div class="kdone">
+    <div class="kdone-ok">✓</div>
+    <h2>${out ? '領出' : '補進'}登記完成</h2>
+    <p>${new Date().toLocaleString('zh-TW', {hour12:false})}・共 ${lines.length} 項、${tot} 件</p>
+    <ul>${lines.map(l=>`<li>${esc(l.label)}<span>${fromName(l.from)} ${out ? '−' : '＋'}${l.qty}</span></li>`).join('')}</ul>
+    <button class="kbig" id="kd-next">繼續登記</button></div>`;
+  sheet.querySelector('#kd-next').onclick = closeSheet;
+  kCart.clear(); renderKiosk();
+}
+
+/* ---- 進入內部管理 ---- */
+function kUnlock(){
+  if(!cloudUrl() && !cloud.key){ cloud.admin = true; saveCloud(); showInner(); toast('已進入管理頁（建議設定雲端同步與管理密碼）'); return; }
+  openSheet(`<h2>🔒 進入管理</h2>
+    <div class="field"><label>管理密碼</label><input id="ku-key" type="password" autocomplete="current-password"></div>
+    <div class="kc-err" id="ku-err" hidden></div>
+    <div class="actions"><button class="btn" id="ku-cancel">取消</button><button class="btn primary" id="ku-ok">進入</button></div>`);
+  const inp = sheet.querySelector('#ku-key'); setTimeout(()=>inp.focus(), 50);
+  const go = async ()=>{
+    const key = inp.value; if(!key) return;
+    const err = sheet.querySelector('#ku-err');
+    if(cloud.key && key === cloud.key){ cloud.admin = true; saveCloud(); closeSheet(); showInner(); return; }
+    try{
+      const j = await api('auth', {}, {key});
+      if(j.role !== 'admin') throw new Error('密碼不正確');
+      cloud.key = key; cloud.admin = true; saveCloud(); closeSheet(); showInner();
+    }catch(e){ err.hidden = false; err.textContent = '⚠ ' + (/工讀生代碼錯誤|管理密碼錯誤/.test(e.message) ? '密碼不正確' : e.message); }
+  };
+  sheet.querySelector('#ku-ok').onclick = go;
+  inp.addEventListener('keydown', e=>{ if(e.key === 'Enter') go(); });
+  sheet.querySelector('#ku-cancel').onclick = closeSheet;
+}
+document.getElementById('lockBtn').onclick = ()=>{ cloud.admin = false; saveCloud(); kCart.clear(); showKiosk(); };
+document.getElementById('cloudBtn').onclick = openCloudSettings;
+
+// 先用預設資料立即畫出畫面，再讀取已儲存的資料；外層（工讀生）是預設畫面，管理需解鎖
+let stateReady = false;
+if(!isAdmin()) document.body.classList.add('kiosk-mode');
 invalidate('all');
-loadState();
-loadLib();
+Promise.all([loadState(), loadLib()]).then(()=>{ stateReady = true; isAdmin() ? showInner() : showKiosk(); });
 </script>
 </body>
 </html>
