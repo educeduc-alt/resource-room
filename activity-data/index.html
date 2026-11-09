@@ -71,7 +71,7 @@ tr.off td{opacity:.4}
 h2.sec{font-size:1.05rem;margin:24px 0 10px}
 .outgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .outcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
-.outcard b{font-size:1rem}.outcard p{margin:3px 0 8px;color:var(--muted);font-size:.84rem}.outcard .btns{display:flex;gap:8px;flex-wrap:wrap}.outcard.dim{background:#fafcfb}.outcard.dim b{color:var(--muted)}
+.outcard b{font-size:1rem;display:block;margin-bottom:8px}.outcard p{margin:3px 0 8px;color:var(--muted);font-size:.84rem}.outcard .btns{display:flex;gap:8px;flex-wrap:wrap}.outcard.dim{background:#fafcfb}.outcard.dim b{color:var(--muted)}
 body.simple main>*{max-width:1100px}
 .grp{display:grid;gap:3px}.grp-h{display:flex;justify-content:space-between;align-items:center;border:0;background:transparent;color:#f3c77e;font-weight:800;font-size:.8rem;letter-spacing:.08em;padding:12px 12px 4px;cursor:pointer;text-align:left}.grp-h i{font-style:normal;transition:transform .15s}.grp.closed .grp-h i{transform:rotate(-90deg)}.grp-b{display:grid;gap:3px}.grp.closed .grp-b{display:none}.grp-b .nav{padding:8px 12px 8px 20px}
 aside{overflow-y:auto;max-height:100vh;position:sticky;top:0}
@@ -88,38 +88,37 @@ h3{font-size:.95rem;margin:16px 0 8px}
 <aside>
   <div class="brand"><span class="mark">資</span><span>資源教室資料台</span></div>
   <nav>
-    <button class="nav" data-tab="home">首頁<small>丟檔案、複製／下載表單</small></button>
+    <button class="nav" data-tab="home">首頁</button>
     <div class="grp" data-grp="act">
       <button class="grp-h" type="button"><span>活動場次</span><i>▾</i></button>
       <div class="grp-b">
-        <button class="nav" data-tab="src">匯入資料<small>總表＋活動辦理列表</small></button>
-        <button class="nav" data-tab="cls">活動分類<small>7 類指標／生涯轉銜</small></button>
-        <button class="nav" data-tab="sem">學期報告<small>特推會附件二／附件四</small></button>
-        <button class="nav" data-tab="t74">table7_4<small>活動填報 xls</small></button>
-        <button class="nav" data-tab="life">生命教育指標<small>學年度場次／人次</small></button>
-        <button class="nav" data-tab="conv">學期末總表<small>列表 → 總表格式</small></button>
+        <button class="nav" data-tab="src">匯入資料</button>
+        <button class="nav" data-tab="cls">活動分類</button>
+        <button class="nav" data-tab="sem">學期報告</button>
+        <button class="nav" data-tab="t74">table7_4</button>
+        <button class="nav" data-tab="life">生命教育指標</button>
+        <button class="nav" data-tab="conv">學期末總表</button>
         <button class="nav" data-tab="csv">自選欄位 CSV</button>
       </div>
     </div>
     <div class="grp" data-grp="duty">
       <button class="grp-h" type="button"><span>業務分工</span><i>▾</i></button>
       <div class="grp-b">
-        <button class="nav" data-tab="staff" data-owner="">全部承辦人<small>活動歸屬、學年度輪值</small></button>
-        <button class="nav" data-tab="staff" data-owner="雨欣">雨欣<small>老福、環安</small></button>
-        <button class="nav" data-tab="staff" data-owner="曉臻">曉臻<small>護理、營養、動保</small></button>
-        <button class="nav" data-tab="staff" data-owner="微姍">微姍<small>餐旅、健管</small></button>
-        <button class="nav" data-tab="staff" data-owner="梅青">梅青<small>幼保、食科</small></button>
-        <button class="nav" data-tab="staff" data-owner="心榆">心榆<small>多遊、文創、妝品、國英、運休</small></button>
-        <button class="nav" data-tab="staff" data-owner="望謙">望謙<small>醫材、智科、物治、語聽、美髮</small></button>
-        <button class="nav" data-tab="staff" data-owner="家銘">家銘<small>行政彙整</small></button>
+        <button class="nav" data-tab="staff" data-owner="">全部承辦人</button>
+        <button class="nav" data-tab="staff" data-owner="雨欣">雨欣</button>
+        <button class="nav" data-tab="staff" data-owner="曉臻">曉臻</button>
+        <button class="nav" data-tab="staff" data-owner="微姍">微姍</button>
+        <button class="nav" data-tab="staff" data-owner="梅青">梅青</button>
+        <button class="nav" data-tab="staff" data-owner="心榆">心榆</button>
+        <button class="nav" data-tab="staff" data-owner="望謙">望謙</button>
+        <button class="nav" data-tab="staff" data-owner="家銘">家銘</button>
       </div>
     </div>
   </nav>
-  <div class="aside-foot">活動辦完只填「中心活動辦理列表」，<br>其他表單都從這裡產出。<br>資料只存在這台電腦的瀏覽器。</div>
 </aside>
 <main>
   <header class="top">
-    <div><h1 id="title">匯入資料</h1><p id="subtitle">活動資料只 key 一次，其他表單自動產出。</p></div>
+    <div><h1 id="title">匯入資料</h1><p id="subtitle" style="display:none">活動資料只 key 一次，其他表單自動產出。</p></div>
     <div class="ctl">
       <label>範圍<select id="scope"><option value="rc">只看資源教室</option><option value="all">全中心（含諮輔）</option></select></label>
       <label id="ownerWrap">承辦人<select id="owner"><option value="">全部</option><option>雨欣</option><option>曉臻</option><option>微姍</option><option>梅青</option><option>心榆</option><option>望謙</option><option>家銘</option><option>未分類</option></select></label>
@@ -130,48 +129,44 @@ h3{font-size:.95rem;margin:16px 0 8px}
 
   <!-- 簡易畫面 -->
   <section class="tab" id="tab-home">
-    <div class="drop big" id="dropHome"><strong>把總表的 Excel／Word 丟進來</strong><span>可一次丟多個：活動總表、中心活動辦理列表、資源教室活動統計表（.xlsx）、ISP 個別化支持計畫（.docx）</span></div>
+    <div class="drop big" id="dropHome"><strong>把總表的 Excel／Word 丟進來</strong></div>
     <div id="homeFiles" class="chips"></div>
     <h2 class="sec">可直接複製</h2>
     <div class="outgrid" id="homeCopy"></div>
     <h2 class="sec">可下載完整表單</h2>
     <div class="outgrid" id="homeDl"></div>
-    <p class="sub" style="margin-top:22px">要逐筆檢查、修改活動分類或承辦人，請用左側選單。</p>
+    
   </section>
 
   <!-- ① 匯入 -->
   <section class="tab active" id="tab-src">
     <div class="card">
       <h2>匯入 Excel（可一次選多個檔）</h2>
-      <p class="sub">從 Google 試算表「檔案 → 下載 → Microsoft Excel (.xlsx)」後拖進來。兩種檔都認得，會自動判斷：</p>
-      <div class="drop" id="drop"><strong>拖曳檔案到這裡，或點一下選檔</strong><span>「109.2學期_活動總表~迄今(114.2).xlsx」、「(115.1學期)中心活動辦理列表.xlsx」、資源教室活動統計表（1131、1132…工作表）</span></div>
+      
+      <div class="drop" id="drop"><strong>拖曳檔案到這裡，或點一下選檔</strong></div>
       <input id="file" type="file" accept=".xlsx,.xls,.docx" multiple hidden>
       <div class="hint">同一學期兩邊都有資料時，以<b>活動總表</b>為準（有男女人數、經費、時數）；總表還沒填的學期（例如 115.1）就用<b>活動辦理列表</b>。</div>
       <div class="row"><button class="btn ghost" id="clearData">清除已匯入資料</button><span id="lastImport" class="sub" style="margin:0"></span></div>
     </div>
     <div class="card">
       <h2>目前資料</h2>
-      <p class="sub">每個學期採用的來源與筆數（依上方「範圍」計算）。</p>
+      
       <div class="srcgrid" id="srcGrid"></div>
     </div>
-    <div class="card">
-      <h2>資源教室怎麼辨識</h2>
-      <p class="sub" style="margin:0">符合任一條件就算資源教室：經費來源含「資教」、活動對象／名稱／講師含「資源教室」、主題或方式為 ISP，或承辦人曾承辦資教經費活動（目前辨識到：<span id="rcStaff">—</span>）。</p>
-    </div>
-  </section>
+      </section>
 
   <!-- ② 業務分工 -->
   <section class="tab" id="tab-staff">
     <div class="card">
       <h2>依業務分工表自動歸屬</h2>
-      <p class="sub">列表有填承辦人就用承辦人；總表沒有承辦人時，依分工表規則判斷（ISP 依個管系所、聯誼活動→微姍、志工會議→望謙…）。點卡片只看那個人，其他頁的特推會、table7_4、總表也會跟著只算那個人。</p>
+      
       <div class="srcgrid" id="staffCards"></div>
     </div>
     <div class="card" id="staffDuty"></div>
     <div class="card">
       <h2>活動清單</h2>
       <div class="row"><span class="sub" id="staffCount" style="margin:0"></span><button class="btn" id="staffXlsx">下載分工清單 .xlsx</button></div>
-      <p class="sub">「依分工表」與實際承辦人不同時會標「不同」，可在「歸屬」欄手動改（會記住）。選「全部」下載時，每位承辦人各一個工作表。</p>
+      
       <div class="scroll" id="staffTable"></div>
     </div>
   </section>
@@ -179,14 +174,14 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <!-- ③ 活動分類 -->
   <section class="tab" id="tab-cls">
     <div class="grid2">
-      <div class="card"><h2>活動項目統計</h2><p class="sub">依「活動分類指標」7 類。</p><div id="clsStats"></div></div>
-      <div class="card"><h2>適應生活／生涯轉銜</h2><p class="sub">就業、庇護、轉銜會議、職涯相關算「生涯轉銜」，其餘算「適應生活」。</p><div id="clsCareer"></div></div>
+      <div class="card"><h2>活動項目統計</h2><div id="clsStats"></div></div>
+      <div class="card"><h2>適應生活／生涯轉銜</h2><div id="clsCareer"></div></div>
     </div>
     <div class="card">
       <h2>逐筆分類</h2>
-      <p class="sub">分類依據：<b>統計表</b>＝你在資源教室活動統計表分過的（匯入後自動沿用）；<b>規則</b>＝依指標關鍵字判斷，請確認。下拉可改，會記住。</p>
+      
       <div class="row"><label class="sub" style="margin:0"><input type="checkbox" id="clsTag" checked> 活動名稱加註（輔導）（會報）（招收）</label><button class="btn" id="clsXlsx">下載統計表格式 .xlsx</button></div>
-      <p class="sub">下載檔的前 11 欄與統計表 A～K 欄相同（活動對象～滿意度），可直接貼進新學期工作表；各學院人數仍需另填。</p>
+      
       <div class="scroll" id="clsTable"></div>
     </div>
   </section>
@@ -198,19 +193,19 @@ h3{font-size:.95rem;margin:16px 0 8px}
     </div>
     <div class="card">
       <h2>特推會「業務報告」文字</h2>
-      <p class="sub">已辦理學期（附件二）與本學期規劃（附件四）的說明段落，可直接貼到會議資料。</p>
+      
       <div class="out" id="semText"></div>
       <div class="row"><button class="btn secondary" data-copytext="semText">複製文字</button></div>
     </div>
     <div class="card">
       <h2>附件二：學期辦理學生輔導相關活動一覽表</h2>
-      <p class="sub">序、活動日期、項目、活動內容、參與人次，最後一列自動合計。</p>
+      
       <div class="row"><button class="btn" id="copyA2">複製表格（貼到 Word）</button><button class="btn ghost" id="docA2">下載 Word 檔</button></div>
       <div class="scroll" id="a2"></div>
     </div>
     <div class="card">
       <h2>附件四：學期舉辦各項活動、會議、研習一覽表</h2>
-      <p class="sub">同名活動合併為一列；日期在基準日（含）之前標「已完成」，之後標「待完成」。</p>
+      
       <div class="row"><label class="sub" style="margin:0">基準日（會議日）<input type="date" id="refDate"></label><button class="btn" id="copyA4">複製表格（貼到 Word）</button><button class="btn ghost" id="docA4">下載 Word 檔</button></div>
       <div class="scroll" id="a4"></div>
     </div>
@@ -220,7 +215,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <section class="tab" id="tab-t74">
     <div class="card">
       <h2>table7_4 活動填報</h2>
-      <p class="sub">已排除 ISP 會議與各類行政會議／座談；活動類別自動判斷，可在表格中修改。男女人數＝校內教師＋學生＋其他（不含校外）。</p>
+      
       <div class="row">
         <label class="sub" style="margin:0">單位名稱 <input type="text" id="unit" value="資源教室" style="width:120px"></label>
         <label class="sub" style="margin:0"><input type="checkbox" id="keepEx" checked> 保留第 2 列「(範例)」</label>
@@ -237,7 +232,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <section class="tab" id="tab-life">
     <div class="card">
       <h2>生命教育指標調查表（學年度＝上學期＋下學期，8/1–7/31）</h2>
-      <p class="sub">勾掉不想算進去的活動，數字即時更新。整份表是全中心一起填時，請把上方「範圍」切到「全中心」。</p>
+      
       <div class="grid2">
         <div class="out" id="lifeNums" style="white-space:normal"></div>
         <div><div class="out" id="lifeText"></div><div class="row"><button class="btn secondary" data-copytext="lifeText">複製填表文字</button></div></div>
@@ -245,17 +240,17 @@ h3{font-size:.95rem;margin:16px 0 8px}
     </div>
     <div class="card">
       <h2>項次 2：教師及行政人員生命教育相關研習與進修</h2>
-      <p class="sub">預設：活動對象為教職員、主題類別為「生命」、非會議／督導。</p>
+      
       <div class="scroll" id="lifeT2"></div>
     </div>
     <div class="card">
       <h2>項次 3：校園心理健康多元活動</h2>
-      <p class="sub">預設排除 ISP、會議、座談、督導。對象為教師／職員工者算「教職員場次」，其餘算「學生場次」。</p>
+      
       <div class="scroll" id="lifeT3"></div>
     </div>
     <div class="card">
       <h2>佐證資料照片說明</h2>
-      <p class="sub">依文件格式「114.10.27活動名稱」，一行一筆（項次 3 勾選的活動）。</p>
+      
       <div class="out" id="lifeCaps"></div>
       <div class="row"><button class="btn secondary" data-copytext="lifeCaps">複製</button></div>
     </div>
@@ -265,7 +260,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <section class="tab" id="tab-conv">
     <div class="card">
       <h2>學期末：把「活動辦理列表」轉成「活動總表」格式</h2>
-      <p class="sub">寒暑假要填總表時，不用重打。下載後整段貼到總表新學期工作表第 8 列起（欄位順序與 114.2 學期相同，25 欄）。</p>
+      
       <div class="hint">活動辦理列表沒有男女／教師學生的分項人數。若在 ⑤ table7_4 表格填了男女人數，這裡會一起帶入「校內學生男／女」，其餘分項請在總表補齊。具體成效會先帶入「參與人次總計…，整體活動滿意度…%」開頭句。</div>
       <div class="row"><button class="btn" id="convMake">下載總表格式 .xlsx</button><span class="sub" id="convNote" style="margin:0"></span></div>
       <div class="scroll" id="convTable"></div>
@@ -276,7 +271,7 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <section class="tab" id="tab-csv">
     <div class="card">
       <h2>自選欄位另存 CSV</h2>
-      <p class="sub">依目前學期與範圍匯出。</p>
+      
       <div class="srcgrid" id="csvChecks"></div>
       <div class="row"><button class="btn" id="csvMake">下載 CSV</button></div>
     </div>
@@ -434,7 +429,7 @@ const semDone=()=>DB.rows.length?'':'<div class="empty">請先到「① 匯入�
 function renderSrc(){
   const eff=effective(),sems=allSems();
   $('#srcGrid').innerHTML=sems.length?sems.map(s=>{const rs=eff.filter(r=>r.sem===s);return `<div class="src"><b>${s}</b>${rs.length} 筆｜${rs.reduce((a,r)=>a+r.場次,0)} 場<br><span class="pill ${rs[0]?.src==='列表'?'warn':''}">${rs[0]?.src||'—'}</span></div>`}).join(''):'<div class="empty" style="grid-column:1/-1">尚未匯入</div>';
-  $('#rcStaff').textContent=[...rcStaff()].join('、')||'—';
+  if($('#rcStaff'))$('#rcStaff').textContent=[...rcStaff()].join('、')||'—';
   $('#lastImport').textContent=DB.files.map(f=>`${f.name}（${f.kind} ${f.n}筆，${f.at}）`).join('；');
 }
 
@@ -522,7 +517,7 @@ function renderLife(){
   $('#lifeNums').innerHTML=`<div class="kv"><span>項次2 研習場次</span><b class="big">${sum(t2,'場次')}</b><span>項次2 參與人次</span><b class="big">${sum(t2,'參與總計')}</b>
   <span>項次3 學生場次</span><b class="big">${sum(stu,'場次')}</b><span>項次3 學生人數</span><b class="big">${sum(stu,'參與總計')}</b>
   <span>項次3 教職員場次</span><b class="big">${sum(stf,'場次')}</b><span>項次3 教職員人數</span><b class="big">${sum(stf,'參與總計')}</b></div>
-  <p class="sub" style="margin:10px 0 0">${y} 學年度（${y}.1＋${y}.2），範圍：${$('#scope').selectedOptions[0].text}。${rows.some(r=>r.src==='列表')?'<br>部分學期資料來自活動辦理列表，人次以列表為準。':''}</p>`;
+  `;
   $('#lifeText').textContent=
 (t2.length?`項次2-一：■是，共辦理 ${sum(t2,'場次')} 場次活動，參與人員 ${sum(t2,'參與總計')} 人次。\n（${t2.map(r=>`${dotROC(firstDate(r.start))} ${r.活動名稱}`).join('、')}）`:'項次2-一：此範圍內無教職員生命教育研習（若全中心一起填，請切換範圍為「全中心」）。')+`
 
@@ -650,17 +645,17 @@ function renderStaff(){
   if($('#scope').value!=='rc'){$('#staffCards').innerHTML='<div class="empty" style="grid-column:1/-1">業務分工只適用資源教室，請把「範圍」切回「只看資源教室」。</div>';$('#staffDuty').innerHTML='';$('#staffTable').innerHTML='';return}
   const groups={};base.forEach(r=>{const o=ownerOf(r).k||'未分類';(groups[o]=groups[o]||[]).push(r)});
   const card=(k,name,sub)=>{const rs=groups[k]||[],isp=rs.filter(isISP).length,mis=rs.filter(r=>ownerOf(r).mismatch).length;
-    return `<button class="src staffcard ${sel===k?'on':''}" data-owner="${k}"><b>${name}</b>${rs.reduce((a,r)=>a+r.場次,0)} 場｜${rs.reduce((a,r)=>a+r.參與總計,0)} 人次<br><span class="sub" style="margin:0">ISP ${isp} 場${mis?`　<span class="pill warn">${mis} 筆待確認</span>`:''}</span>${sub?`<br><span class="sub" style="margin:0;font-size:.74rem">${sub}</span>`:''}</button>`};
+    return `<button class="src staffcard ${sel===k?'on':''}" data-owner="${k}"><b>${name}</b>${rs.reduce((a,r)=>a+r.場次,0)} 場｜${rs.reduce((a,r)=>a+r.參與總計,0)} 人次<br><span class="sub" style="margin:0">ISP ${isp} 場${mis?`　<span class="pill warn">${mis} 筆待確認</span>`:''}</span></button>`};
   $('#staffCards').innerHTML=`<button class="src staffcard ${sel===''?'on':''}" data-owner=""><b>全部</b>${base.reduce((a,r)=>a+r.場次,0)} 場｜${base.length} 筆</button>`+STAFF.map(p=>card(p.k,p.k,p.depts.length?'ISP：'+p.depts.filter(d=>d!=='文設'&&d!=='溝通英語').join('、'):'')).join('')+(groups['未分類']?card('未分類','未分類','需手動指定'):'');
   // 職責
   const p=staffBy(sel);
   if(p){
     const rot=rotationFor(p.k,y);
-    $('#staffDuty').innerHTML=`<h2>${p.full} 的業務</h2><p class="sub">${p.college?`個管學院：${p.college}｜`:''}依 115.02.23 業務分工表</p><div class="dutygrid">${Object.entries(p.duty).filter(([,v])=>v.length).map(([g,v])=>`<div class="duty"><h3>${g}</h3><ul>${v.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+    $('#staffDuty').innerHTML=`<h2>${p.full} 的業務</h2><div class="dutygrid">${Object.entries(p.duty).filter(([,v])=>v.length).map(([g,v])=>`<div class="duty"><h3>${g}</h3><ul>${v.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
       ${p.k!=='家銘'?`<div class="duty"><h3>特通網共同業務</h3><ul>${SEN_COMMON.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
-      <div class="duty"><h3>${y} 學年度輪值</h3>${rot.length?`<ul>${rot.map(x=>`<li>${x.item}${x.note?'（'+x.note+'）':''}</li>`).join('')}</ul>`:'<p class="sub">本學年度沒有輪值項目</p>'}</div></div>`;
+      <div class="duty"><h3>${y} 學年度輪值</h3>${rot.length?`<ul>${rot.map(x=>`<li>${x.item}${x.note?'（'+x.note+'）':''}</li>`).join('')}</ul>`:''}</div></div>`;
   }else{
-    $('#staffDuty').innerHTML=`<h2>${y} 學年度輪值</h2><p class="sub">點上方人名卡片可看個人業務清單與活動。</p><table><thead><tr><th>項目</th><th>負責人</th></tr></thead><tbody>${rotationFor('',y).map(x=>`<tr><td>${x.item}${x.note?'（'+x.note+'）':''}</td><td>${x.who||'<span class="pill warn">分工表未列</span>'}</td></tr>`).join('')}</tbody></table>`;
+    $('#staffDuty').innerHTML=`<h2>${y} 學年度輪值</h2><table><thead><tr><th>項目</th><th>負責人</th></tr></thead><tbody>${rotationFor('',y).map(x=>`<tr><td>${x.item}${x.note?'（'+x.note+'）':''}</td><td>${x.who||'<span class="pill warn">分工表未列</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   const rows=sel===''?base:base.filter(r=>(ownerOf(r).k||'未分類')===sel);
   $('#staffCount').textContent=`${sem} 學期｜${rows.length} 筆｜${rows.reduce((a,r)=>a+r.場次,0)} 場｜${rows.reduce((a,r)=>a+r.參與總計,0)} 人次`;
@@ -720,7 +715,7 @@ function renderCls(){
   $('#clsStats').innerHTML=`<table><thead><tr><th>活動項目（指標）</th><th class="n">筆數</th><th class="n">場次</th><th class="n">人次</th></tr></thead><tbody>${INDS.map(k=>{const [n,c,p]=agg(k);return `<tr><td>${k}</td><td class="n">${n}</td><td class="n">${c}</td><td class="n">${p}</td></tr>`}).join('')}<tr><td><b>合計</b></td><td class="n"><b>${rows.length}</b></td><td class="n"><b>${rows.reduce((a,r)=>a+r.場次,0)}</b></td><td class="n"><b>${rows.reduce((a,r)=>a+r.參與總計,0)}</b></td></tr></tbody></table>`;
   const cr=['適應生活','生涯轉銜'].map(k=>{const rs=rows.filter(r=>careerOf(r)===k);return `<div class="stat"><b>${rs.reduce((a,r)=>a+r.場次,0)} 場</b><span>${k}｜${rs.reduce((a,r)=>a+r.參與總計,0)} 人次</span></div>`}).join('');
   const learnedN=Object.keys(DB.learned||{}).length,ruleN=rows.filter(r=>indicatorOf(r).by!=='統計表'&&indicatorOf(r).by!=='手動').length;
-  $('#clsCareer').innerHTML=`<div class="stats" style="grid-template-columns:1fr 1fr">${cr}</div><p class="sub" style="margin:10px 0 0">${learnedN?`已從活動統計表學到 ${learnedN} 個活動的分類。`:'尚未匯入活動統計表，全部依規則判斷。'}本學期有 ${ruleN} 筆是依規則判斷，建議掃一眼。</p>`;
+  $('#clsCareer').innerHTML=`<div class="stats" style="grid-template-columns:1fr 1fr">${cr}</div>`;
   $('#clsTable').innerHTML=`<table><thead><tr><th>日期</th><th>活動名稱</th><th>活動項目</th><th>依據</th><th>類別</th><th>適應生活／生涯轉銜</th><th class="n">人次</th></tr></thead><tbody>${rows.map(r=>{const i=indicatorOf(r);
     return `<tr><td>${esc(rocText(r.日期原文))}</td><td>${esc(r.活動名稱)}</td><td><select data-ov="ind" data-id="${esc(r.id)}">${INDS.map(k=>`<option ${k===i.v?'selected':''}>${k}</option>`).join('')}</select></td><td><span class="pill ${i.by==='規則'||i.by==='預設'?'warn':''}">${i.by}</span></td><td>${clsCat(r)}</td>
     <td><select data-ov="career" data-id="${esc(r.id)}">${['適應生活','生涯轉銜'].map(k=>`<option ${k===careerOf(r)?'selected':''}>${k}</option>`).join('')}</select></td><td class="n">${r.參與總計}</td></tr>`}).join('')}</tbody></table>`;
@@ -783,7 +778,7 @@ function homeOutputs(){
 }
 function renderHome(){
   $('#homeFiles').innerHTML=DB.files.length?DB.files.map(f=>`<span class="chip">✓ ${esc(f.kind)}｜${esc(f.name)}</span>`).join('')+`<button class="chip ghostchip" id="homeClear">清除</button>`:'<span class="sub">尚未匯入任何檔案</span>';
-  const card=o=>`<div class="outcard ${o.ok===true?'':'dim'}"><div><b>${esc(o.t)}</b><p>${esc(o.d)}</p>${o.ok===true?(o.info?`<span class="pill ${o.warn?'warn':'done'}">${esc(o.info)}</span>`:''):`<span class="pill">${esc(o.ok)}</span>`}</div><div class="btns">${o.b.map((b,i)=>`<button class="btn ${i?'ghost':''}" ${o.ok===true?'':'disabled'} data-out="${i}">${b[0]}</button>`).join('')}</div></div>`;
+  const card=o=>`<div class="outcard ${o.ok===true?'':'dim'}"><div><b>${esc(o.t)}</b>${o.ok===true?(o.info?`<span class="pill ${o.warn?'warn':'done'}">${esc(o.info)}</span>`:''):`<span class="pill">${esc(o.ok)}</span>`}</div><div class="btns">${o.b.map((b,i)=>`<button class="btn ${i?'ghost':''}" ${o.ok===true?'':'disabled'} data-out="${i}">${b[0]}</button>`).join('')}</div></div>`;
   const O=homeOutputs();HOME_REF=O;
   $('#homeCopy').innerHTML=O.copy.map(card).join('');$('#homeDl').innerHTML=O.dl.map(card).join('');
   [['#homeCopy',O.copy],['#homeDl',O.dl]].forEach(([sel,list])=>$$(sel+' .outcard').forEach((el,i)=>el.querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{try{list[i].b[Number(b.dataset.out)][1]()}catch(e){toast('發生錯誤：'+e.message)}})));
