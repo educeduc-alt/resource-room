@@ -522,7 +522,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 
 <div id="kiosk" class="kiosk" hidden>
   <div class="k-head"><div><div class="k-title">資源教室 物品登記</div><div class="k-sub">宣導品・文具・團體服 領出／補進</div></div>
-    <button class="k-hbtn" id="k-refresh" title="更新庫存">⟳</button><button class="k-hbtn" id="k-admin">🔒 管理</button></div>
+    <button class="k-hbtn" id="k-refresh" title="更新庫存">⟳</button><button class="k-hbtn" id="k-logout" hidden>登出</button><button class="k-hbtn" id="k-admin">🔒 管理</button></div>
   <div class="k-body"></div>
   <div class="k-cart" hidden><button class="btn" id="k-clear" hidden>清空</button><div class="k-sum"></div><button class="kbig" id="k-go" disabled>確認領出 →</button></div>
 </div>
@@ -2548,17 +2548,25 @@ function saveCloud(){ try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud)
 (()=>{
   const u = new URL(location.href), c = u.searchParams.get('c'), s = u.searchParams.get('s');
   if(c || s){
-    if(c) cloud.url = c; if(s) cloud.code = s; saveCloud();
+    if(c) cloud.url = c; saveCloud();
+    if(s) try{ sessionStorage.setItem('rc-staff-prefill', s); }catch(_){}
     u.searchParams.delete('c'); u.searchParams.delete('s');
     history.replaceState(null, '', u.pathname + u.search + u.hash);
   }
 })();
 const cloudUrl = () => cloud.url || CLOUD_URL_DEFAULT;
+// 舊版把工讀生代碼長期記在裝置上 → 改為只給管理者產生連結用
+if(cloud.code){ cloud.linkCode = cloud.linkCode || cloud.code; delete cloud.code; saveCloud(); }
+/* ---- 工讀生登入：只在這次開啟的分頁有效（關掉分頁、按登出、閒置太久都會登出） ---- */
+const STAFF_SS = 'rc-staff-session', IDLE_MIN = 10;
+let staff = (()=>{ try{ return JSON.parse(sessionStorage.getItem(STAFF_SS)) || null; }catch(_){ return null; } })();
+function setStaff(v){ staff = v; try{ v ? sessionStorage.setItem(STAFF_SS, JSON.stringify(v)) : sessionStorage.removeItem(STAFF_SS); }catch(_){} }
+if(staff && Date.now() - (staff.last || 0) > IDLE_MIN*60000) setStaff(null);
 const isAdmin = () => !!cloud.admin;
 const adminCloud = () => !!(cloudUrl() && cloud.key && isAdmin());
 async function api(op, data={}, auth={}){
   const url = cloudUrl(); if(!url) throw new Error('尚未設定雲端網址');
-  const body = JSON.stringify({op, code: auth.code ?? cloud.code, key: auth.key ?? cloud.key, ...data});
+  const body = JSON.stringify({op, code: auth.code ?? (staff && staff.code), key: auth.key ?? cloud.key, ...data});
   let r, j;
   try{ r = await fetch(url, {method:'POST', body}); }catch(_){ throw new Error('連不上雲端，請檢查網路'); }
   try{ j = await r.json(); }catch(_){ throw new Error('雲端回應格式不對（網址是否正確、是否設定「所有人」可存取？）'); }
@@ -2623,7 +2631,7 @@ document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState 
 
 /* ---- 雲端設定（管理者） ---- */
 function openCloudSettings(){
-  const link = studentLink(cloud.code || '');
+  const link = studentLink(cloud.linkCode || '');
   openSheet(`<h2>☁ 雲端同步設定</h2>
     <div class="hint" style="margin-bottom:10px">設定後，工讀生用自己的手機登記，你這邊會自動收到；你在任何電腦登入管理也會是同一份資料（存在你的 Google 雲端硬碟）。
       第一次設定請照 <a href="https://github.com/educeduc-alt/resource-room#雲端同步設定" target="_blank" rel="noopener">安裝說明</a> 建立 Google Apps Script（約 5 分鐘）。
@@ -2637,8 +2645,8 @@ function openCloudSettings(){
     </div>
     <hr style="border:none;border-top:1px solid var(--line);margin:14px 0">
     <h2>📱 給工讀生的連結</h2>
-    <div class="hint">工讀生用手機掃 QR code（或打開連結）就會自動設定好，只會看到登記畫面。</div>
-    <div class="field"><label>工讀生代碼（Apps Script 裡的 STAFF_CODE）</label><input id="cs-code" value="${esc(cloud.code||'')}" placeholder="例：1234"></div>
+    <div class="hint">工讀生用手機掃 QR code（或打開連結）會自動帶入代碼，再輸入名字就能登入，只會看到登記畫面。關掉網頁、按「登出」或閒置 ${IDLE_MIN} 分鐘就會登出。</div>
+    <div class="field"><label>工讀生代碼（Apps Script 裡的 STAFF_CODE）</label><input id="cs-code" value="${esc(cloud.linkCode||'')}" placeholder="例：1234"></div>
     <div id="cs-link">${link ? linkBox(link) : '<div class="hint">填好雲端網址和工讀生代碼後會產生連結。</div>'}</div>`);
   const $ = id => sheet.querySelector(id);
   $('#cs-copy').onclick = async ()=>{
@@ -2665,7 +2673,7 @@ function openCloudSettings(){
   const off = $('#cs-off'); if(off) off.onclick = ()=>{
     if(!confirm('停止這台裝置的雲端同步？（雲端上的資料不會被刪除）')) return;
     delete cloud.url; delete cloud.key; saveCloud(); closeSheet(); setCloudStatus('未設定'); };
-  const refreshLink = ()=>{ cloud.code = $('#cs-code').value.trim(); saveCloud(); const l = studentLink(cloud.code); $('#cs-link').innerHTML = l ? linkBox(l) : ''; if(l) drawQr(l); };
+  const refreshLink = ()=>{ cloud.linkCode = $('#cs-code').value.trim(); saveCloud(); const l = studentLink(cloud.linkCode); $('#cs-link').innerHTML = l ? linkBox(l) : ''; if(l) drawQr(l); };
   $('#cs-code').addEventListener('input', debounce(refreshLink, 300));
   if(link) drawQr(link);
 }
@@ -2696,49 +2704,83 @@ const fromName = f => f === 'wh' ? 'Q棟倉庫' : '悅讀書房';
 function showKiosk(){
   kioskOn = true; document.body.classList.add('kiosk-mode'); kioskEl.hidden = false;
   window.scrollTo(0,0);
-  if(!kLocal() && !cloud.code && !cloud.key){ kSetup(); return; }
+  if(!kLocal() && !staff){ kSetup(); return; }
+  kHeadUser();
   try{ const c = JSON.parse(localStorage.getItem('rc-kiosk-cache') || 'null'); if(c && !kItems) kItems = c; }catch(_){}
   renderKiosk(); kRefresh();
 }
 function showInner(){
   kioskOn = false; document.body.classList.remove('kiosk-mode'); kioskEl.hidden = true;
+  setStaff(null); kCart.clear();
   setCloudStatus(cloudUrl() ? (cloud.key ? '同步中…' : '未登入') : '未設定');
   invalidate('all'); flush(); pullCloud();
 }
 async function kRefresh(quiet){
   if(kLocal()){ renderKiosk(); return; }
-  if(kBusy) return;
+  if(kBusy || !staff) return;
   try{
-    const j = await api('get');
+    const j = await kApi('get');
     kItems = j.state.items || [];
     kLoadedAt = new Date();
     try{ localStorage.setItem('rc-kiosk-cache', JSON.stringify(kItems)); }catch(_){}
     kClampCart(); renderKiosk();
   }catch(err){
-    if(/代碼錯誤/.test(err.message)){ delete cloud.code; saveCloud(); kSetup('代碼不正確，請重新輸入'); return; }
+    if(/代碼錯誤/.test(err.message)){ kLogout('工讀生代碼已變更，請重新登入'); return; }
     if(!quiet) toast('⚠ ' + err.message);
     kSetNote('⚠ 無法更新庫存：' + err.message, true);
   }
 }
 function kSetNote(t, bad){ const n = document.getElementById('k-note'); if(n){ n.textContent = t; n.classList.toggle('bad', !!bad); } }
+const kApi = (op, data) => api(op, data, {key:'', code: staff && staff.code});   // 工讀生畫面一律用工讀生身分
 function kSetup(msg){
+  const pre = (()=>{ try{ return sessionStorage.getItem('rc-staff-prefill') || ''; }catch(_){ return ''; } })();
+  kHeadUser();
+  kioskEl.querySelector('.k-sub').textContent = '請先登入';
   kioskEl.querySelector('.k-body').innerHTML = `<div class="k-setup">
     <div style="font-size:2.4rem">👋</div>
-    <h2>第一次使用</h2>
-    <p>請輸入管理者給你的<b>工讀生代碼</b>（或直接掃管理者提供的 QR code）。</p>
+    <h2>工讀生登入</h2>
+    <p>${pre ? '代碼已自動帶入，' : '請輸入管理者給你的<b>工讀生代碼</b>，並'}填上你的名字。</p>
     ${msg ? `<p class="bad">${esc(msg)}</p>` : ''}
-    <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off">
-    <input id="k-name" placeholder="你的名字（登記人）" value="${esc(localStorage.getItem('rc-kiosk-name')||'')}">
-    <button class="kbig" id="k-start">開始使用</button></div>`;
+    <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off" value="${esc(pre)}" ${pre ? 'type="password"' : ''}>
+    <input id="k-name" placeholder="你的名字（登記人）" autocomplete="name">
+    <button class="kbig" id="k-start">登入</button>
+    <p style="font-size:.78rem">關掉網頁、按「登出」或閒置 ${IDLE_MIN} 分鐘會自動登出。</p></div>`;
   kioskEl.querySelector('.k-cart').hidden = true;
-  kioskEl.querySelector('#k-start').onclick = async ()=>{
+  const go = async ()=>{
     const code = kioskEl.querySelector('#k-code').value.trim(), name = kioskEl.querySelector('#k-name').value.trim();
     if(!code){ toast('請輸入工讀生代碼'); return; }
-    try{ await api('auth', {}, {code}); }catch(err){ toast('⚠ ' + err.message); return; }
-    cloud.code = code; saveCloud(); if(name) localStorage.setItem('rc-kiosk-name', name);
-    kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); showKiosk();
+    if(!name){ toast('請輸入你的名字'); kioskEl.querySelector('#k-name').focus(); return; }
+    const btn = kioskEl.querySelector('#k-start'); btn.disabled = true; btn.textContent = '登入中…';
+    try{ await api('auth', {}, {key:'', code}); }
+    catch(err){ btn.disabled = false; btn.textContent = '登入'; toast('⚠ ' + err.message); return; }
+    setStaff({code, name, last: Date.now()});
+    kFrom = null; kCart.clear();
+    kioskEl.querySelector('.k-body').innerHTML = ''; showKiosk();
   };
+  kioskEl.querySelector('#k-start').onclick = go;
+  kioskEl.querySelectorAll('.k-setup input').forEach(i=>i.addEventListener('keydown', e=>{ if(e.key === 'Enter') go(); }));
 }
+function kHeadUser(){
+  const b = document.getElementById('k-logout');
+  b.hidden = !staff || kLocal();
+  if(staff) b.textContent = `👤 ${staff.name}・登出`;
+}
+function kLogout(msg){
+  stopHold(); kCart.clear(); kItems = null; kFrom = null; kLoadedAt = null;
+  setStaff(null);
+  try{ localStorage.removeItem('rc-kiosk-cache'); sessionStorage.removeItem('rc-staff-prefill'); }catch(_){}
+  closeSheet(); if(typeof closeViewer === 'function') closeViewer();
+  if(kioskOn) kSetup(msg || '已登出');
+}
+// 閒置自動登出
+let kLastWrite = 0;
+function kTouch(){
+  if(!staff) return; const now = Date.now(); staff.last = now;
+  if(now - kLastWrite > 15000){ kLastWrite = now; setStaff(staff); }
+}
+['pointerdown','keydown','scroll'].forEach(t=>document.addEventListener(t, ()=>{ if(kioskOn) kTouch(); }, {passive:true, capture:true}));
+setInterval(()=>{ if(kioskOn && staff && Date.now() - (staff.last || 0) > IDLE_MIN*60000) kLogout(`閒置超過 ${IDLE_MIN} 分鐘，已自動登出`); }, 20000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && kioskOn && staff && Date.now() - (staff.last || 0) > IDLE_MIN*60000) kLogout(`閒置超過 ${IDLE_MIN} 分鐘，已自動登出`); });
 // 品項是否放在這個地點：該地點有庫存，或位置圖上標在這裡（yd-＝悅讀書房、q-＝Q棟倉庫）
 const kAtLoc = (it, from) => {
   const has = it.sizes ? it.sizes.some((_,i)=>kStock(it,i,from) > 0) : kStock(it,null,from) > 0;
@@ -2797,7 +2839,7 @@ function renderKiosk(){
   else grid.innerHTML = (shown.length ? shown.map(kCardHtml).join('') : `<div class="k-empty">${list.length ? '找不到符合的品項' : (kMode < 0 ? '這裡目前沒有可領出的物品' : '這裡目前沒有物品')}</div>`)
     + (kMode > 0 ? `<button class="k-more" data-kall>${kAll ? '只顯示放在這裡的品項' : '＋ 要補進的東西不在清單裡？顯示所有品項'}</button>` : '');
   kSetNote(kLocal() ? '這台裝置沒有連雲端，登記只會記在這台裝置。' :
-    (kLoadedAt ? `庫存更新於 ${String(kLoadedAt.getHours()).padStart(2,'0')}:${String(kLoadedAt.getMinutes()).padStart(2,'0')}　登記人：${localStorage.getItem('rc-kiosk-name') || '（送出時填寫）'}` : '更新庫存中…'));
+    (kLoadedAt ? `庫存更新於 ${String(kLoadedAt.getHours()).padStart(2,'0')}:${String(kLoadedAt.getMinutes()).padStart(2,'0')}　登記人：${staff ? esc(staff.name) : '（送出時填寫）'}` : '更新庫存中…'));
   kUpdateCart();
 }
 function kStepHtml(it, size){
@@ -2898,6 +2940,7 @@ kioskEl.addEventListener('click', e=>{
   if(t.id === 'k-clear'){ if(confirm('清空已選的物品？')){ kCart.clear(); renderKiosk(); } return; }
   if(t.id === 'k-refresh'){ kRefresh(); toast('更新庫存中…'); return; }
   if(t.id === 'k-admin'){ kUnlock(); return; }
+  if(t.closest('#k-logout')){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要登出嗎？')) return; kLogout('已登出，下一位請登入'); return; }
 });
 kioskEl.addEventListener('change', e=>{ if(e.target.matches('[data-kq]')) kSet(e.target.closest('.kstep').dataset.key, e.target.value); });
 kioskEl.addEventListener('focusin', e=>{ if(e.target.matches('[data-kq]')) e.target.select(); });
@@ -2918,7 +2961,7 @@ function kConfirm(){
         <div class="kc-name">${esc(l.label)}<small>${fromName(l.from)}</small></div>
         <div class="kc-qty">${out ? '−' : '＋'}${l.qty}</div>
         <div class="kc-chg">${l.cur} → <b>${l.cur + (out ? -l.qty : l.qty)}</b></div></div>`).join('')}</div>
-    <div class="field"><label>登記人（你的名字）＊</label><input id="kc-by" value="${esc(localStorage.getItem('rc-kiosk-name') || '')}" placeholder="例：王小明"></div>
+    <div class="field"><label>登記人（你的名字）＊</label><input id="kc-by" value="${esc(staff ? staff.name : '')}" placeholder="例：王小明"></div>
     ${out ? `<div class="field"><label>領用人／單位（可留空）</label><input id="kc-person" placeholder="例：陳老師、新生輔導活動"></div>` : ''}
     <div class="field"><label>${out ? '用途' : '備註'}（可留空）</label><input id="kc-purpose" placeholder="${out ? '例：身心障礙宣導週發放' : '例：新進貨、活動退回'}"></div>
     <div class="kc-err" id="kc-err" hidden></div>
@@ -2930,14 +2973,14 @@ async function kSubmit(){
   const by = sheet.querySelector('#kc-by').value.trim();
   const errBox = sheet.querySelector('#kc-err');
   if(!by){ errBox.hidden = false; errBox.textContent = '請填寫登記人（你的名字）'; sheet.querySelector('#kc-by').focus(); return; }
-  localStorage.setItem('rc-kiosk-name', by);
+  if(staff && by !== staff.name){ staff.name = by; setStaff(staff); kHeadUser(); }
   const person = sheet.querySelector('#kc-person')?.value.trim() || '', purpose = sheet.querySelector('#kc-purpose').value.trim();
   const lines = kLines(), dir = kMode;
   const ok = sheet.querySelector('#kc-ok'); ok.disabled = true; ok.textContent = '送出中…'; kBusy = true;
   try{
     if(kLocal()) kApplyLocal(lines, dir, {by, person, purpose});
     else {
-      const j = await api('order', {dir, by, person, purpose, lines: lines.map(l=>({id:l.it.id, size:l.size, from:l.from, qty:l.qty}))});
+      const j = await kApi('order', {dir, by, person, purpose, lines: lines.map(l=>({id:l.it.id, size:l.size, from:l.from, qty:l.qty}))});
       kItems = j.state.items; kLoadedAt = new Date();
       try{ localStorage.setItem('rc-kiosk-cache', JSON.stringify(kItems)); }catch(_){}
     }
