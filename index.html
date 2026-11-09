@@ -2521,7 +2521,7 @@ function renderLib(){ renderLibMap(); renderLibResults(); renderLibBatches(); re
 
 
 /* ================= 雲端同步（Google Apps Script） ================= */
-const CLOUD_URL_DEFAULT = '';   // 部署好的 Apps Script 網址；填好後每台裝置都會自動使用
+const CLOUD_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbybkyIJXQFVo5iSp6XK3TYS-sT-DoN_kNjvs-MLNNs_TistrKTxjo9HSRa-6Q3MPICM/exec';   // 部署好的 Apps Script 網址；填好後每台裝置都會自動使用
 const CLOUD_KEY = 'rc-cloud-1142';
 let cloud = (()=>{ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY)) || {}; }catch(_){ return {}; } })();
 function saveCloud(){ try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud)); }catch(_){} }
