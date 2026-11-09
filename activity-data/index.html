@@ -153,7 +153,11 @@ h3{font-size:.95rem;margin:16px 0 8px}
   <!-- ① 匯入 -->
   <section class="tab active" id="tab-src">
     <div class="card">
-      <h2>匯入 Excel（可一次選多個檔）</h2>
+      <h2>從 Google 雲端匯入</h2>
+      <div id="srcCloud"></div>
+    </div>
+    <div class="card">
+      <h2>從電腦匯入 Excel／Word（可一次選多個檔）</h2>
       
       <div class="drop" id="drop"><strong>拖曳檔案到這裡，或點一下選檔</strong></div>
       <input id="file" type="file" accept=".xlsx,.xls,.docx" multiple hidden>
@@ -441,6 +445,7 @@ const semDone=()=>DB.rows.length?'':'<div class="empty">請先到「① 匯入�
 function renderSrc(){
   const eff=effective(),sems=allSems();
   $('#srcGrid').innerHTML=sems.length?sems.map(s=>{const rs=eff.filter(r=>r.sem===s);return `<div class="src"><b>${s}</b>${rs.length} 筆｜${rs.reduce((a,r)=>a+r.場次,0)} 場<br><span class="pill ${rs[0]?.src==='列表'?'warn':''}">${rs[0]?.src||'—'}</span></div>`}).join(''):'<div class="empty" style="grid-column:1/-1">尚未匯入</div>';
+  $('#srcCloud').innerHTML=cloudPanel();
   if($('#rcStaff'))$('#rcStaff').textContent=[...rcStaff()].join('、')||'—';
   $('#lastImport').textContent=DB.files.map(f=>`${f.name}（${f.kind} ${f.n}筆，${f.at}）`).join('；');
 }
@@ -777,7 +782,7 @@ async function cloudGet(id){
   throw Error('抓不到，請確認共用設定是「知道連結的人」');
 }
 async function cloudFetchAll(silent){
-  if(CLOUD_BUSY||!CLOUD.length)return;CLOUD_BUSY=true;if(TAB==='home')renderHome();
+  if(CLOUD_BUSY||!CLOUD.length)return;CLOUD_BUSY=true;renderSrc();if(TAB==='home')renderHome();
   const files=[],bad=[];
   await Promise.all(CLOUD.map(async c=>{try{files.push(await cloudGet(c.id))}catch(e){bad.push(c.id)}}));
   CLOUD_BUSY=false;
@@ -788,9 +793,9 @@ async function cloudFetchAll(silent){
 function cloudAdd(v){const id=cloudId(v);if(!id)return toast('看不懂這個連結');if(CLOUD.some(c=>c.id===id))return toast('這個連結已經加過了');CLOUD.push({id});store.set('rcCloud',CLOUD);cloudFetchAll()}
 function cloudRemove(id){CLOUD=CLOUD.filter(c=>c.id!==id);store.set('rcCloud',CLOUD);DB.files=DB.files.filter(f=>!f.name.startsWith(cloudName(id)));save();refresh()}
 function cloudPanel(){
-  return `<div class="cloud"><div class="cloud-h"><b>☁ Google 雲端</b>${CLOUD.length?`<button class="btn" ${CLOUD_BUSY?'disabled':''} data-a="${act(()=>cloudFetchAll())}">${CLOUD_BUSY?'抓取中…':'抓最新資料'}</button>`:''}${CLOUD_AT&&!CLOUD_BUSY?`<span class="muted">上次更新 ${CLOUD_AT}</span>`:''}</div>
-  ${CLOUD.map(c=>`<div class="cloud-row"><span>${cloudKind(c.id)?`✓ ${esc(cloudKind(c.id))}`:'<span class="muted">尚未抓取</span>'}</span><a href="https://drive.google.com/file/d/${c.id}/view" target="_blank" rel="noopener">開啟</a><button class="linkbtn" data-a="${act(()=>cloudRemove(c.id))}">移除</button></div>`).join('')}
-  <div class="cloud-add"><input type="text" id="cloudInput" placeholder="貼上 Google 雲端連結"><button class="btn secondary" data-a="${act(()=>cloudAdd($('#cloudInput').value))}">加入</button></div></div>`;
+  return `<div class="cloud"><div class="cloud-h"><b>☁ Google 雲端</b>${CLOUD.length?`<button class="btn" ${CLOUD_BUSY?'disabled':''} data-cloud="fetch">${CLOUD_BUSY?'抓取中…':'抓最新資料'}</button>`:''}${CLOUD_AT&&!CLOUD_BUSY?`<span class="muted">上次更新 ${CLOUD_AT}</span>`:''}</div>
+  ${CLOUD.map(c=>`<div class="cloud-row"><span>${cloudKind(c.id)?`✓ ${esc(cloudKind(c.id))}`:'<span class="muted">尚未抓取</span>'}</span><a href="https://drive.google.com/file/d/${c.id}/view" target="_blank" rel="noopener">開啟</a><button class="linkbtn" data-cloud="remove" data-id="${c.id}">移除</button></div>`).join('')}
+  <div class="cloud-add"><input type="text" class="cloud-input" placeholder="貼上 Google 雲端連結"><button class="btn secondary" data-cloud="add">加入</button></div></div>`;
 }
 
 /* ---------- 簡易畫面 ---------- */
@@ -847,7 +852,7 @@ function renderHome(){
   ].join('');
   wireHome();
 }
-function wireHome(){const ci=$('#cloudInput');if(ci)ci.onkeydown=e=>{if(e.key==='Enter')cloudAdd(ci.value)};$$('#tab-home [data-a]').forEach(b=>b.onclick=()=>{try{ACTS[Number(b.dataset.a)]()}catch(e){toast('發生錯誤：'+e.message)}})}
+function wireHome(){$$('#tab-home [data-a]').forEach(b=>b.onclick=()=>{try{ACTS[Number(b.dataset.a)]()}catch(e){toast('發生錯誤：'+e.message)}})}
 function pickSem(s){$('#sem').value=s;store.set('rcSem',s);refresh()}
 
 /* ---------- 選單／分頁 ---------- */
@@ -893,6 +898,9 @@ $('#owner').value=store.get('rcOwner','');$('#owner').onchange=()=>{store.set('r
 document.addEventListener('click',e=>{const b=e.target.closest('.staffcard');if(!b)return;$('#owner').value=b.dataset.owner;store.set('rcOwner',b.dataset.owner);renderStaff();markNav()});
 $('#staffXlsx').onclick=staffExport;
 document.addEventListener('dragover',e=>{if(TAB==='home')e.preventDefault()});document.addEventListener('drop',e=>{if(TAB!=='home'||e.target.closest('#dropHome'))return;e.preventDefault();e.dataTransfer.files.length&&importFiles([...e.dataTransfer.files])});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-cloud]');if(!b)return;const k=b.dataset.cloud;
+  if(k==='fetch')cloudFetchAll();else if(k==='remove')cloudRemove(b.dataset.id);else if(k==='add'){const i=b.closest('.cloud').querySelector('.cloud-input');cloudAdd(i.value)}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('cloud-input'))cloudAdd(e.target.value)});
 setTab(TAB);
 if(CLOUD.length)cloudFetchAll(true);
 </script>
