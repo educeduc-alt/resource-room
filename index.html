@@ -311,7 +311,7 @@ tr.addrow td{background:var(--primary-soft);padding:10px 12px}
 @media (max-width:420px){ .ic-grid{grid-template-columns:1fr 1fr;gap:8px} }
 details.maps>summary{display:flex;align-items:center;gap:10px}
 .mapseg{display:inline-flex;margin-left:auto;flex:0 0 auto;padding:2px}
-.simplezones{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px;align-items:start}
+.simplezones{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,1fr);gap:8px;margin-top:8px;align-items:start;overflow-x:auto;padding-bottom:4px}
 .sz{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .sz.hl,.sz:target{box-shadow:0 0 0 3px var(--gold)}
 .sz-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 12px;background:#F6F8F7;border-bottom:1px solid var(--line);cursor:pointer}
@@ -321,6 +321,11 @@ details.maps>summary{display:flex;align-items:center;gap:10px}
 .sz li:hover{background:var(--primary-soft)}
 .sz li b{font-variant-numeric:tabular-nums}.sz li b.zero{color:#B7C0BD;font-weight:400}
 .sz-empty{padding:10px 12px;font-size:.82rem;color:#A7B1AE}
+.audbtn{margin-left:6px;border:none;border-radius:999px;padding:1px 8px;font-size:.7rem;cursor:pointer;font-family:inherit;vertical-align:1px}
+.audbtn.out{background:#E1F1EC;color:#155C54}.audbtn.in{background:#FFF1D6;color:#9A6200}
+.audtag{display:inline-block;margin-left:6px;background:#FFF1D6;color:#9A6200;border-radius:999px;padding:0 7px;font-size:.68rem;font-weight:400;vertical-align:1px}
+.bw-aud button.on{background:var(--primary);color:#fff;font-weight:700}
+.bw-aud[hidden]{display:none}
 .zeronote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:10px}
 .zeronote[hidden]{display:none}
 details.maps{margin-top:12px}
@@ -689,6 +694,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
       <option value="noloc">尚未指定位置</option>
     </select>
     <select id="groupBy" title="分區方式">
+      <option value="aud">依對外／內部分區</option>
       <option value="cat">依類別分區</option>
       <option value="zone">依存放區塊分區</option>
     </select>
@@ -898,6 +904,9 @@ const ZONES = [
   {id:'q-cab',    map:'q', name:'左側獨立櫃'},
 ];
 const zoneName = id => (ZONES.find(z=>z.id===id)||{}).name || id;
+// 對外（給外部看的宣導品）／內部（內部用品）：依 1142 盤點表資料夾分類；之後新增的宣導品預設對外
+const audOf = it => it.aud || (it.cat === '宣導品' && !(+it.id >= 36 && +it.id <= 62) ? 'out' : 'in');   // 36–62 為盤點表「內部看」
+const AUD_NAME = {out:'給外部看（對外宣導品）', in:'內部看（內部用品）'};
 
 /* ============ 原始庫存資料（115.01.22 統計） ============ */
 const DEFAULT_ITEMS = [
@@ -1339,7 +1348,8 @@ function passFilter(it, f, q){
 const groupByEl = document.getElementById('groupBy');
 let collapsedGroups = new Set();
 try{ collapsedGroups = new Set(JSON.parse(localStorage.getItem('rc-inv-collapsed')||'[]'));
-     groupByEl.value = localStorage.getItem('rc-inv-groupby') || 'cat'; }catch(_){}
+     groupByEl.value = localStorage.getItem('rc-aud-default') ? (localStorage.getItem('rc-inv-groupby') || 'aud') : 'aud';
+     localStorage.setItem('rc-aud-default', '1'); }catch(_){}
 const saveCollapse = () => { try{ localStorage.setItem('rc-inv-collapsed', JSON.stringify([...collapsedGroups]));
                                   localStorage.setItem('rc-inv-groupby', groupByEl.value); }catch(_){} };
 function rowHtml(it, cols){
@@ -1350,7 +1360,7 @@ function rowHtml(it, cols){
     ? `<input class="qedit" type="number" min="0" value="${w}" data-id="${it.id}" data-f="wh">` : `<span class="${qtyCls(w)}">${w}</span>`;
   let h = `<tr>
     <td><div class="itemcell">${thumbHtml(it)}<div>
-      <span class="itemname">${esc(it.name)}</span>
+      <span class="itemname">${esc(it.name)}</span>${editMode ? `<button class="audbtn ${audOf(it)}" data-aud="${it.id}" title="切換對外／內部">${audOf(it)==='out'?'對外':'內部'}</button>` : (audOf(it)==='in' && groupByEl.value!=='aud' ? '<span class="audtag">內部</span>' : '')}
       ${it.note?`<div class="itemnote">${esc(it.note)}</div>`:''}
       ${it.sizes?`<button class="sizebtn" data-sz="${it.id}">${expanded.has(it.id)?'▴ 收合尺寸':'▾ 各尺寸明細'}</button>`:''}
     </div></div></td>
@@ -1375,6 +1385,7 @@ function currentGroups(){
   const f = locFilterEl.value, q = qInput.value.trim().toLowerCase();
   const mode = groupByEl.value, groups = new Map();
   const add = (key,label,it) => { if(!groups.has(key)) groups.set(key,{label,items:[]}); groups.get(key).items.push(it); };
+  if(mode==='aud'){ groups.set('aud:out',{label:AUD_NAME.out, items:[]}); groups.set('aud:in',{label:AUD_NAME.in, items:[]}); }
   if(mode==='zone'){
     ZONES.forEach(z=>groups.set('zone:'+z.id,{label:(z.map==='q'?'Q棟倉庫・':'悅讀書房・')+z.name, items:[]}));
     groups.set('zone:none',{label:'尚未指定位置', items:[]});
@@ -1383,6 +1394,7 @@ function currentGroups(){
     if(!passFilter(it,f,q)) continue;
     if(mode==='zone'){ const locs = (it.loc&&it.loc.length) ? it.loc : ['none'];
       locs.forEach(z=>add('zone:'+z, z==='none'?'尚未指定位置':zoneName(z), it)); }
+    else if(mode==='aud'){ const a = audOf(it); add('aud:'+a, AUD_NAME[a], it); }
     else add('cat:'+it.cat, it.cat, it);
   }
   return [...groups].filter(([,g])=>g.items.length);
@@ -1424,7 +1436,7 @@ function renderInvCards(){
         (closed ? '' : `<div class="ic-grid">${g.items.map(it=>{ const src = getImg(it), r = roomQty(it), w = whQty(it);
           return `<button class="bw-card" data-icard="${it.id}">
             <div class="bw-img">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : '<span class="noimg">無照片</span>'}${totQty(it) <= 10 ? '<span class="bw-tag low">數量少</span>' : ''}</div>
-            <div class="bw-body"><div class="bw-name">${esc(it.name)}</div>
+            <div class="bw-body"><div class="bw-name">${esc(it.name)}${audOf(it)==='in' && groupByEl.value!=='aud' ? ' <span class="audtag">內部</span>' : ''}</div>
               <div class="bw-meta">${it.price ? `$${it.price}` : ''}${it.note ? `${it.price ? '・' : ''}${esc(it.note)}` : ''}</div>
               <div class="bw-badges"><span class="bw-b room ${r?'':'zero'}">書房 ${r}</span><span class="bw-b wh ${w?'':'zero'}">倉庫 ${w}</span></div>
               ${it.sizes ? `<div class="bw-sizes">${it.sizes.map(z=>`<span>${esc(z.s)} ${(+z.room||0)+(+z.wh||0)}</span>`).join('')}</div>` : ''}
@@ -1449,6 +1461,8 @@ document.getElementById('collapseAll').onclick = ()=>{ currentGroups().forEach((
 // 表格事件：委派到 tbody，只綁一次
 invBody.addEventListener('click', e=>{
   const t = e.target;
+  const au = t.closest('[data-aud]');
+  if(au){ const it = byId(au.dataset.aud); if(it){ it.aud = audOf(it)==='out' ? 'in' : 'out'; scheduleSave(); renderTable(); toast(`「${it.name}」改為${it.aud==='out'?'對外':'內部'}`); } return; }
   const grp = t.closest('tr.grp');
   if(grp){ const k = grp.dataset.grp; collapsedGroups.has(k)?collapsedGroups.delete(k):collapsedGroups.add(k);
     saveCollapse(); renderTable(); dirty.table=false; return; }
@@ -3366,11 +3380,12 @@ function kAddItem(){
 }
 
 /* ================= 瀏覽頁：好看、好找的庫存目錄（工讀生與管理者共用） ================= */
-const BW = {q:'', cat:'', loc:'all', sort:'', view:'grid'};
+const BW = {q:'', cat:'', loc:'all', sort:'', view:'grid', aud:''};
 try{ Object.assign(BW, JSON.parse(localStorage.getItem('rc-browse') || '{}'), {q:''}); }catch(_){}
 const bwTot = (it, loc) => loc === 'room' ? roomQty(it) : loc === 'wh' ? whQty(it) : totQty(it);
 function renderBrowse(host, list){
-  host._list = list.filter(it=>totQty(it) > 0);   // 沒有庫存的不顯示（在管理頁「曾製作宣導品」）
+  host._inner = !!(staff || isAdmin());   // 工讀生、管理者看得到內部用品
+  host._list = list.filter(it=>totQty(it) > 0 && (host._inner || audOf(it) === 'out'));   // 沒有庫存的不顯示；外部只看對外宣導品
   if(!host.querySelector('.bw')){
     host.innerHTML = `<div class="bw">
       <div class="bw-tools">
@@ -3380,6 +3395,7 @@ function renderBrowse(host, list){
           <select class="bw-sort"><option value="">依類別</option><option value="name">依品名</option><option value="desc">數量多→少</option><option value="asc">數量少→多</option></select>
           <div class="k-seg bw-view"><button data-bwview="grid">圖卡</button><button data-bwview="list">清單</button></div>
         </div>
+        <div class="k-seg bw-aud" hidden><button data-bwaud="">全部</button><button data-bwaud="out">給外部看</button><button data-bwaud="in">內部看</button></div>
         <div class="k-cats bw-cats"></div>
       </div>
       <div class="bw-sum"></div>
@@ -3387,6 +3403,7 @@ function renderBrowse(host, list){
     host.querySelector('.bw-q').addEventListener('input', debounce(()=>{ BW.q = host.querySelector('.bw-q').value; drawBrowse(host); }, 150));
     host.querySelector('.bw-sort').addEventListener('change', e=>{ BW.sort = e.target.value; drawBrowse(host); });
     host.addEventListener('click', e=>{
+      const au = e.target.closest('[data-bwaud]'); if(au){ BW.aud = au.dataset.bwaud; drawBrowse(host); return; }
       const t = e.target, l = t.closest('[data-bwloc]'), v = t.closest('[data-bwview]'), c = t.closest('[data-bwcat]'), it = t.closest('[data-bwit]');
       if(l){ BW.loc = l.dataset.bwloc; drawBrowse(host); }
       else if(v){ BW.view = v.dataset.bwview; drawBrowse(host); }
@@ -3399,7 +3416,10 @@ function renderBrowse(host, list){
 }
 function drawBrowse(host){
   try{ localStorage.setItem('rc-browse', JSON.stringify({cat:BW.cat, loc:BW.loc, sort:BW.sort, view:BW.view})); }catch(_){}
-  const list = host._list, cats = [...new Set(list.map(i=>i.cat).filter(Boolean))];
+  const audBar = host.querySelector('.bw-aud'); audBar.hidden = !host._inner;
+  if(!host._inner) BW.aud = '';
+  audBar.querySelectorAll('[data-bwaud]').forEach(b=>b.classList.toggle('on', b.dataset.bwaud === (BW.aud||'')));
+  const list = host._list.filter(it=>!BW.aud || audOf(it) === BW.aud), cats = [...new Set(list.map(i=>i.cat).filter(Boolean))];
   if(BW.cat && !cats.includes(BW.cat)) BW.cat = '';
   host.querySelectorAll('[data-bwloc]').forEach(b=>b.classList.toggle('on', b.dataset.bwloc === BW.loc));
   host.querySelectorAll('[data-bwview]').forEach(b=>b.classList.toggle('on', b.dataset.bwview === BW.view));
@@ -3587,10 +3607,14 @@ function newApply(){
   return add.length;
 }
 // 管理者進入時自動套用（先拿到雲端最新資料再套用，避免蓋掉）
+const AUD_OUT_1142 = [...Array.from({length:34},(_,i)=>i+2), 75,76,77,78,79,80,81,82,83];
+function audPending(){ return items.some(it=>!it.aud); }
+function audApply(){ let n = 0; items.forEach(it=>{ if(!it.aud){ it.aud = AUD_OUT_1142.includes(+it.id) ? 'out' : 'in'; n++; } }); return n; }
 async function autoPatch(){
   const msg = [];
   if(stPending()) msg.push(`盤點更新 ${stApply()} 項、移除四部曲`);
   if(newPending()) msg.push(`新增 ${newApply()} 項新購宣導品`);
+  if(audPending()){ audApply(); msg.push('依盤點表分出對外／內部品項'); }
   if(!msg.length) return;
   scheduleSave(); invalidate('all'); renderStBanner(); renderNewBanner();
   toast('已自動套用：' + msg.join('；'));
