@@ -79,6 +79,30 @@ button.btn.on{background:var(--gold);border-color:#d8ac3c;color:#4a3a09;font-wei
 .sttable tr.del td{background:var(--accent-soft);text-decoration:line-through}
 .sttable .up{color:var(--ok);font-weight:700}.sttable .dn{color:var(--accent);font-weight:700}
 .stwrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.sf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 10px}
+.sf-checks{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem}
+.sf-checks label{display:flex;align-items:center;gap:5px;color:var(--ink)}
+#printArea{display:none}
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  body.printing > *:not(#printArea){display:none!important}
+  body.printing{background:#fff;padding:0}
+  body.printing #printArea{display:block}
+  #printArea table.pf{width:100%;border-collapse:collapse;font-family:"Times New Roman","DFKai-SB","BiauKai","標楷體",serif;font-size:11pt;color:#000;break-after:page}
+  #printArea table.pf:last-child{break-after:auto}
+  #printArea th,#printArea td{border:1px solid #000;padding:3px 4px;text-align:center;vertical-align:middle}
+  #printArea .pf-ttl{font-size:13pt;font-weight:700;border:none;padding:0 0 6px;color:#000}
+  #printArea th{color:#000;background:#fff}
+  #printArea thead tr:first-child th{border:none}
+  #printArea .c-no{width:6%}#printArea .c-img{width:24%}#printArea .c-q{width:8%}
+  #printArea tbody.pf-item{break-inside:avoid}
+  #printArea tbody.pf-item tr{height:38mm}
+  #printArea table.nophoto tbody.pf-item tr{height:12mm}
+  #printArea tr.pf-sz{height:9mm!important}
+  #printArea .c-img img{max-width:42mm;max-height:34mm;object-fit:contain;display:block;margin:0 auto}
+  #printArea .pf-sub{font-size:10pt}
+  #printArea .c-szn{width:13%}
+}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
 .stat .n{font-size:1.5rem;font-weight:800;color:var(--primary)}
@@ -558,6 +582,10 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
     <div><b>📋 1142 暑假盤點數量還沒套用</b><span>依盤點表更新各品項在悅讀書房、Q棟倉庫的數量，並移除「資源教室服務及就業規劃四部曲 DM 簡介」（已整箱丟棄）。</span></div>
     <button class="btn primary" id="stOpen">檢查並套用</button>
   </div>
+  <div class="stbanner" id="newBanner" hidden>
+    <div><b>🆕 1151 學期新購宣導品還沒加入</b><span></span></div>
+    <button class="btn primary" id="newOpen">檢查並新增</button>
+  </div>
   <div class="stats" id="stats"></div>
   <div class="toolbar">
     <input type="search" id="q" placeholder="搜尋品名、備註、位置…">
@@ -575,6 +603,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
     <button class="btn" id="expandAll" title="全部展開">⊞ 全部展開</button>
     <button class="btn" id="collapseAll" title="全部收合">⊟ 全部收合</button>
     <button class="btn" id="editToggle">✏️ 編輯模式</button>
+    <button class="btn" id="statForm" title="產生可列印的庫存數量統計表（列印／PDF／Word）">🖨 統計表</button>
     <button class="btn primary" id="addItem">＋ 新增品項</button>
   </div>
   <div class="chipbar" id="catChips"></div>
@@ -1161,7 +1190,7 @@ function pickPhoto(it){
 
 /* ============ 統計 ============ */
 function renderStats(){
-  try{ renderStBanner(); }catch(_){}
+  try{ renderStBanner(); renderNewBanner(); }catch(_){}
   let totalRoom=0,totalWh=0,low=0,value=0;
   for(const i of items){
     const r=roomQty(i), w=whQty(i), t=r+w;
@@ -3110,6 +3139,199 @@ document.getElementById('stOpen').onclick = ()=>{
     toast(`已套用盤點：更新 ${n} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
   };
 };
+
+/* ================= 1151 學期新購宣導品（一次性新增，先不放照片） ================= */
+const NEW_1151 = [
+  {name:'動物造型紓壓球',     price:130, room:100, note:'1151學期新購 100 個'},
+  {name:'六角矽膠按摩球',     price:45,  room:100, note:'1151學期新購 100 個'},
+  {name:'粉嫩可愛圖案筆記本', price:50,  room:100, note:'1151學期新購 100 本'},
+  {name:'炫彩磁吸手機架',     price:70,  room:100, note:'1151學期新購 100 個'},
+  {name:'城市型走側背包',     price:0,   room:0,   note:'1151學期新購（共 41,895 元），數量待補'},
+  {name:'湯匙造型盒餐具',     price:0,   room:0,   note:'1151學期新購（共 12,500 元），數量待補'},
+  {name:'矽藻土吸水杯墊',     price:0,   room:0,   note:'1151學期新購（共 4,600 元），數量待補'},
+  {name:'壓克力鑰匙圈',       price:0,   room:0,   note:'1151學期新購（共 2,600 元），數量待補'},
+  {name:'素面茄芷零錢包',     price:0,   room:0,   note:'1151學期新購（共 2,900 元），數量待補'},
+];
+const NEW_DONE = 'rc-new-1151';
+const newMissing = () => NEW_1151.filter(n=>!items.some(it=>it.name===n.name));
+function newPending(){ try{ if(localStorage.getItem(NEW_DONE)) return false; }catch(_){} return newMissing().length > 0; }
+function renderNewBanner(){
+  const b = document.getElementById('newBanner'); if(!b) return;
+  const m = newPending() ? newMissing() : [];
+  b.hidden = !m.length;
+  if(m.length) b.querySelector('span').textContent = `${m.map(x=>x.name).join('、')}（共 ${m.length} 項，暫不放照片）`;
+}
+document.getElementById('newOpen').onclick = ()=>{
+  const m = newMissing();
+  openSheet(`<h2>🆕 新增 1151 學期新購宣導品</h2>
+    <div class="hint">依付款單據整理。數量寫明 100 個的已填入悅讀書房；其餘單據只有總金額，數量先填 0，請到時候在「編輯模式」補上。照片之後再加。</div>
+    <div class="stwrap"><table class="sttable"><thead><tr><th>品項</th><th>單價</th><th>書房</th><th>倉庫</th></tr></thead><tbody>
+    ${m.map(n=>`<tr class="chg"><td>${esc(n.name)}<div class="itemnote">${esc(n.note)}</div></td><td>${n.price?'$'+n.price:'—'}</td><td>${n.room}</td><td>0</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="actions"><button class="btn" id="nw-cancel">取消</button><button class="btn primary" id="nw-ok">確認新增 ${m.length} 項</button></div>`);
+  sheet.querySelector('#nw-cancel').onclick = closeSheet;
+  sheet.querySelector('#nw-ok').onclick = ()=>{
+    let id = Math.max(0, ...items.map(it=>+it.id||0));
+    // 放在宣導品的最後面
+    let pos = -1; items.forEach((it,i)=>{ if(it.cat==='宣導品') pos = i; });
+    const add = newMissing().map(n=>({id:++id, cat:'宣導品', name:n.name, price:n.price, note:n.note, room:n.room, wh:0, loc:[]}));
+    items.splice(pos<0 ? items.length : pos+1, 0, ...add);
+    try{ localStorage.setItem(NEW_DONE, new Date().toISOString()); }catch(_){}
+    closeSheet(); scheduleSave(); invalidate('all'); renderNewBanner();
+    toast(`已新增 ${add.length} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
+  };
+};
+
+/* ================= 一鍵產生「庫存數量統計表」（列印／PDF／Word） ================= */
+function rocToday(){ const d = new Date(); return `${d.getFullYear()-1911}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+function rocTerm(){ const d = new Date(), m = d.getMonth()+1, y = d.getFullYear()-1911; return m >= 8 ? `${y}.1` : (m === 1 ? `${y-1}.1` : `${y-1}.2`); }
+const SF_KEY = 'rc-statform-opts';
+function sfOpts(){ try{ return JSON.parse(localStorage.getItem(SF_KEY)) || {}; }catch(_){ return {}; } }
+function openStatForm(){
+  const o = sfOpts(), cats = [...new Set(items.map(i=>i.cat))];
+  const chosen = o.cats || cats;
+  openSheet(`<h2>🖨 產生庫存數量統計表</h2>
+    <div class="hint">格式與原本的「資源教室宣導品庫存數量統計」相同：序、圖片、品名（單價）、數量（資／倉），右邊留兩欄空白給盤點時手寫。</div>
+    <div class="sf-grid">
+      <div class="field"><label>學期</label><input id="sf-term" value="${esc(o.term || rocTerm())}" placeholder="例：115.1"></div>
+      <div class="field"><label>統計日期</label><input id="sf-date" value="${esc(rocToday())}"></div>
+      <div class="field"><label>右側空白欄標題</label><input id="sf-blank" value="${esc(o.blank || '盤點')}" placeholder="例：寒假盤點"></div>
+    </div>
+    <div class="field"><label>要包含的類別</label><div class="sf-checks">${cats.map(c=>`<label><input type="checkbox" class="sf-cat" value="${esc(c)}" ${chosen.includes(c)?'checked':''}> ${esc(c)}（${items.filter(i=>i.cat===c).length}）</label>`).join('')}</div></div>
+    <div class="field"><label>選項</label><div class="sf-checks">
+      <label><input type="checkbox" id="sf-photo" ${o.photo!==false?'checked':''}> 放照片</label>
+      <label><input type="checkbox" id="sf-qty" ${o.qty!==false?'checked':''}> 填入目前數量（不勾＝數量欄也空白）</label>
+      <label><input type="checkbox" id="sf-zero" ${o.zero?'checked':''}> 不列出數量為 0 的品項</label>
+      <label><input type="checkbox" id="sf-note" ${o.note!==false?'checked':''}> 顯示備註（顏色、款式）</label>
+    </div></div>
+    <div class="actions"><button class="btn" id="sf-word">⬇ 下載 Word</button><button class="btn primary" id="sf-print">🖨 預覽／列印（可存 PDF）</button></div>`);
+  const read = ()=>{
+    const v = {term: sheet.querySelector('#sf-term').value.trim(), date: sheet.querySelector('#sf-date').value.trim(), blank: sheet.querySelector('#sf-blank').value.trim() || '盤點',
+      cats: [...sheet.querySelectorAll('.sf-cat:checked')].map(x=>x.value), photo: sheet.querySelector('#sf-photo').checked,
+      qty: sheet.querySelector('#sf-qty').checked, zero: sheet.querySelector('#sf-zero').checked, note: sheet.querySelector('#sf-note').checked};
+    try{ localStorage.setItem(SF_KEY, JSON.stringify({term:v.term, blank:v.blank, cats:v.cats, photo:v.photo, qty:v.qty, zero:v.zero, note:v.note})); }catch(_){}
+    if(!v.cats.length){ toast('請至少選一個類別'); return null; }
+    return v;
+  };
+  sheet.querySelector('#sf-print').onclick = ()=>{ const v = read(); if(v){ closeSheet(); printStatForm(v); } };
+  sheet.querySelector('#sf-word').onclick = async e=>{ const v = read(); if(!v) return;
+    const b = e.target; b.disabled = true; b.textContent = '產生中…';
+    try{ await wordStatForm(v); closeSheet(); }catch(err){ console.error(err); toast('⚠ Word 產生失敗：' + (err.message||err)); b.disabled = false; b.textContent = '⬇ 下載 Word'; } };
+}
+document.getElementById('statForm').onclick = openStatForm;
+
+// 依類別分組；每組一張表
+function sfGroups(v){
+  return v.cats.map(cat=>{
+    let list = items.filter(i=>i.cat===cat);
+    if(v.zero) list = list.filter(i=>totQty(i) > 0);
+    return {cat, title:`資源教室${cat}庫存數量統計(${v.term}學期)${v.date}統計`, list};
+  }).filter(g=>g.list.length);
+}
+const sfNum = (v, n) => v.qty ? (+n ? String(n) : '') : '';
+const sfNameLines = (it, v) => [it.name, it.price ? `(${it.price}元)` : '', v.note && it.note ? it.note : ''].filter(Boolean);
+
+function printStatForm(v){
+  const groups = sfGroups(v);
+  let area = document.getElementById('printArea');
+  if(!area){ area = document.createElement('div'); area.id = 'printArea'; document.body.appendChild(area); }
+  const head = g => `<thead><tr><th colspan="7" class="pf-ttl">${esc(g.title)}</th></tr>
+    <tr><th rowspan="2" class="c-no">序</th><th rowspan="2" class="c-img">圖片</th><th rowspan="2" class="c-nm">品名</th><th colspan="2">數量</th><th colspan="2">${esc(v.blank)}</th></tr>
+    <tr><th class="c-q">資</th><th class="c-q">倉</th><th class="c-q">資</th><th class="c-q">倉</th></tr></thead>`;
+  const img = it => { const s = v.photo ? getImg(it) : null; return s ? `<img src="${s}" alt="">` : ''; };
+  const nm = it => sfNameLines(it, v).map((l,i)=>i ? `<div class="pf-sub">${esc(l)}</div>` : `<div>${esc(l)}</div>`).join('');
+  area.innerHTML = groups.map(g=>`<table class="pf ${v.photo?'':'nophoto'}">${head(g)}
+    ${g.list.map((it,n)=> it.sizes ? `<tbody class="pf-item">${it.sizes.map((z,k)=>`<tr class="pf-sz">
+        ${k ? '' : `<td rowspan="${it.sizes.length}" class="c-no">${n+1}</td><td rowspan="${it.sizes.length}" class="c-img">${img(it)}</td>`}
+        ${k ? '' : `<td rowspan="${it.sizes.length}" class="c-nm">${nm(it)}</td>`}
+        <td class="c-szn" style="display:none"></td>
+        <td class="c-q">${sfNum(v,z.room)}</td><td class="c-q">${sfNum(v,z.wh)}</td><td class="c-q"></td><td class="c-q"></td></tr>`).join('')}</tbody>`
+      : `<tbody class="pf-item"><tr><td class="c-no">${n+1}</td><td class="c-img">${img(it)}</td><td class="c-nm">${nm(it)}</td>
+        <td class="c-q">${sfNum(v,it.room)}</td><td class="c-q">${sfNum(v,it.wh)}</td><td class="c-q"></td><td class="c-q"></td></tr></tbody>`).join('')}
+    </table>`).join('');
+  fixSizeRows(area, groups, v);
+  const imgs = [...area.querySelectorAll('img')];
+  Promise.all(imgs.map(im => im.complete ? 0 : new Promise(r=>{ im.onload = im.onerror = r; }))).then(()=>{
+    document.body.classList.add('printing'); window.print();
+    setTimeout(()=>document.body.classList.remove('printing'), 500);
+  });
+}
+// 有尺寸的品項：品名欄右邊加一欄「尺寸：M」，跟原本表格一樣
+function fixSizeRows(area, groups, v){
+  groups.forEach((g,gi)=>{
+    const table = area.querySelectorAll('table.pf')[gi];
+    if(!g.list.some(it=>it.sizes)) return;
+    table.classList.add('has-size');
+    const tbs = table.querySelectorAll('tbody.pf-item');
+    g.list.forEach((it,n)=>{
+      const tb = tbs[n];
+      if(!it.sizes){ const nmTd = tb.querySelector('.c-nm'); nmTd.colSpan = 2; return; }
+      tb.querySelectorAll('tr.pf-sz').forEach((tr,k)=>{ const td = tr.querySelector('.c-szn'); td.style.display = ''; td.textContent = `尺寸：${it.sizes[k].s}`; });
+    });
+    table.querySelectorAll('thead .c-nm').forEach(th=>th.colSpan = 2);
+    table.querySelector('.pf-ttl').colSpan = 8;
+  });
+}
+
+async function wordStatForm(v){
+  if(!window.docx) await loadScript('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js');
+  const D = window.docx, groups = sfGroups(v);
+  const B = {style: D.BorderStyle.SINGLE, size: 4, color: '000000'};
+  const borders = {top:B, bottom:B, left:B, right:B};
+  const P = (t, o={}) => new D.Paragraph({alignment: D.AlignmentType.CENTER, spacing:{before:0, after:0}, children:[new D.TextRun({text: t, bold: o.bold, size: o.size || 22})]});
+  const cell = (children, o={}) => new D.TableCell({children: Array.isArray(children) ? children : [children], width:{size:o.w, type:D.WidthType.DXA},
+    rowSpan: o.rs, columnSpan: o.cs, borders, verticalAlign: D.VerticalAlign.CENTER, margins:{top:40, bottom:40, left:60, right:60}});
+  // 讀取照片（縮成最長邊 110px 放進表格）
+  const imgCache = new Map();
+  async function imgRun(it){
+    if(!v.photo) return null;
+    const src = getImg(it); if(!src) return null;
+    if(imgCache.has(src)) return imgCache.get(src);
+    let r = null;
+    try{
+      const buf = await (await fetch(src)).arrayBuffer();
+      const dim = await new Promise(ok=>{ const im = new Image(); im.onload = ()=>ok([im.naturalWidth, im.naturalHeight]); im.onerror = ()=>ok(null); im.src = src; });
+      if(dim){ const k = 110 / Math.max(dim[0], dim[1]); r = new D.ImageRun({data: buf, transformation:{width: Math.round(dim[0]*k), height: Math.round(dim[1]*k)}}); }
+    }catch(_){}
+    imgCache.set(src, r); return r;
+  }
+  const hasSize = g => g.list.some(it=>it.sizes);
+  const W = {no:600, img:2300, nm:2700, sz:1300, q:900};
+  const sections = [];
+  for(const g of groups){
+    const sz = hasSize(g), nmW = sz ? W.nm : W.nm + W.sz;
+    const rows = [
+      new D.TableRow({tableHeader:true, children:[cell(P(g.title, {bold:true, size:26}), {w: W.no+W.img+nmW+(sz?W.sz:0)+W.q*4, cs: sz?8:7})]}),
+      new D.TableRow({tableHeader:true, children:[
+        cell(P('序',{bold:true}),{w:W.no, rs:2}), cell(P('圖片',{bold:true}),{w:W.img, rs:2}), cell(P('品名',{bold:true}),{w:sz?W.nm+W.sz:nmW, rs:2, cs: sz?2:undefined}),
+        cell(P('數量',{bold:true}),{w:W.q*2, cs:2}), cell(P(v.blank,{bold:true}),{w:W.q*2, cs:2})]}),
+      new D.TableRow({tableHeader:true, children:['資','倉','資','倉'].map(t=>cell(P(t,{bold:true}),{w:W.q}))}),
+    ];
+    for(let n=0; n<g.list.length; n++){
+      const it = g.list[n], ir = await imgRun(it);
+      const imgP = new D.Paragraph({alignment: D.AlignmentType.CENTER, children: ir ? [ir] : []});
+      const nmPs = sfNameLines(it, v).map((l,i)=>P(l, {size: i ? 20 : 22}));
+      const q = x => cell(P(sfNum(v, x)), {w:W.q});
+      if(it.sizes){
+        it.sizes.forEach((z,k)=>rows.push(new D.TableRow({cantSplit:true, children:[
+          ...(k ? [] : [cell(P(String(n+1)),{w:W.no, rs:it.sizes.length}), cell(imgP,{w:W.img, rs:it.sizes.length}), cell(nmPs,{w:W.nm, rs:it.sizes.length})]),
+          cell(P(`尺寸：${z.s}`),{w:W.sz}), q(z.room), q(z.wh), q(0), q(0)]})));
+      }else{
+        rows.push(new D.TableRow({cantSplit:true, height:{value: v.photo ? 1900 : 700, rule: D.HeightRule.ATLEAST}, children:[
+          cell(P(String(n+1)),{w:W.no}), cell(imgP,{w:W.img}), cell(nmPs,{w: W.nm+W.sz, cs: sz?2:undefined}), q(it.room), q(it.wh), q(0), q(0)]}));
+      }
+    }
+    sections.push({properties:{page:{margin:{top:720, bottom:720, left:720, right:720}}},
+      children:[new D.Table({rows, width:{size: W.no+W.img+W.nm+W.sz+W.q*4, type:D.WidthType.DXA}, layout: D.TableLayoutType.FIXED,
+        columnWidths: sz ? [W.no, W.img, W.nm, W.sz, W.q, W.q, W.q, W.q] : [W.no, W.img, W.nm+W.sz, W.q, W.q, W.q, W.q]})]});
+  }
+  const doc = new D.Document({styles:{default:{document:{run:{font:{ascii:'Times New Roman', eastAsia:'標楷體', hAnsi:'Times New Roman'}, size:22}}}}, sections});
+  const blob = await D.Packer.toBlob(doc);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `資源教室庫存數量統計(${v.term}學期)${v.date}.docx`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+  toast('已下載 Word 檔');
+}
 // 先用預設資料立即畫出畫面，再讀取已儲存的資料；外層（工讀生）是預設畫面，管理需解鎖
 let stateReady = false;
 if(!isAdmin()) document.body.classList.add('kiosk-mode');
