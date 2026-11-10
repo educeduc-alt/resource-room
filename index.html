@@ -68,6 +68,17 @@ button.btn.on{background:var(--gold);border-color:#d8ac3c;color:#4a3a09;font-wei
 .chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
 
 /* ===== stats ===== */
+.stbanner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#FFF6E0;border:1px solid #F0D58C;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.stbanner[hidden]{display:none}
+.stbanner>div{flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px}
+.stbanner span{font-size:.84rem;color:var(--ink-soft)}
+.sttable{width:100%;border-collapse:collapse;font-size:.86rem;margin:8px 0}
+.sttable th,.sttable td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.sttable th:first-child,.sttable td:first-child{text-align:left;white-space:normal}
+.sttable tr.chg td{background:#FFF8E6}
+.sttable tr.del td{background:var(--accent-soft);text-decoration:line-through}
+.sttable .up{color:var(--ok);font-weight:700}.sttable .dn{color:var(--accent);font-weight:700}
+.stwrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
 .stat .n{font-size:1.5rem;font-weight:800;color:var(--primary)}
@@ -543,6 +554,10 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <main>
 <!-- ================= 庫存總覽 ================= -->
 <section class="panel show" id="panel-inv">
+  <div class="stbanner" id="stBanner" hidden>
+    <div><b>📋 1142 暑假盤點數量還沒套用</b><span>依盤點表更新各品項在悅讀書房、Q棟倉庫的數量，並移除「資源教室服務及就業規劃四部曲 DM 簡介」（已整箱丟棄）。</span></div>
+    <button class="btn primary" id="stOpen">檢查並套用</button>
+  </div>
   <div class="stats" id="stats"></div>
   <div class="toolbar">
     <input type="search" id="q" placeholder="搜尋品名、備註、位置…">
@@ -1146,6 +1161,7 @@ function pickPhoto(it){
 
 /* ============ 統計 ============ */
 function renderStats(){
+  try{ renderStBanner(); }catch(_){}
   let totalRoom=0,totalWh=0,low=0,value=0;
   for(const i of items){
     const r=roomQty(i), w=whQty(i), t=r+w;
@@ -3038,6 +3054,62 @@ function kUnlock(){
 document.getElementById('lockBtn').onclick = ()=>{ cloud.admin = false; saveCloud(); kCart.clear(); showKiosk(); };
 document.getElementById('cloudBtn').onclick = openCloudSettings;
 
+
+/* ================= 1142 暑假盤點（一次性套用） ================= */
+// [悅讀書房, Q棟倉庫]；有尺寸的品項依尺寸列出。null＝盤點表沒填，維持原數量
+const STOCKTAKE_1142 = {
+  remove: [1],   // 資源教室服務及就業規劃四部曲DM簡介：已整箱丟棄
+  qty: {
+    2:[32,235], 3:[350,0], 4:[27,120], 5:[null,0], 6:[169,200], 7:[4,0], 8:[21,0], 9:[648,0], 10:[50,0],
+    11:[26,24], 12:[25,0], 13:[171,0], 14:[219,0], 15:[3,0], 16:[57,0], 17:[20,0], 18:[8,0], 19:[61,0], 20:[0,0],
+    21:[0,27], 22:[0,0], 23:[42,0], 24:[89,0], 25:[22,0], 26:[12,0], 27:[31,0], 28:[33,0], 29:[87,0], 30:[89,0],
+    31:[5,0], 32:[145,0], 33:[10,0], 34:[30,33], 35:[61,0], 36:[87,null], 37:[66,0], 38:[86,0], 39:[54,0], 40:[0,98],
+    42:[96,0], 43:[15,66], 44:[24,0], 45:[5,90],
+    55:[93,0], 56:[13,0], 57:[29,47], 58:[14,10], 59:[28,0], 60:[29,47], 61:[49,98], 62:[40,50],
+    46:[12,0], 47:[12,0], 48:[12,0], 49:[100,0], 50:[11,0]
+  },
+  sizes: {
+    70:{M:[7,2], L:[7,17], XL:[5,23], '2XL':[4,16], '3XL':[5,11], '4XL':[0,2]},
+    71:{S:[6,8], M:[5,14], L:[10,6], XL:[10,9], '2XL':[3,null]},
+    72:{S:[8,7], M:[5,7], L:[15,6], XL:[8,11], '2XL':[4,4], '3XL':[2,1]},
+    73:{S:[2,0], M:[2,0], L:[5,0], XL:[3,0], '2XL':[3,0], '3XL':[1,0]}
+  }
+};
+const ST_DONE = 'rc-stocktake-1142';
+function stPending(){ try{ if(localStorage.getItem(ST_DONE)) return false; }catch(_){} return STOCKTAKE_1142.remove.some(id=>byId(id)); }
+function stRows(){
+  const rows = [], T = STOCKTAKE_1142;
+  const add = (name, obj, nv) => {
+    const r0 = +obj.room||0, w0 = +obj.wh||0, r1 = nv[0] ?? r0, w1 = nv[1] ?? w0;
+    rows.push({name, obj, r0, w0, r1, w1, chg: r0!==r1 || w0!==w1});
+  };
+  for(const it of items){
+    if(T.remove.includes(+it.id)){ rows.push({name:it.name, del:it, r0:roomQty(it), w0:whQty(it), r1:0, w1:0, chg:true}); continue; }
+    if(it.sizes && T.sizes[it.id]) it.sizes.forEach(z=>{ const nv = T.sizes[it.id][z.s]; if(nv) add(`${it.name}（${z.s}）`, z, nv); });
+    else if(T.qty[it.id]) add(it.name, it, T.qty[it.id]);
+  }
+  return rows;
+}
+function renderStBanner(){ document.getElementById('stBanner').hidden = !stPending(); }
+document.getElementById('stOpen').onclick = ()=>{
+  const rows = stRows(), n = rows.filter(r=>r.chg).length;
+  const d = (a,b) => b===a ? `${b}` : `<span class="${b>a?'up':'dn'}">${b}</span>`;
+  openSheet(`<h2>📋 套用 1142 暑假盤點</h2>
+    <div class="hint">依你上傳的盤點表照片整理。<b>${n}</b> 項會變動（黃色），紅色刪除線為移除的品項。盤點表上沒填的欄位維持原數量。</div>
+    <div class="stwrap"><table class="sttable"><thead><tr><th>品項</th><th>書房 原→新</th><th>倉庫 原→新</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr class="${r.del?'del':(r.chg?'chg':'')}"><td>${esc(r.name)}${r.del?'（移除）':''}</td>
+      <td>${r.r0} → ${r.del?'—':d(r.r0,r.r1)}</td><td>${r.w0} → ${r.del?'—':d(r.w0,r.w1)}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="actions"><button class="btn" id="st-cancel">取消</button><button class="btn primary" id="st-ok">確認套用</button></div>`);
+  sheet.querySelector('#st-cancel').onclick = closeSheet;
+  sheet.querySelector('#st-ok').onclick = ()=>{
+    for(const r of rows){ if(r.del) continue; r.obj.room = r.r1; r.obj.wh = r.w1; }
+    items = items.filter(it=>!STOCKTAKE_1142.remove.includes(+it.id));
+    try{ localStorage.setItem(ST_DONE, new Date().toISOString()); }catch(_){}
+    closeSheet(); scheduleSave(); invalidate('all'); renderStBanner();
+    toast(`已套用盤點：更新 ${n} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
+  };
+};
 // 先用預設資料立即畫出畫面，再讀取已儲存的資料；外層（工讀生）是預設畫面，管理需解鎖
 let stateReady = false;
 if(!isAdmin()) document.body.classList.add('kiosk-mode');
