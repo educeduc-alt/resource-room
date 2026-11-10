@@ -328,6 +328,7 @@ details.maps>summary{display:flex;align-items:center;gap:10px}
 .bw-tools .bw-aud button{flex:0 0 auto;padding:3px 12px!important;font-size:.78rem!important;border-radius:999px;white-space:nowrap;line-height:1.5}
 .bw-aud button.on{background:var(--primary);color:#fff;font-weight:700}
 .bw-aud[hidden]{display:none}
+.pendbanner{background:#EEF2FA;border-color:#C5D0E6}
 .zeronote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:10px}
 .zeronote[hidden]{display:none}
 details.maps{margin-top:12px}
@@ -684,6 +685,10 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
   <div class="stbanner" id="newBanner" hidden>
     <div><b>🆕 1151 學期新購宣導品還沒加入</b><span></span></div>
     <button class="btn primary" id="newOpen">檢查並新增</button>
+  </div>
+  <div class="stbanner pendbanner" id="pendBanner" hidden>
+    <div><b>已訂購、尚未到貨</b><span></span></div>
+    <button class="btn" id="pendOpen">到貨入庫</button>
   </div>
   <div class="stats" id="stats"></div>
   <div class="toolbar">
@@ -1299,7 +1304,7 @@ function pickPhoto(it){
 
 /* ============ 統計 ============ */
 function renderStats(){
-  try{ renderStBanner(); renderNewBanner(); }catch(_){}
+  try{ renderStBanner(); renderNewBanner(); renderPendBanner(); }catch(_){}
   let totalRoom=0,totalWh=0,low=0,value=0;
   for(const i of items){
     const r=roomQty(i), w=whQty(i), t=r+w;
@@ -1338,6 +1343,7 @@ function locTags(it){
     + (editMode?`<span class="loctag none" data-edit="${it.id}">✎</span>`:'');
 }
 function passFilter(it, f, q){
+  if(it.pending) return false;        // 已訂購、尚未到貨
   if(totQty(it) <= 0) return false;   // 沒有庫存 → 移到「曾製作宣導品」
   if(activeCat && it.cat!==activeCat) return false;
   if(f==='room' && roomQty(it)<=0) return false;
@@ -1422,7 +1428,7 @@ function renderTable(){
       <span class="caret">▾</span>${esc(g.label)}<span class="grpmeta">${g.items.length} 項・共 ${total.toLocaleString()} 件</span></td></tr>`);
     if(!closed) for(const it of g.items) out.push(rowHtml(it, cols));
   }
-  const nz = items.filter(it=>totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
+  const nz = items.filter(it=>!it.pending && totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
   zn.hidden = !nz; zn.innerHTML = nz ? `另有 <b>${nz}</b> 項目前沒有庫存，已移到「曾製作宣導品」。<button class="btn" data-gohist>查看</button>` : '';
   invBody.innerHTML = (out.length ? out.join('')
     : `<tr><td colspan="${cols}" style="text-align:center;color:var(--ink-soft);padding:24px">沒有符合條件的品項</td></tr>`)
@@ -1432,7 +1438,7 @@ groupByEl.addEventListener('change', ()=>{ saveCollapse(); renderTable(); dirty.
 // 圖卡檢視：依分區顯示照片卡片，點卡片看詳細
 function renderInvCards(){
   const box = document.getElementById('invCards'), searching = qInput.value.trim() !== '', groups = currentGroups();
-  const nz = items.filter(it=>totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
+  const nz = items.filter(it=>!it.pending && totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
   zn.hidden = !nz; zn.innerHTML = nz ? `另有 <b>${nz}</b> 項目前沒有庫存，已移到「曾製作宣導品」。<button class="btn" data-gohist>查看</button>` : '';
   if(!groups.length){ box.innerHTML = '<div class="k-empty">沒有符合條件的品項</div>'; return; }
   box.innerHTML = `<div class="ic-bar"><span>${groups.reduce((a,[,g])=>a+g.items.length,0)} 項</span><span class="thtools"><button type="button" data-allexp="1">全部展開</button><button type="button" data-allexp="0">全部收合</button></span></div>` +
@@ -1826,7 +1832,7 @@ $t('t-logcsv').onclick = ()=>{
 
 /* ============ 歷史紀錄（切到該分頁才載入圖片） ============ */
 function renderHist(){
-  const zero = items.filter(it=>totQty(it) <= 0);
+  const zero = items.filter(it=>!it.pending && totQty(it) <= 0);
   document.getElementById('zeroCount').textContent = `（${zero.length} 項）`;
   document.getElementById('zeroGrid').innerHTML = zero.length ? zero.map(it=>{ const src = getImg(it);
     return `<div class="zcard">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async" data-zlb="${it.id}">` : '<div class="zimg">無照片</div>'}
@@ -2951,7 +2957,7 @@ async function drawQr(text){
 const kioskEl = document.getElementById('kiosk');
 let kView = 'browse', kioskOn = false, kItems = null, kMode = -1, kFrom = null, kCat = '', kAll = false, kCart = new Map(), kBusy = false, kLoadedAt = null;
 const kLocal = () => !cloudUrl();                       // 沒有雲端：這台裝置自己記
-const kList = () => kLocal() ? items : (kItems || []);
+const kList = () => (kLocal() ? items : (kItems || [])).filter(it=>!it.pending);
 const kKey = (id, size, from) => `${id}|${size ?? ''}|${from}`;
 const kObj = (it, size) => size != null && it.sizes ? it.sizes[size] : it;
 const kStock = (it, size, from=kFrom) => +((kObj(it,size)||{})[from]) || 0;
@@ -3392,7 +3398,7 @@ try{ Object.assign(BW, JSON.parse(localStorage.getItem('rc-browse') || '{}'), {q
 const bwTot = (it, loc) => loc === 'room' ? roomQty(it) : loc === 'wh' ? whQty(it) : totQty(it);
 function renderBrowse(host, list){
   host._inner = !!(staff || isAdmin());   // 工讀生、管理者看得到內部用品
-  host._list = list.filter(it=>totQty(it) > 0 && (host._inner || audOf(it) === 'out'));   // 沒有庫存的不顯示；外部只看對外宣導品
+  host._list = list.filter(it=>!it.pending && totQty(it) > 0 && (host._inner || audOf(it) === 'out'));   // 沒有庫存的不顯示；外部只看對外宣導品
   if(!host.querySelector('.bw')){
     host.innerHTML = `<div class="bw">
       <div class="bw-tools">
@@ -3572,10 +3578,10 @@ function stApply(){
 
 /* ================= 1151 學期新購宣導品（一次性新增，先不放照片） ================= */
 const NEW_1151 = [
-  {name:'動物造型紓壓球',     price:130, room:100, note:'1151學期新購 100 個'},
-  {name:'六角矽膠按摩球',     price:45,  room:100, note:'1151學期新購 100 個'},
-  {name:'粉嫩可愛圖案筆記本', price:50,  room:100, note:'1151學期新購 100 本'},
-  {name:'炫彩磁吸手機架',     price:70,  room:100, note:'1151學期新購 100 個'},
+  {name:'動物造型紓壓球',     price:130, room:0, note:'1151學期新購 100 個', pending:true},
+  {name:'六角矽膠按摩球',     price:45,  room:0, note:'1151學期新購 100 個', pending:true},
+  {name:'粉嫩可愛圖案筆記本', price:50,  room:0, note:'1151學期新購 100 本', pending:true},
+  {name:'炫彩磁吸手機架',     price:70,  room:0, note:'1151學期新購 100 個', pending:true},
   {name:'城市型走側背包',     price:0,   room:100, note:'1151學期新購 100 個（共 41,895 元）'},
   {name:'湯匙造型盒餐具',     price:0,   room:100, note:'1151學期新購 100 個（共 12,500 元）'},
   {name:'矽藻土吸水杯墊',     price:0,   room:100, note:'1151學期新購 100 個（共 4,600 元）'},
@@ -3608,7 +3614,7 @@ document.getElementById('newOpen').onclick = ()=>{
 function newApply(){
   let id = Math.max(0, ...items.map(it=>+it.id||0));
   let pos = -1; items.forEach((it,i)=>{ if(it.cat==='宣導品') pos = i; });   // 放在宣導品的最後面
-  const add = newMissing().map(n=>({id:++id, cat:'宣導品', name:n.name, price:n.price, note:n.note, room:n.room, wh:0, loc:[]}));
+  const add = newMissing().map(n=>({id:++id, cat:'宣導品', name:n.name, price:n.price, note:n.note, room:n.room, wh:0, loc:[], ...(n.pending ? {pending:true} : {})}));
   items.splice(pos<0 ? items.length : pos+1, 0, ...add);
   try{ localStorage.setItem(NEW_DONE, new Date().toISOString()); }catch(_){}
   return add.length;
@@ -3633,8 +3639,13 @@ function paperApply(){
   try{ localStorage.setItem(PAPER_DONE, new Date().toISOString()); }catch(_){}
   return PAPER_1142.length;
 }
+// 尚未到貨的 4 項（已付款訂購）：先從庫存拉出來，到貨後在庫存總覽按「到貨入庫」
+const PENDING_1151 = ['動物造型紓壓球','六角矽膠按摩球','粉嫩可愛圖案筆記本','炫彩磁吸手機架'];
+const pendApplyNeeded = () => items.some(it=>PENDING_1151.includes(it.name) && !it.pending && !it.arrived && /1151學期新購/.test(it.note||''));
+function pendApply(){ let n = 0; items.forEach(it=>{ if(PENDING_1151.includes(it.name) && !it.pending && !it.arrived){ it.pending = true; it.room = 0; it.wh = 0; it.note = '1151學期新購，已訂購 100 個，尚未到貨'; n++; } }); return n; }
 async function autoPatch(){
   const msg = [];
+  if(pendApplyNeeded()) msg.push(`${pendApply()} 項尚未到貨的品項先移出庫存`);
   if(paperPending()) msg.push(`補登紙本領用 ${paperApply()} 筆`);
   if(stPending()) msg.push(`盤點更新 ${stApply()} 項、移除四部曲`);
   if(newPending()) msg.push(`新增 ${newApply()} 項新購宣導品`);
@@ -3643,6 +3654,37 @@ async function autoPatch(){
   scheduleSave(); invalidate('all'); renderStBanner(); renderNewBanner();
   toast('已自動套用：' + msg.join('；'));
 }
+
+function renderPendBanner(){
+  const b = document.getElementById('pendBanner'), list = items.filter(it=>it.pending);
+  b.hidden = !list.length;
+  if(list.length) b.querySelector('span').textContent = `${list.map(it=>it.name).join('、')}（共 ${list.length} 項，不會出現在庫存、前台與工讀生畫面）`;
+}
+document.getElementById('pendOpen').onclick = ()=>{
+  const list = items.filter(it=>it.pending);
+  openSheet(`<h2>到貨入庫</h2>
+    <div class="hint">勾選已經到貨的品項，填上實際收到的數量（預設放在悅讀書房）。入庫後就會出現在庫存總覽、前台和工讀生畫面，並記一筆入庫紀錄。</div>
+    <div class="stwrap"><table class="sttable"><thead><tr><th>品項</th><th>到貨</th><th>悅讀書房</th><th>Q棟倉庫</th></tr></thead><tbody>
+    ${list.map(it=>`<tr><td>${esc(it.name)}${it.price?`<div class="itemnote">$${it.price}</div>`:''}</td>
+      <td><input type="checkbox" class="pd-ok" data-id="${it.id}"></td>
+      <td><input class="zq pd-r" data-id="${it.id}" inputmode="numeric" value="100"></td>
+      <td><input class="zq pd-w" data-id="${it.id}" inputmode="numeric" value="0"></td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="actions"><button class="btn" id="pd-cancel">取消</button><button class="btn primary" id="pd-go">入庫</button></div>`);
+  sheet.querySelector('#pd-cancel').onclick = closeSheet;
+  sheet.querySelector('#pd-go').onclick = ()=>{
+    const ids = [...sheet.querySelectorAll('.pd-ok:checked')].map(x=>x.dataset.id);
+    if(!ids.length){ toast('請勾選已到貨的品項'); return; }
+    const ts = new Date().toISOString();
+    ids.forEach(id=>{
+      const it = byId(id), r = Math.max(0, Math.floor(+sheet.querySelector(`.pd-r[data-id="${id}"]`).value||0)), w = Math.max(0, Math.floor(+sheet.querySelector(`.pd-w[data-id="${id}"]`).value||0));
+      delete it.pending; it.arrived = true; it.room = r; it.wh = w; it.note = '1151學期新購';
+      if(r) log.unshift({ts, itemId:it.id, name:it.name, size:null, from:'room', qty:r, dir:1, person:'', purpose:'到貨入庫', by:'管理者', src:'admin', remain:r});
+      if(w) log.unshift({ts, itemId:it.id, name:it.name, size:null, from:'wh', qty:w, dir:1, person:'', purpose:'到貨入庫', by:'管理者', src:'admin', remain:w});
+    });
+    closeSheet(); scheduleSave(); invalidate('all'); renderPendBanner(); toast(`已入庫 ${ids.length} 項`);
+  };
+};
 
 /* ================= 一鍵產生「庫存數量統計表」（列印／PDF／Word） ================= */
 function rocToday(){ const d = new Date(); return `${d.getFullYear()-1911}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
@@ -3685,7 +3727,7 @@ document.getElementById('statForm').onclick = openStatForm;
 // 依類別分組；每組一張表
 function sfGroups(v){
   return v.cats.map(cat=>{
-    let list = items.filter(i=>i.cat===cat);
+    let list = items.filter(i=>i.cat===cat && !i.pending);
     if(v.zero) list = list.filter(i=>totQty(i) > 0);
     return {cat, title:`資源教室${cat}庫存數量統計(${v.term}學期)${v.date}統計`, list};
   }).filter(g=>g.list.length);
