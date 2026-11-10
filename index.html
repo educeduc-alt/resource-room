@@ -440,6 +440,8 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .k-head>div{flex:1;min-width:0}
 .k-title{font-size:1.12rem;font-weight:700;letter-spacing:.06em}
 .k-sub{font-size:.74rem;opacity:.8}
+.k-role{background:rgba(255,255,255,.95)!important;color:var(--primary)!important;font-weight:700}
+@media (max-width:480px){ .k-head{flex-wrap:wrap} .k-head>div{flex:1 1 100%} #k-refresh{margin-left:auto} }
 .k-hbtn{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
 #k-refresh{font-size:1.1rem;padding:6px 11px}
 .k-body{max-width:1100px;margin:0 auto;padding:12px 12px 0}
@@ -606,13 +608,17 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <body>
 
 <div id="kiosk" class="kiosk" hidden>
-  <div class="k-head"><div><div class="k-title">資源教室 物品登記</div><div class="k-sub">宣導品・文具・團體服 領出／補進</div></div>
-    <button class="k-hbtn" id="k-refresh" title="更新庫存">⟳</button><button class="k-hbtn" id="k-logout" hidden>登出</button><button class="k-hbtn" id="k-admin">🔒 管理</button></div>
+  <div class="k-head"><div><div class="k-title">資源教室 宣導品</div><div class="k-sub">瀏覽庫存</div></div>
+    <button class="k-hbtn" id="k-refresh" title="更新庫存">⟳</button>
+    <button class="k-hbtn" id="k-tobrowse" hidden>👀 瀏覽</button>
+    <button class="k-hbtn k-role" id="k-tostaff">🧑‍🎓 工讀生</button>
+    <button class="k-hbtn" id="k-logout" hidden>登出</button>
+    <button class="k-hbtn k-role" id="k-admin">🔒 管理者</button></div>
   <div class="k-body"></div>
   <div class="k-cart" hidden><button class="btn" id="k-clear" hidden>清空</button><div class="k-sum"></div><button class="kbig" id="k-go" disabled>確認領出 →</button></div>
 </div>
 <header>
-  <div class="hdr-actions"><button id="browseBtn" title="好讀的庫存瀏覽頁">👀 瀏覽</button><button id="cloudBtn" title="雲端同步設定">☁ 未設定</button><button id="lockBtn" title="切換到工讀生登記畫面">🔒 工讀生畫面</button></div>
+  <div class="hdr-actions"><button id="browseBtn" title="回到前台瀏覽頁">👀 前台</button><button id="cloudBtn" title="雲端同步設定">☁ 未設定</button><button id="lockBtn" title="登出管理者，回到前台">🔒 登出管理</button></div>
   <h1>資源教室宣導品倉庫管理</h1>
   <div class="sub">114-2 學期庫存 ・ 115.01.22 統計基準 ・ 資＝悅讀書房(資源教室)、倉＝Q棟地下室倉庫</div>
   <nav class="tabs">
@@ -2792,7 +2798,7 @@ async function drawQr(text){
 
 /* ================= 外層：工讀生登記畫面（點餐式） ================= */
 const kioskEl = document.getElementById('kiosk');
-let kioskOn = false, kItems = null, kMode = -1, kFrom = null, kCat = '', kAll = false, kCart = new Map(), kBusy = false, kLoadedAt = null;
+let kView = 'browse', kioskOn = false, kItems = null, kMode = -1, kFrom = null, kCat = '', kAll = false, kCart = new Map(), kBusy = false, kLoadedAt = null;
 const kLocal = () => !cloudUrl();                       // 沒有雲端：這台裝置自己記
 const kList = () => kLocal() ? items : (kItems || []);
 const kKey = (id, size, from) => `${id}|${size ?? ''}|${from}`;
@@ -2800,12 +2806,15 @@ const kObj = (it, size) => size != null && it.sizes ? it.sizes[size] : it;
 const kStock = (it, size, from=kFrom) => +((kObj(it,size)||{})[from]) || 0;
 const fromName = f => f === 'wh' ? 'Q棟倉庫' : '悅讀書房';
 
-function showKiosk(){
+// 前台：view＝'browse'（瀏覽，不用登入）或 'staff'（工讀生登記，需要登入）
+function showKiosk(view){
+  if(view) kView = view;
   kioskOn = true; document.body.classList.add('kiosk-mode'); kioskEl.hidden = false;
-  window.scrollTo(0,0);
-  if(!kLocal() && !staff){ kSetup(); return; }
+  window.scrollTo(0,0); closeSheet();
+  if(kView === 'staff' && !kLocal() && !staff){ kSetup(); return; }
   kHeadUser();
-  try{ const c = JSON.parse(localStorage.getItem('rc-kiosk-cache') || 'null'); if(c && !kItems) kItems = c; }catch(_){}
+  if(!kItems) try{ const c = JSON.parse(localStorage.getItem(kView === 'browse' ? 'rc-browse-cache' : 'rc-kiosk-cache') || 'null'); if(c) kItems = c; }catch(_){}
+  kioskEl.querySelector('.k-body').innerHTML = '';
   renderKiosk(); kRefresh();
 }
 function showInner(){
@@ -2817,7 +2826,20 @@ function showInner(){
 }
 async function kRefresh(quiet){
   if(kLocal()){ renderKiosk(); return; }
-  if(kBusy || !staff) return;
+  if(kBusy) return;
+  if(kView === 'browse' && !staff){
+    try{
+      const j = await api('browse', {}, {key:'', code:''});
+      kItems = j.state.items || []; kLoadedAt = new Date();
+      try{ localStorage.setItem('rc-browse-cache', JSON.stringify(kItems)); }catch(_){}
+      renderKiosk();
+    }catch(err){
+      const host = kioskEl.querySelector('.bw-host');
+      if(host && !kItems) host.innerHTML = `<div class="k-empty">${/代碼錯誤/.test(err.message) ? '瀏覽頁需要管理者更新雲端程式後才能使用。<br>工讀生請按右上「🧑‍🎓 工讀生」登入。' : '⚠ 無法載入庫存：' + esc(err.message)}</div>`;
+    }
+    return;
+  }
+  if(!staff) return;
   try{
     const j = await kApi('get');
     kItems = j.state.items || [];
@@ -2844,6 +2866,7 @@ function kSetup(msg){
     <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off" value="${esc(pre)}" ${pre ? 'type="password"' : ''}>
     <input id="k-name" placeholder="你的名字（登記人）" autocomplete="name">
     <button class="kbig" id="k-start">登入</button>
+    <button class="btn" id="k-cancel">← 回瀏覽頁</button>
     <p style="font-size:.78rem">關掉網頁、按「登出」或閒置 ${IDLE_MIN} 分鐘會自動登出。</p></div>`;
   kioskEl.querySelector('.k-cart').hidden = true;
   const go = async ()=>{
@@ -2855,22 +2878,26 @@ function kSetup(msg){
     catch(err){ btn.disabled = false; btn.textContent = '登入'; toast('⚠ ' + err.message); return; }
     setStaff({code, name, last: Date.now()});
     kFrom = null; kCart.clear();
-    kioskEl.querySelector('.k-body').innerHTML = ''; showKiosk();
+    kItems = null; showKiosk('staff');
   };
   kioskEl.querySelector('#k-start').onclick = go;
+  kioskEl.querySelector('#k-cancel').onclick = ()=>showKiosk('browse');
   kioskEl.querySelectorAll('.k-setup input').forEach(i=>i.addEventListener('keydown', e=>{ if(e.key === 'Enter') go(); }));
 }
 function kHeadUser(){
   const b = document.getElementById('k-logout');
-  b.hidden = !staff || kLocal();
+  b.hidden = !staff || kLocal() || kView !== 'staff';
   if(staff) b.textContent = `👤 ${staff.name}・登出`;
+  document.getElementById('k-tostaff').hidden = kView === 'staff';
+  document.getElementById('k-tobrowse').hidden = kView !== 'staff';
+  kioskEl.querySelector('.k-title').textContent = kView === 'staff' ? '資源教室 工讀生登記' : '資源教室 宣導品';
 }
 function kLogout(msg){
   stopHold(); kCart.clear(); kItems = null; kFrom = null; kLoadedAt = null;
   setStaff(null);
   try{ localStorage.removeItem('rc-kiosk-cache'); sessionStorage.removeItem('rc-staff-prefill'); }catch(_){}
   closeSheet(); if(typeof closeViewer === 'function') closeViewer();
-  if(kioskOn) kSetup(msg || '已登出');
+  if(kioskOn){ showKiosk('browse'); toast(msg || '已登出'); }
 }
 // 閒置自動登出
 let kLastWrite = 0;
@@ -2891,7 +2918,6 @@ const LOCS = [{k:'room', name:'悅讀書房', sub:'資源教室', icon:'📚'}, 
 function kLandingHtml(){
   const list = kList();
   return `<div class="k-land">
-    <button class="k-browse" data-kbrowse><span>👀</span><b>瀏覽全部庫存</b><small>看看有哪些東西、各放在哪裡、還剩多少</small></button>
     <h2>要到哪裡拿東西／放東西／盤點？</h2>
     <div class="k-locs">${LOCS.map(L=>{
       const n = list.filter(it=>kInStock(it, L.k)).length;
@@ -2913,19 +2939,20 @@ const kBodyHtml = () => `
 
 function renderKiosk(){
   const body = kioskEl.querySelector('.k-body');
+  if(kView === 'browse'){
+    kioskEl.querySelector('.k-cart').hidden = true; kioskEl.classList.remove('restock','counting');
+    kioskEl.querySelector('.k-sub').textContent = '宣導品・文具・團體服　瀏覽庫存';
+    if(!body.querySelector('.bw-host')) body.innerHTML = `<div class="bw-host"></div>`;
+    if(!kLocal() && !kItems) body.querySelector('.bw-host').innerHTML = '<div class="k-empty">載入中…</div>';
+    else renderBrowse(body.querySelector('.bw-host'), kList());
+    return;
+  }
   if(!kFrom){
     body.innerHTML = kLandingHtml(); kioskEl.querySelector('.k-cart').hidden = true;
     kioskEl.classList.remove('restock','counting'); kioskEl.querySelector('.k-sub').textContent = '先選擇地點';
     return;
   }
-  if(kFrom === 'browse'){
-    kioskEl.querySelector('.k-cart').hidden = true; kioskEl.classList.remove('restock','counting');
-    kioskEl.querySelector('.k-sub').textContent = '瀏覽庫存';
-    if(!body.querySelector('.bw')) body.innerHTML = `<div class="k-bar"><button class="k-back" data-kback>← 返回</button><div class="k-here">👀 <b>瀏覽庫存</b></div></div><div class="bw-host"></div>`;
-    if(!kLocal() && !kItems) body.querySelector('.bw-host').innerHTML = '<div class="k-empty">載入中…</div>';
-    else renderBrowse(body.querySelector('.bw-host'), kList());
-    return;
-  }
+
   if(!body.querySelector('#k-grid')) body.innerHTML = kBodyHtml();
   kioskEl.querySelector('.k-cart').hidden = false;
   const L = LOCS.find(x=>x.k===kFrom);
@@ -3050,7 +3077,8 @@ kioskEl.addEventListener('click', e=>{
     kCart.clear(); kFrom = null; renderKiosk(); window.scrollTo(0,0); return; }
   if(t.closest('[data-kall]')){ kAll = !kAll; renderKiosk(); return; }
   if(t.closest('[data-kadd]')){ kAddItem(); return; }
-  if(t.closest('[data-kbrowse]')){ kFrom = 'browse'; kioskEl.querySelector('.k-body').innerHTML = ''; renderKiosk(); window.scrollTo(0,0); return; }
+  if(t.id === 'k-tostaff'){ showKiosk('staff'); return; }
+  if(t.id === 'k-tobrowse'){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要回瀏覽頁嗎？')) return; kCart.clear(); kFrom = null; showKiosk('browse'); return; }
   const c = t.closest('[data-kcat]');
   if(c){ kCat = c.dataset.kcat; renderKiosk(); return; }
   const im = t.closest('[data-kimg]');
@@ -3296,11 +3324,12 @@ function openBrowseItem(it){
 }
 // 管理者也能開瀏覽頁
 const bwOv = document.getElementById('browseOv');
-document.getElementById('browseBtn').onclick = ()=>{ bwOv.hidden = false; document.body.classList.add('noscroll'); renderBrowse(bwOv.querySelector('.bw-host'), items); };
+document.getElementById('browseBtn').onclick = ()=>{ kItems = null; showKiosk('browse'); };
 bwOv.querySelector('[data-bwclose]').onclick = ()=>{ bwOv.hidden = true; document.body.classList.remove('noscroll'); };
 
 /* ---- 進入內部管理 ---- */
 function kUnlock(){
+  if(isAdmin() && (cloud.key || !cloudUrl())){ showInner(); return; }
   if(!cloudUrl() && !cloud.key){ cloud.admin = true; saveCloud(); showInner(); toast('已進入管理頁（建議設定雲端同步與管理密碼）'); return; }
   openSheet(`<h2>🔒 進入管理</h2>
     <div class="field"><label>管理密碼</label><input id="ku-key" type="password" autocomplete="current-password"></div>
@@ -3321,7 +3350,7 @@ function kUnlock(){
   inp.addEventListener('keydown', e=>{ if(e.key === 'Enter') go(); });
   sheet.querySelector('#ku-cancel').onclick = closeSheet;
 }
-document.getElementById('lockBtn').onclick = ()=>{ cloud.admin = false; saveCloud(); kCart.clear(); showKiosk(); };
+document.getElementById('lockBtn').onclick = ()=>{ cloud.admin = false; saveCloud(); kCart.clear(); kItems = null; showKiosk('browse'); toast('已登出管理者'); };
 document.getElementById('cloudBtn').onclick = openCloudSettings;
 
 
@@ -3590,9 +3619,9 @@ async function wordStatForm(v){
 }
 // 先用預設資料立即畫出畫面，再讀取已儲存的資料；外層（工讀生）是預設畫面，管理需解鎖
 let stateReady = false;
-if(!isAdmin()) document.body.classList.add('kiosk-mode');
+document.body.classList.add('kiosk-mode');   // 一律先顯示瀏覽頁
 invalidate('all');
-Promise.all([loadState(), loadLib()]).then(()=>{ stateReady = true; isAdmin() ? showInner() : showKiosk(); });
+Promise.all([loadState(), loadLib()]).then(()=>{ stateReady = true; showKiosk('browse'); });
 </script>
 </body>
 </html>

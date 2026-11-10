@@ -36,6 +36,8 @@ function role_(p){
 
 function handle_(p){
   if(p.op === 'ping') return out_({ok:true});
+  // 瀏覽頁：不用登入就能看品項與數量（看不到紀錄）
+  if(p.op === 'browse'){ const b = read_(); return out_({ok:true, ver:b.ver, state:{ver:b.ver, items:b.items}}); }
   const role = role_(p);
   if(!role) return out_({ok:false, err: p.key ? '管理密碼錯誤' : '工讀生代碼錯誤'});
   const lock = LockService.getScriptLock();
