@@ -46,6 +46,8 @@ function handle_(p){
       case 'auth':  return out_({ok:true, role});
       case 'get':   return out_({ok:true, role, ver:s.ver, state: view_(s, role)});
       case 'order': return out_(order_(s, p, role));
+      case 'count': return out_(count_(s, p, role));
+      case 'additem': return out_(addItem_(s, p, role));
       case 'save':
         if(role !== 'admin') return out_({ok:false, err:'需要管理密碼'});
         return out_(save_(s, p));
@@ -121,12 +123,76 @@ function order_(s, p, role){
   return {ok:true, ver:s.ver, state: view_(s, role)};
 }
 
+/* ---------- 盤點：直接改成點算出來的數量（工讀生與管理者都可），差額記進紀錄 ---------- */
+function count_(s, p, role){
+  if(!s.items) return {ok:false, err:'雲端還沒有庫存資料'};
+  const lines = Array.isArray(p.lines) ? p.lines : [];
+  const byId = {}; s.items.forEach(function(it){ byId[it.id] = it; });
+  const ts = new Date().toISOString(), entries = [];
+  s.ver++;
+  lines.forEach(function(l){
+    const it = byId[l.id]; if(!it) return;
+    const sized = l.size != null && it.sizes;
+    const obj = sized ? it.sizes[l.size] : it; if(!obj) return;
+    const from = l.from === 'wh' ? 'wh' : 'room';
+    const now = Math.max(0, Math.floor(Number(l.qty) || 0)), prev = Number(obj[from]) || 0;
+    if(now === prev) return;
+    obj[from] = now;
+    entries.push({ts:ts, itemId:it.id, name: it.name + (sized ? '（' + obj.s + '）' : ''), size: sized ? Number(l.size) : null, from:from,
+                  qty: Math.abs(now - prev), dir: now > prev ? 1 : -1, kind:'count', prev:prev,
+                  person:'', purpose:'盤點調整（' + prev + ' → ' + now + '）' + (p.purpose ? '：' + String(p.purpose).slice(0,80) : ''),
+                  by: String(p.by || '').slice(0,30), src: role, remain: now, ver: s.ver});
+  });
+  if(!entries.length){ s.ver--; return {ok:false, err:'沒有任何數量變動'}; }
+  s.log = entries.concat(s.log);
+  write_(s); sheetLog_(entries); sheetStock_(s);
+  return {ok:true, ver:s.ver, n:entries.length, state: view_(s, role)};
+}
+
+/* ---------- 新增品項（工讀生與管理者都可） ---------- */
+function addItem_(s, p, role){
+  if(!s.items) return {ok:false, err:'雲端還沒有庫存資料'};
+  const x = p.item || {};
+  const name = String(x.name || '').trim().slice(0,60);
+  if(!name) return {ok:false, err:'請填寫品名'};
+  if(s.items.some(function(it){ return it.name === name; })) return {ok:false, err:'已經有「' + name + '」這個品項了'};
+  const id = s.items.reduce(function(m, it){ return Math.max(m, Number(it.id) || 0); }, 0) + 1;
+  const it = {id:id, cat: String(x.cat || '宣導品').slice(0,20), name:name, price: Math.max(0, Number(x.price) || 0),
+              note: String(x.note || '').slice(0,120), room: Math.max(0, Math.floor(Number(x.room) || 0)), wh: Math.max(0, Math.floor(Number(x.wh) || 0)), loc:[]};
+  // 放在同類別的最後面
+  let pos = -1; s.items.forEach(function(o, i){ if(o.cat === it.cat) pos = i; });
+  s.items.splice(pos < 0 ? s.items.length : pos + 1, 0, it);
+  s.ver++;
+  const ts = new Date().toISOString(), entries = [];
+  ['room','wh'].forEach(function(f){ if(it[f]) entries.push({ts:ts, itemId:id, name:name, size:null, from:f, qty:it[f], dir:1, kind:'add',
+    person:'', purpose:'新增品項', by:String(p.by || '').slice(0,30), src:role, remain:it[f], ver:s.ver}); });
+  // 沒有數量也留一筆紀錄，管理者儲存時才會把新品項併回去
+  if(!entries.length) entries.push({ts:ts, itemId:id, name:name, size:null, from:'room', qty:0, dir:1, kind:'add', person:'', purpose:'新增品項',
+    by:String(p.by || '').slice(0,30), src:role, remain:0, ver:s.ver});
+  entries[0].item = JSON.parse(JSON.stringify(it));
+  s.log = entries.concat(s.log);
+  write_(s); sheetLog_(entries); sheetStock_(s);
+  return {ok:true, ver:s.ver, id:id, state: view_(s, role)};
+}
+
 /* ---------- 管理者整份儲存：把管理者沒看過的工讀生登記補算回去，不會互相覆蓋 ---------- */
 function save_(s, p){
   const st = p.state || {};
   if(!Array.isArray(st.items)) return {ok:false, err:'資料格式錯誤'};
   const base = Number(p.baseVer) || 0;
   const missed = s.items ? s.log.filter(function(e){ return e.ver && e.ver > base; }) : [];
+  // 管理者還沒看過的新品項：先加回去（編號撞到就換一個）
+  missed.slice().reverse().forEach(function(e){
+    if(e.kind !== 'add' || !e.item) return;
+    if(st.items.some(function(x){ return x.name === e.item.name; })) return;
+    const item = JSON.parse(JSON.stringify(e.item)); item.room = 0; item.wh = 0;
+    if(st.items.some(function(x){ return x.id == item.id; })){
+      const nid = st.items.reduce(function(m, x){ return Math.max(m, Number(x.id) || 0); }, 0) + 1;
+      missed.forEach(function(m){ if(m.itemId == item.id) m.itemId = nid; });
+      item.id = nid;
+    }
+    st.items.push(item);
+  });
   missed.slice().reverse().forEach(function(e){
     const it = st.items.filter(function(x){ return x.id == e.itemId; })[0]; if(!it) return;
     const obj = (e.size != null && it.sizes) ? it.sizes[e.size] : it; if(!obj) return;
@@ -154,7 +220,7 @@ function sheetLog_(entries){
   const sh = sheet_('領用紀錄', ['時間','動作','品項','地點','數量','剩餘(該地點)','領用人／單位','用途','登記人','身分']);
   if(!sh) return;
   const rows = entries.map(function(e){
-    return [new Date(e.ts), e.dir < 0 ? '領出' : '補進', e.name, e.from==='wh'?'Q棟倉庫':'悅讀書房', e.qty, e.remain,
+    return [new Date(e.ts), e.kind==='count' ? '盤點' : (e.kind==='add' ? '新增品項' : (e.dir < 0 ? '領出' : '補進')), e.name, e.from==='wh'?'Q棟倉庫':'悅讀書房', e.qty, e.remain,
             e.person, e.purpose, e.by, e.src==='admin'?'管理者':'工讀生'];
   });
   sh.getRange(sh.getLastRow()+1, 1, rows.length, rows[0].length).setValues(rows);

@@ -461,6 +461,56 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .k-ln{font-size:1.4rem;font-weight:800;letter-spacing:.08em}
 .k-ls{font-size:.85rem;opacity:.85}
 .k-lgo{margin-top:10px;background:rgba(255,255,255,.2);border-radius:999px;padding:6px 16px;font-size:.9rem}
+.kiosk.counting{--mode:#4B5D86;--mode-soft:#E6EAF3}
+.kconf.cnt{--mode:#4B5D86}
+.k-addnew{border-style:solid;color:var(--primary);font-weight:600}
+.k-browse{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;border:2px dashed #B9C7C3;background:#fff;border-radius:16px;padding:14px;margin:6px 0 18px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.k-browse span{font-size:1.6rem}.k-browse b{font-size:1.05rem;color:var(--primary)}.k-browse small{color:var(--ink-soft);font-size:.8rem}
+.bw-ov{position:fixed;inset:0;z-index:300;background:#F3F5F4;overflow:auto}
+.bw-ov[hidden]{display:none}
+.bw-tools{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.bw-q{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:16px;background:#fff}
+.bw-row{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
+.bw-row .bw-loc{flex:1 1 300px}
+.bw-row .bw-view{flex:0 0 auto}
+.bw-row .bw-view button{padding:8px 14px;font-size:1.05rem}
+.bw-row .k-seg button.on{background:var(--primary);color:#fff;font-weight:700}
+.bw-sort{border:1px solid var(--line);border-radius:12px;padding:0 10px;font-family:inherit;font-size:.92rem;background:#fff;min-height:44px}
+.bw-sum{font-size:.85rem;color:var(--ink-soft);margin:4px 2px 10px}
+.bw-sum b{color:var(--ink)}
+.bw-out.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+@media (max-width:420px){ .bw-out.grid{grid-template-columns:1fr 1fr;gap:8px} }
+.bw-card{display:flex;flex-direction:column;text-align:left;background:#fff;border:none;border-radius:14px;overflow:hidden;padding:0;cursor:pointer;font-family:inherit;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.07);transition:transform .12s,box-shadow .12s}
+.bw-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.bw-card.none{opacity:.6}
+.bw-img{position:relative;width:100%;aspect-ratio:1;flex:0 0 auto;background:#EEF1F0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;overflow:hidden}
+.bw-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bw-img .bw-tag{z-index:1}
+.bw-img .bw-tag{position:absolute;top:8px;left:8px}
+.bw-tag{display:inline-block;font-size:.7rem;font-weight:700;border-radius:999px;padding:2px 8px;vertical-align:2px}
+.bw-tag.low{background:#FFF1D6;color:#9A6200}.bw-tag.out{background:var(--accent-soft);color:var(--accent)}
+.bw-body{padding:9px 11px 12px;display:flex;flex-direction:column;gap:4px}
+.bw-name{font-weight:700;font-size:.95rem;line-height:1.35}
+.bw-meta{font-size:.76rem;color:var(--ink-soft)}
+.bw-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.bw-b{font-size:.82rem;font-weight:700;border-radius:8px;padding:3px 8px}
+.bw-b.room{background:#E1F1EC;color:#155C54}.bw-b.wh{background:#E6EAF3;color:#3E4A66}
+.bw-b.zero{background:#F1F3F2;color:#A7B1AE;font-weight:400}
+.bw-sizes{display:flex;flex-wrap:wrap;gap:4px}
+.bw-sizes span{font-size:.72rem;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--ink-soft)}
+.bw-tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:.9rem}
+.bw-tbl th{font-size:.78rem;color:var(--ink-soft);font-weight:400;text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+.bw-tbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.bw-tbl tr[data-bwit]{cursor:pointer}.bw-tbl tr[data-bwit]:hover{background:var(--primary-soft)}
+.bw-tbl .n{text-align:right;white-space:nowrap}.bw-tbl th:nth-child(n+3){text-align:right}
+.bw-th{width:52px}.bw-th img{width:44px;height:44px;object-fit:cover;border-radius:8px;display:block}
+.bw-dimg{position:relative;margin:-4px -4px 12px;border-radius:12px;overflow:hidden;background:#EEF1F0;cursor:zoom-in}
+.bw-dimg img{width:100%;max-height:46vh;object-fit:contain;display:block}
+.bw-dimg span{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.55);color:#fff;font-size:.74rem;border-radius:999px;padding:3px 9px}
+.bw-qt{width:100%;border-collapse:collapse;font-size:.9rem;table-layout:fixed}
+.bw-qt th{font-size:.78rem;color:var(--ink-soft);font-weight:400;padding:6px;border-bottom:1px solid var(--line);text-align:right}
+.bw-qt td{padding:6px;border-bottom:1px solid var(--line);text-align:right}
+.bw-qt td:first-child,.bw-qt th:first-child{text-align:left}
 .k-more{grid-column:1/-1;border:1px dashed var(--line);background:#fff;border-radius:12px;padding:12px;font-family:inherit;font-size:.9rem;color:var(--ink-soft);cursor:pointer}
 .k-seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px;flex:1 1 240px}
 .k-seg button{flex:1;border:none;background:none;padding:10px 8px;border-radius:9px;font-family:inherit;font-size:1rem;color:var(--ink-soft);cursor:pointer}
@@ -562,7 +612,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
   <div class="k-cart" hidden><button class="btn" id="k-clear" hidden>清空</button><div class="k-sum"></div><button class="kbig" id="k-go" disabled>確認領出 →</button></div>
 </div>
 <header>
-  <div class="hdr-actions"><button id="cloudBtn" title="雲端同步設定">☁ 未設定</button><button id="lockBtn" title="切換到工讀生登記畫面">🔒 工讀生畫面</button></div>
+  <div class="hdr-actions"><button id="browseBtn" title="好讀的庫存瀏覽頁">👀 瀏覽</button><button id="cloudBtn" title="雲端同步設定">☁ 未設定</button><button id="lockBtn" title="切換到工讀生登記畫面">🔒 工讀生畫面</button></div>
   <h1>資源教室宣導品倉庫管理</h1>
   <div class="sub">114-2 學期庫存 ・ 115.01.22 統計基準 ・ 資＝悅讀書房(資源教室)、倉＝Q棟地下室倉庫</div>
   <nav class="tabs">
@@ -777,6 +827,10 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <!-- 位置編輯 / 區域檢視 modal -->
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div id="toast"></div>
+<div class="bw-ov" id="browseOv" hidden>
+  <div class="k-head"><div><div class="k-title">資源教室 庫存瀏覽</div><div class="k-sub">宣導品・文具・團體服</div></div><button class="k-hbtn" data-bwclose>✕ 關閉</button></div>
+  <div class="k-body"><div class="bw-host"></div></div>
+</div>
 <div class="viewer" id="viewer" hidden>
   <div class="vstage"><img class="vimg" alt="" draggable="false"></div>
   <div class="vtop"><span class="vcap"></span>
@@ -1607,7 +1661,7 @@ function renderLog(){
     return `<tr>
       <td style="white-space:nowrap">${fmtTs(e.ts)}</td>
       <td>${esc(e.name)}<div class="itemnote">${e.from==='room'?'悅讀書房':'Q棟倉庫'}</div></td>
-      <td class="${e.dir<0?'logact-out':'logact-in'}">${e.dir<0?'領用':'入庫'}</td>
+      <td class="${e.dir<0?'logact-out':'logact-in'}">${e.kind==='count'?'盤點'+(e.dir<0?'−':'＋'):e.kind==='add'?'新增品項':(e.dir<0?'領用':'入庫')}</td>
       <td class="num">${e.qty}</td>
       <td class="num"><b>${e.remain}</b></td>
       <td>${esc(e.person||'—')}${e.by?`<div class="itemnote">${e.src==='staff'?'工讀生 ':''}${esc(e.by)} 登記</div>`:''}</td>
@@ -1632,7 +1686,7 @@ $t('t-logcsv').onclick = ()=>{
   const rows=[['時間','品名','地點','動作','數量','剩餘(該地點)','領用人','用途','登記人']];
   for(const e of log){
     rows.push([new Date(e.ts).toLocaleString('zh-TW'), e.name,
-      e.from==='room'?'悅讀書房':'Q棟倉庫', e.dir<0?'領用':'入庫',
+      e.from==='room'?'悅讀書房':'Q棟倉庫', e.kind==='count'?'盤點調整':e.kind==='add'?'新增品項':(e.dir<0?'領用':'入庫'),
       e.qty, e.remain, e.person||'', e.purpose||'', e.by||'']);
   }
   download(`領用紀錄_${today()}.csv`, toCsv(rows), 'text/csv');
@@ -2837,7 +2891,8 @@ const LOCS = [{k:'room', name:'悅讀書房', sub:'資源教室', icon:'📚'}, 
 function kLandingHtml(){
   const list = kList();
   return `<div class="k-land">
-    <h2>要到哪裡拿東西／放東西？</h2>
+    <button class="k-browse" data-kbrowse><span>👀</span><b>瀏覽全部庫存</b><small>看看有哪些東西、各放在哪裡、還剩多少</small></button>
+    <h2>要到哪裡拿東西／放東西／盤點？</h2>
     <div class="k-locs">${LOCS.map(L=>{
       const n = list.filter(it=>kInStock(it, L.k)).length;
       return `<button class="k-loc ${L.k}" data-kfrom="${L.k}"><span class="k-li">${L.icon}</span><span class="k-ln">${L.name}</span>
@@ -2847,7 +2902,7 @@ const kBodyHtml = () => `
   <div class="k-bar">
     <button class="k-back" data-kback>← 換地點</button>
     <div class="k-here" id="k-here"></div>
-    <div class="k-seg k-mode"><button data-kmode="-1">📤 領出</button><button data-kmode="1">📥 補進</button></div>
+    <div class="k-seg k-mode"><button data-kmode="-1">📤 領出</button><button data-kmode="1">📥 補進</button><button data-kmode="0">📋 盤點</button></div>
   </div>
   <div class="k-filter">
     <input type="search" id="k-q" placeholder="🔍 搜尋品名" autocomplete="off">
@@ -2860,15 +2915,23 @@ function renderKiosk(){
   const body = kioskEl.querySelector('.k-body');
   if(!kFrom){
     body.innerHTML = kLandingHtml(); kioskEl.querySelector('.k-cart').hidden = true;
-    kioskEl.classList.remove('restock'); kioskEl.querySelector('.k-sub').textContent = '先選擇地點';
+    kioskEl.classList.remove('restock','counting'); kioskEl.querySelector('.k-sub').textContent = '先選擇地點';
+    return;
+  }
+  if(kFrom === 'browse'){
+    kioskEl.querySelector('.k-cart').hidden = true; kioskEl.classList.remove('restock','counting');
+    kioskEl.querySelector('.k-sub').textContent = '瀏覽庫存';
+    if(!body.querySelector('.bw')) body.innerHTML = `<div class="k-bar"><button class="k-back" data-kback>← 返回</button><div class="k-here">👀 <b>瀏覽庫存</b></div></div><div class="bw-host"></div>`;
+    if(!kLocal() && !kItems) body.querySelector('.bw-host').innerHTML = '<div class="k-empty">載入中…</div>';
+    else renderBrowse(body.querySelector('.bw-host'), kList());
     return;
   }
   if(!body.querySelector('#k-grid')) body.innerHTML = kBodyHtml();
   kioskEl.querySelector('.k-cart').hidden = false;
   const L = LOCS.find(x=>x.k===kFrom);
   document.getElementById('k-here').innerHTML = `${L.icon} <b>${L.name}</b>`;
-  kioskEl.querySelector('.k-sub').textContent = `${L.name}・${kMode < 0 ? '領出' : '補進'}`;
-  kioskEl.classList.toggle('restock', kMode === 1);
+  kioskEl.querySelector('.k-sub').textContent = `${L.name}・${KMODE_NAME[kMode]}`;
+  kioskEl.classList.toggle('restock', kMode === 1); kioskEl.classList.toggle('counting', kMode === 0);
   kioskEl.querySelectorAll('[data-kmode]').forEach(b=>b.classList.toggle('on', +b.dataset.kmode === kMode));
   kioskEl.querySelectorAll('[data-kfrom]').forEach(b=>b.classList.toggle('on', b.dataset.kfrom === kFrom));
   // 只列出這個地點的東西；領出時只列有庫存的，補進時可展開全部品項
@@ -2883,15 +2946,23 @@ function renderKiosk(){
   if(!kLocal() && !kItems){ grid.innerHTML = '<div class="k-empty">載入中…</div>'; }
   else if(!all.length){ grid.innerHTML = '<div class="k-empty">管理者還沒有把庫存資料放到雲端。</div>'; }
   else grid.innerHTML = (shown.length ? shown.map(kCardHtml).join('') : `<div class="k-empty">${list.length ? '找不到符合的品項' : (kMode < 0 ? '這裡目前沒有可領出的物品' : '這裡目前沒有物品')}</div>`)
-    + (kMode > 0 ? `<button class="k-more" data-kall>${kAll ? '只顯示放在這裡的品項' : '＋ 要補進的東西不在清單裡？顯示所有品項'}</button>` : '');
-  kSetNote(kLocal() ? '這台裝置沒有連雲端，登記只會記在這台裝置。' :
+    + (kMode >= 0 ? `<button class="k-more" data-kall>${kAll ? '只顯示放在這裡的品項' : `＋ 要${kMode ? '補進' : '盤點'}的東西不在清單裡？顯示所有品項`}</button>
+       <button class="k-more k-addnew" data-kadd>🆕 清單裡都沒有？新增一個品項</button>` : '');
+
+  if(kMode !== 0) kSetNote(kLocal() ? '這台裝置沒有連雲端，登記只會記在這台裝置。' :
     (kLoadedAt ? `庫存更新於 ${String(kLoadedAt.getHours()).padStart(2,'0')}:${String(kLoadedAt.getMinutes()).padStart(2,'0')}　登記人：${staff ? esc(staff.name) : '（送出時填寫）'}` : '更新庫存中…'));
+  else kSetNote(`盤點：數字一開始是系統上的數量，請改成實際點到的數量（按 ＋／－ 或直接輸入），有改的會變色。`);
   kUpdateCart();
 }
+const KMODE_NAME = {'-1':'領出', '1':'補進', '0':'盤點'};
+// 目前格子裡的數字：盤點＝點到的數量（沒改過就是系統數量）；領出／補進＝要拿或放的數量
+function kCur(key){ if(kMode !== 0) return kCart.get(key) || 0; if(kCart.has(key)) return kCart.get(key); const {it,size,from} = kFind(key); return it ? kStock(it,size,from) : 0; }
 function kStepHtml(it, size){
-  const key = kKey(it.id, size, kFrom), q = kCart.get(key) || 0, st = kStock(it, size);
+  const key = kKey(it.id, size, kFrom), st = kStock(it, size);
+  const q = kMode === 0 ? (kCart.has(key) ? kCart.get(key) : st) : (kCart.get(key) || 0);
+  const has = kMode === 0 ? kCart.has(key) : q > 0;
   const max = kMode < 0 ? st : 9999;
-  return `<div class="kstep ${q ? 'has' : ''}" data-key="${key}">
+  return `<div class="kstep ${has ? 'has' : ''}" data-key="${key}">
     <button class="kminus" data-kd="-1" ${q ? '' : 'disabled'} aria-label="減少">−</button>
     <input class="kq" data-kq value="${q}" inputmode="numeric" aria-label="數量">
     <button class="kplus" data-kd="1" ${q >= max ? 'disabled' : ''} aria-label="增加">＋</button></div>`;
@@ -2899,7 +2970,7 @@ function kStepHtml(it, size){
 function kCardHtml(it){
   const src = getImg(it);
   const img = src ? `<img src="${src}" alt="" loading="lazy" decoding="async" data-kimg="${it.id}">` : '<span>📦</span>';
-  const lbl = kMode < 0 ? '剩' : '現有';
+  const lbl = kMode < 0 ? '剩' : (kMode ? '現有' : '系統');
   let inner, empty;
   if(it.sizes){
     empty = kMode < 0 && it.sizes.every((_,i)=>kStock(it,i) === 0);
@@ -2922,10 +2993,11 @@ function kSet(key, q){
   const max = kMode < 0 ? kStock(it, size, from) : 9999;
   q = Math.max(0, Math.min(max, Math.floor(+q || 0)));
   if(kMode < 0 && +q >= max && max > 0) kHint(`${it.name}${size!=null&&it.sizes?'（'+it.sizes[size].s+'）':''} 只剩 ${max} 件`);
-  q ? kCart.set(key, q) : kCart.delete(key);
+  if(kMode === 0) (q === kStock(it, size, from) ? kCart.delete(key) : kCart.set(key, q));
+  else q ? kCart.set(key, q) : kCart.delete(key);
   const box = kioskEl.querySelector(`.kstep[data-key="${CSS.escape(key)}"]`);
   if(box){
-    box.querySelector('.kq').value = q; box.classList.toggle('has', q > 0);
+    box.querySelector('.kq').value = q; box.classList.toggle('has', kMode === 0 ? kCart.has(key) : q > 0);
     box.querySelector('.kminus').disabled = !q; box.querySelector('.kplus').disabled = q >= max;
     const card = box.closest('.kcard'); card.classList.toggle('picked', !!card.querySelector('.kstep.has'));
   }
@@ -2944,8 +3016,9 @@ function kUpdateCart(){
   const n = kCart.size, tot = [...kCart.values()].reduce((a,b)=>a+b, 0);
   const bar = kioskEl.querySelector('.k-cart');
   bar.classList.toggle('on', n > 0);
-  bar.querySelector('.k-sum').innerHTML = n ? `已選 <b>${n}</b> 項・共 <b>${tot}</b> 件` : (kMode < 0 ? '按 ＋ 選擇要領出的物品' : '按 ＋ 選擇要補進的物品');
-  bar.querySelector('#k-go').textContent = kMode < 0 ? '確認領出 →' : '確認補進 →';
+  bar.querySelector('.k-sum').innerHTML = kMode === 0 ? (n ? `已修改 <b>${n}</b> 項` : '把數字改成實際點到的數量')
+    : (n ? `已選 <b>${n}</b> 項・共 <b>${tot}</b> 件` : (kMode < 0 ? '按 ＋ 選擇要領出的物品' : '按 ＋ 選擇要補進的物品'));
+  bar.querySelector('#k-go').textContent = `確認${KMODE_NAME[kMode]} →`;
   bar.querySelector('#k-go').disabled = !n;
   bar.querySelector('#k-clear').hidden = !n;
 }
@@ -2956,7 +3029,7 @@ kioskEl.addEventListener('pointerdown', e=>{
   const b = e.target.closest('[data-kd]'); if(!b || b.disabled) return;
   e.preventDefault();
   const key = b.closest('.kstep').dataset.key, d = +b.dataset.kd;
-  const step = ()=>{ if(b.disabled){ stopHold(); return; } kSet(key, (kCart.get(key) || 0) + d); };
+  const step = ()=>{ if(b.disabled){ stopHold(); return; } kSet(key, kCur(key) + d); };
   step();
   kHold = {t: setTimeout(function rep(){ step(); kHold.t = setTimeout(rep, 80); }, 450)};
 });
@@ -2965,10 +3038,10 @@ const stopHold = ()=>{ if(kHold){ clearTimeout(kHold.t); kHold = null; } };
 kioskEl.addEventListener('click', e=>{
   const t = e.target;
   const kd = t.closest('[data-kd]');
-  if(kd){ if(e.detail === 0){ const key = kd.closest('.kstep').dataset.key; kSet(key, (kCart.get(key)||0) + (+kd.dataset.kd)); } return; }   // 鍵盤操作
+  if(kd){ if(e.detail === 0){ const key = kd.closest('.kstep').dataset.key; kSet(key, kCur(key) + (+kd.dataset.kd)); } return; }   // 鍵盤操作
   const m = t.closest('[data-kmode]');
   if(m){ const v = +m.dataset.kmode; if(v === kMode) return;
-    if(kCart.size && !confirm('切換「領出／補進」會清空已選的物品，確定嗎？')) return;
+    if(kCart.size && !confirm('切換「領出／補進／盤點」會清空目前選的或改的數量，確定嗎？')) return;
     kMode = v; kCart.clear(); renderKiosk(); return; }
   const f = t.closest('[data-kfrom]');
   if(f){ kFrom = f.dataset.kfrom; kCat = ''; kAll = false; kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); renderKiosk(); window.scrollTo(0,0); return; }
@@ -2976,6 +3049,8 @@ kioskEl.addEventListener('click', e=>{
     if(kCart.size && !confirm('換地點會清空已選的物品，確定嗎？')) return;
     kCart.clear(); kFrom = null; renderKiosk(); window.scrollTo(0,0); return; }
   if(t.closest('[data-kall]')){ kAll = !kAll; renderKiosk(); return; }
+  if(t.closest('[data-kadd]')){ kAddItem(); return; }
+  if(t.closest('[data-kbrowse]')){ kFrom = 'browse'; kioskEl.querySelector('.k-body').innerHTML = ''; renderKiosk(); window.scrollTo(0,0); return; }
   const c = t.closest('[data-kcat]');
   if(c){ kCat = c.dataset.kcat; renderKiosk(); return; }
   const im = t.closest('[data-kimg]');
@@ -3000,6 +3075,7 @@ function kLines(){
 }
 function kConfirm(){
   const lines = kLines(); if(!lines.length) return;
+  if(kMode === 0) return kConfirmCount(lines);
   const out = kMode < 0, tot = lines.reduce((a,l)=>a+l.qty, 0);
   openSheet(`<div class="kconf ${out ? 'out' : 'in'}">
     <h2>${out ? '📤 確認領出' : '📥 確認補進'}　<span>共 ${lines.length} 項、${tot} 件</span></h2>
@@ -3015,6 +3091,21 @@ function kConfirm(){
   sheet.querySelector('#kc-back').onclick = closeSheet;
   sheet.querySelector('#kc-ok').onclick = kSubmit;
 }
+function kConfirmCount(lines){
+  openSheet(`<div class="kconf cnt">
+    <h2>📋 確認盤點　<span>${fromName(kFrom)}・修改 ${lines.length} 項</span></h2>
+    <div class="kc-list">${lines.map(l=>`<div class="kc-row">
+        <div class="kc-name">${esc(l.label)}<small>${fromName(l.from)}</small></div>
+        <div class="kc-qty">${l.qty - l.cur > 0 ? '＋' : '−'}${Math.abs(l.qty - l.cur)}</div>
+        <div class="kc-chg">${l.cur} → <b>${l.qty}</b></div></div>`).join('')}</div>
+    <div class="field"><label>盤點人（你的名字）＊</label><input id="kc-by" value="${esc(staff ? staff.name : '')}" placeholder="例：王小明"></div>
+    <div class="field"><label>備註（可留空）</label><input id="kc-purpose" placeholder="例：期末盤點、發現有破損"></div>
+    <div class="kc-err" id="kc-err" hidden></div>
+    <div class="kc-actions"><button class="btn" id="kc-back">← 返回修改</button><button class="kbig" id="kc-ok">確認送出</button></div></div>`);
+  sheet.querySelector('#kc-back').onclick = closeSheet;
+  sheet.querySelector('#kc-ok').onclick = kSubmit;
+}
+const needUpdate = err => /未知的操作/.test(err.message) ? new Error('雲端程式還沒更新，請通知管理者更新 Apps Script 後再試') : err;
 async function kSubmit(){
   const by = sheet.querySelector('#kc-by').value.trim();
   const errBox = sheet.querySelector('#kc-err');
@@ -3024,9 +3115,9 @@ async function kSubmit(){
   const lines = kLines(), dir = kMode;
   const ok = sheet.querySelector('#kc-ok'); ok.disabled = true; ok.textContent = '送出中…'; kBusy = true;
   try{
-    if(kLocal()) kApplyLocal(lines, dir, {by, person, purpose});
+    if(kLocal()) (dir === 0 ? kCountLocal : kApplyLocal)(lines, dir, {by, person, purpose});
     else {
-      const j = await kApi('order', {dir, by, person, purpose, lines: lines.map(l=>({id:l.it.id, size:l.size, from:l.from, qty:l.qty}))});
+      const j = await kApi(dir === 0 ? 'count' : 'order', {dir, by, person, purpose, lines: lines.map(l=>({id:l.it.id, size:l.size, from:l.from, qty:l.qty}))}).catch(e=>{ throw needUpdate(e); });
       kItems = j.state.items; kLoadedAt = new Date();
       try{ localStorage.setItem('rc-kiosk-cache', JSON.stringify(kItems)); }catch(_){}
     }
@@ -3047,7 +3138,25 @@ function kApplyLocal(lines, dir, meta){
   }
   scheduleSave(); invalidate('stats','table','maps','log','take');
 }
+function kCountLocal(lines, dir, meta){
+  const ts = new Date().toISOString();
+  for(const l of lines){
+    const obj = kObj(l.it, l.size), prev = +obj[l.from] || 0; if(prev === l.qty) continue;
+    obj[l.from] = l.qty;
+    log.unshift({ts, itemId:l.it.id, name:l.label, size:l.size, from:l.from, qty:Math.abs(l.qty-prev), dir: l.qty > prev ? 1 : -1, kind:'count',
+      person:'', purpose:`盤點調整（${prev} → ${l.qty}）` + (meta.purpose ? '：' + meta.purpose : ''), by:meta.by, src:'staff', remain:l.qty});
+  }
+  scheduleSave(); invalidate('stats','table','maps','log','take');
+}
 function kDone(lines, dir){
+  if(dir === 0){
+    sheet.innerHTML = `<div class="kdone"><div class="kdone-ok">✓</div><h2>盤點完成</h2>
+      <p>${new Date().toLocaleString('zh-TW', {hour12:false})}・${fromName(kFrom)}・修改 ${lines.length} 項</p>
+      <ul>${lines.map(l=>`<li>${esc(l.label)}<span>${l.cur} → ${l.qty}</span></li>`).join('')}</ul>
+      <button class="kbig" id="kd-next">繼續盤點</button></div>`;
+    sheet.querySelector('#kd-next').onclick = closeSheet;
+    kCart.clear(); renderKiosk(); return;
+  }
   const out = dir < 0, tot = lines.reduce((a,l)=>a+l.qty, 0);
   sheet.innerHTML = `<div class="kdone">
     <div class="kdone-ok">✓</div>
@@ -3058,6 +3167,137 @@ function kDone(lines, dir){
   sheet.querySelector('#kd-next').onclick = closeSheet;
   kCart.clear(); renderKiosk();
 }
+
+/* ---- 工讀生新增品項 ---- */
+function kAddItem(){
+  const cats = [...new Set(kList().map(i=>i.cat).filter(Boolean))];
+  const here = fromName(kFrom);
+  openSheet(`<div class="kconf in"><h2>🆕 新增品項</h2>
+    <div class="hint" style="margin-bottom:8px">清單裡找不到的東西可以在這裡新增，數量會記在「${here}」。</div>
+    <div class="field"><label>品名＊</label><input id="ka-name" placeholder="例：動物造型紓壓球"></div>
+    <div class="field"><label>類別</label><select id="ka-cat">${cats.map(c=>`<option ${c===(kCat||'宣導品')?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    <div class="field"><label>${here}的數量</label><input id="ka-qty" inputmode="numeric" value="0"></div>
+    <div class="field"><label>單價（知道的話）</label><input id="ka-price" inputmode="numeric" placeholder="例：45"></div>
+    <div class="field"><label>備註（顏色、款式…）</label><input id="ka-note" placeholder="例：粉色 10、藍色 20"></div>
+    <div class="field"><label>新增人（你的名字）＊</label><input id="ka-by" value="${esc(staff ? staff.name : '')}"></div>
+    <div class="kc-err" id="kc-err" hidden></div>
+    <div class="kc-actions"><button class="btn" id="kc-back">取消</button><button class="kbig" id="ka-ok">確認新增</button></div></div>`);
+  sheet.querySelector('#kc-back').onclick = closeSheet;
+  sheet.querySelector('#ka-ok').onclick = async ()=>{
+    const v = id => sheet.querySelector(id).value.trim(), err = sheet.querySelector('#kc-err');
+    const item = {name:v('#ka-name'), cat:v('#ka-cat'), price:+v('#ka-price')||0, note:v('#ka-note')};
+    const qty = Math.max(0, Math.floor(+v('#ka-qty') || 0)), by = v('#ka-by');
+    item[kFrom === 'wh' ? 'wh' : 'room'] = qty;
+    if(!item.name){ err.hidden = false; err.textContent = '請填寫品名'; return; }
+    if(!by){ err.hidden = false; err.textContent = '請填寫你的名字'; return; }
+    if(kList().some(i=>i.name === item.name)){ err.hidden = false; err.textContent = `已經有「${item.name}」了，請直接在清單裡找`; return; }
+    const ok = sheet.querySelector('#ka-ok'); ok.disabled = true; ok.textContent = '送出中…';
+    try{
+      if(kLocal()){
+        const id = Math.max(0, ...items.map(i=>+i.id||0)) + 1;
+        let pos = -1; items.forEach((o,i)=>{ if(o.cat === item.cat) pos = i; });
+        items.splice(pos < 0 ? items.length : pos + 1, 0, {id, cat:item.cat, name:item.name, price:item.price, note:item.note, room:item.room||0, wh:item.wh||0, loc:[]});
+        if(qty) log.unshift({ts:new Date().toISOString(), itemId:id, name:item.name, size:null, from:kFrom === 'wh' ? 'wh' : 'room', qty, dir:1, kind:'add', person:'', purpose:'新增品項', by, src:'staff', remain:qty});
+        scheduleSave(); invalidate('all');
+      }else{
+        const j = await kApi('additem', {item, by}).catch(e=>{ throw needUpdate(e); });
+        kItems = j.state.items; kLoadedAt = new Date();
+      }
+      closeSheet(); kAll = false; renderKiosk(); toast(`已新增「${item.name}」`);
+    }catch(e){ err.hidden = false; err.textContent = '⚠ ' + e.message; ok.disabled = false; ok.textContent = '確認新增'; }
+  };
+}
+
+/* ================= 瀏覽頁：好看、好找的庫存目錄（工讀生與管理者共用） ================= */
+const BW = {q:'', cat:'', loc:'all', sort:'', view:'grid'};
+try{ Object.assign(BW, JSON.parse(localStorage.getItem('rc-browse') || '{}'), {q:''}); }catch(_){}
+const bwTot = (it, loc) => loc === 'room' ? roomQty(it) : loc === 'wh' ? whQty(it) : totQty(it);
+function renderBrowse(host, list){
+  host._list = list;
+  if(!host.querySelector('.bw')){
+    host.innerHTML = `<div class="bw">
+      <div class="bw-tools">
+        <input type="search" class="bw-q" placeholder="🔍 搜尋品名、備註" autocomplete="off">
+        <div class="bw-row">
+          <div class="k-seg bw-loc"><button data-bwloc="all">全部</button><button data-bwloc="room">📚 悅讀書房</button><button data-bwloc="wh">📦 Q棟倉庫</button></div>
+          <select class="bw-sort"><option value="">依類別</option><option value="name">依品名</option><option value="desc">數量多→少</option><option value="asc">數量少→多</option></select>
+          <div class="k-seg bw-view"><button data-bwview="grid" title="圖卡">▦</button><button data-bwview="list" title="清單">☰</button></div>
+        </div>
+        <div class="k-cats bw-cats"></div>
+      </div>
+      <div class="bw-sum"></div>
+      <div class="bw-out"></div></div>`;
+    host.querySelector('.bw-q').addEventListener('input', debounce(()=>{ BW.q = host.querySelector('.bw-q').value; drawBrowse(host); }, 150));
+    host.querySelector('.bw-sort').addEventListener('change', e=>{ BW.sort = e.target.value; drawBrowse(host); });
+    host.addEventListener('click', e=>{
+      const t = e.target, l = t.closest('[data-bwloc]'), v = t.closest('[data-bwview]'), c = t.closest('[data-bwcat]'), it = t.closest('[data-bwit]');
+      if(l){ BW.loc = l.dataset.bwloc; drawBrowse(host); }
+      else if(v){ BW.view = v.dataset.bwview; drawBrowse(host); }
+      else if(c){ BW.cat = c.dataset.bwcat; drawBrowse(host); }
+      else if(it){ const x = host._list.find(i=>String(i.id) === it.dataset.bwit); if(x) openBrowseItem(x); }
+    });
+  }
+  host.querySelector('.bw-sort').value = BW.sort;
+  drawBrowse(host);
+}
+function drawBrowse(host){
+  try{ localStorage.setItem('rc-browse', JSON.stringify({cat:BW.cat, loc:BW.loc, sort:BW.sort, view:BW.view})); }catch(_){}
+  const list = host._list, cats = [...new Set(list.map(i=>i.cat).filter(Boolean))];
+  if(BW.cat && !cats.includes(BW.cat)) BW.cat = '';
+  host.querySelectorAll('[data-bwloc]').forEach(b=>b.classList.toggle('on', b.dataset.bwloc === BW.loc));
+  host.querySelectorAll('[data-bwview]').forEach(b=>b.classList.toggle('on', b.dataset.bwview === BW.view));
+  host.querySelector('.bw-cats').innerHTML = ['', ...cats].map(c=>`<button class="${c===BW.cat?'on':''}" data-bwcat="${esc(c)}">${c ? esc(c) : '全部類別'}（${list.filter(i=>!c || i.cat===c).length}）</button>`).join('');
+  const q = BW.q.trim().toLowerCase();
+  let shown = list.filter(it => (!BW.cat || it.cat === BW.cat) && (!q || (it.name + ' ' + (it.note||'')).toLowerCase().includes(q))
+    && (BW.loc === 'all' || bwTot(it, BW.loc) > 0 || (it.loc||[]).some(l=>l.startsWith(BW.loc === 'wh' ? 'q-' : 'yd-'))));
+  if(BW.sort === 'name') shown = shown.slice().sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
+  else if(BW.sort === 'desc') shown = shown.slice().sort((a,b)=>bwTot(b,BW.loc) - bwTot(a,BW.loc));
+  else if(BW.sort === 'asc') shown = shown.slice().sort((a,b)=>bwTot(a,BW.loc) - bwTot(b,BW.loc));
+  const r = shown.reduce((s,i)=>s+roomQty(i),0), w = shown.reduce((s,i)=>s+whQty(i),0);
+  host.querySelector('.bw-sum').innerHTML = `共 <b>${shown.length}</b> 項　📚 書房 <b>${r.toLocaleString()}</b> 件　📦 倉庫 <b>${w.toLocaleString()}</b> 件`;
+  const out = host.querySelector('.bw-out');
+  out.className = 'bw-out ' + BW.view;
+  if(!shown.length){ out.innerHTML = '<div class="k-empty">沒有符合的品項</div>'; return; }
+  const badge = (n, cls, lbl) => `<span class="bw-b ${cls} ${n ? '' : 'zero'}">${lbl} ${n}</span>`;
+  const status = it => { const t = bwTot(it, BW.loc); return !t ? '<span class="bw-tag out">沒有庫存</span>' : t <= 10 ? '<span class="bw-tag low">數量少</span>' : ''; };
+  if(BW.view === 'list'){
+    out.innerHTML = `<table class="bw-tbl"><thead><tr><th></th><th>品名</th><th>書房</th><th>倉庫</th><th>合計</th></tr></thead><tbody>
+      ${shown.map(it=>{ const src = getImg(it); return `<tr data-bwit="${it.id}">
+        <td class="bw-th">${src ? `<img src="${src}" alt="" loading="lazy">` : '📦'}</td>
+        <td><b>${esc(it.name)}</b> ${status(it)}<div class="bw-meta">${esc(it.cat||'')}${it.price ? `・$${it.price}` : ''}${it.sizes ? `・${it.sizes.map(z=>esc(z.s)).join('/')}` : ''}</div></td>
+        <td class="n">${roomQty(it) || '—'}</td><td class="n">${whQty(it) || '—'}</td><td class="n"><b>${totQty(it)}</b></td></tr>`; }).join('')}
+      </tbody></table>`;
+    return;
+  }
+  out.innerHTML = shown.map(it=>{ const src = getImg(it), t = bwTot(it, BW.loc);
+    return `<button class="bw-card ${t ? '' : 'none'}" data-bwit="${it.id}">
+      <div class="bw-img">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : '<span>📦</span>'}${status(it)}</div>
+      <div class="bw-body">
+        <div class="bw-name">${esc(it.name)}</div>
+        <div class="bw-meta">${esc(it.cat||'')}${it.price ? `・$${it.price}` : ''}</div>
+        <div class="bw-badges">${badge(roomQty(it),'room','📚')}${badge(whQty(it),'wh','📦')}</div>
+        ${it.sizes ? `<div class="bw-sizes">${it.sizes.map(z=>`<span>${esc(z.s)} ${(+z.room||0)+(+z.wh||0)}</span>`).join('')}</div>` : ''}
+      </div></button>`; }).join('');
+}
+function openBrowseItem(it){
+  const src = getImg(it), ps = itemPhotos(it);
+  const rows = it.sizes ? it.sizes.map(z=>`<tr><td>${esc(z.s)}</td><td>${+z.room||0}</td><td>${+z.wh||0}</td><td><b>${(+z.room||0)+(+z.wh||0)}</b></td></tr>`).join('')
+    : `<tr><td>數量</td><td>${roomQty(it)}</td><td>${whQty(it)}</td><td><b>${totQty(it)}</b></td></tr>`;
+  openSheet(`<div class="bw-detail">
+    ${src ? `<div class="bw-dimg" data-bwphoto><img src="${ps.length ? photoFull(ps[0]) : src}" alt="">${ps.length > 1 ? `<span>共 ${ps.length} 張，點一下看大圖</span>` : '<span>點一下看大圖</span>'}</div>` : ''}
+    <h2>${esc(it.name)}</h2>
+    <div class="bw-meta" style="margin-bottom:8px">${esc(it.cat||'')}${it.price ? `・單價 $${it.price}` : ''}</div>
+    ${it.note ? `<div class="hint" style="margin-bottom:8px">📝 ${esc(it.note)}</div>` : ''}
+    <table class="bw-qt"><thead><tr><th></th><th>📚 書房</th><th>📦 倉庫</th><th>合計</th></tr></thead><tbody>${rows}</tbody></table>
+    ${(it.loc||[]).length ? `<div class="hint" style="margin-top:8px">📍 放在：${it.loc.map(zoneName).map(esc).join('、')}</div>` : ''}
+    </div>`);
+  const ph = sheet.querySelector('[data-bwphoto]');
+  if(ph) ph.onclick = ()=>{ ps.length ? openViewer(ps.map(k=>({src:photoFull(k), thumb:photoThumb(k)})), 0, {cap: it.name}) : openLightbox(src, it.name); };
+}
+// 管理者也能開瀏覽頁
+const bwOv = document.getElementById('browseOv');
+document.getElementById('browseBtn').onclick = ()=>{ bwOv.hidden = false; document.body.classList.add('noscroll'); renderBrowse(bwOv.querySelector('.bw-host'), items); };
+bwOv.querySelector('[data-bwclose]').onclick = ()=>{ bwOv.hidden = true; document.body.classList.remove('noscroll'); };
 
 /* ---- 進入內部管理 ---- */
 function kUnlock(){
