@@ -294,6 +294,33 @@ body.noscroll{overflow:hidden}
 .zone-itemlist li .q{font-variant-numeric:tabular-nums;color:var(--ink-soft);white-space:nowrap}
 
 /* ===== history list ===== */
+.invview,.mapseg{flex:0 0 auto!important}
+.invview button,.mapseg button{padding:7px 14px;font-size:.88rem;white-space:nowrap}
+.invview button.on,.mapseg button.on{background:var(--primary);color:#fff;font-weight:700}
+.invview button:disabled{opacity:.5}
+.thtools{display:inline-flex;gap:4px;margin-left:8px;vertical-align:1px}
+.thtools button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 9px;font-family:inherit;font-size:.72rem;color:var(--ink-soft);cursor:pointer;font-weight:400}
+.thtools button:hover{color:var(--primary);border-color:var(--primary)}
+tr.addrow td{background:var(--primary-soft);padding:10px 12px}
+.invcards[hidden]{display:none}
+.ic-bar{display:flex;align-items:center;justify-content:space-between;font-size:.85rem;color:var(--ink-soft);margin:6px 2px}
+.ic-grp{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--primary);background:var(--primary-soft);border-radius:10px;padding:9px 12px;margin:12px 0 8px;user-select:none}
+.ic-grp .grpmeta{margin-left:auto;font-weight:400;font-size:.8rem;color:var(--ink-soft)}
+.ic-grp .caret{transition:transform .15s}.ic-grp.closed .caret{transform:rotate(-90deg)}
+.ic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+@media (max-width:420px){ .ic-grid{grid-template-columns:1fr 1fr;gap:8px} }
+details.maps>summary{display:flex;align-items:center;gap:10px}
+.mapseg{display:inline-flex;margin-left:auto;flex:0 0 auto;padding:2px}
+.simplezones{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px;align-items:start}
+.sz{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sz.hl,.sz:target{box-shadow:0 0 0 3px var(--gold)}
+.sz-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 12px;background:#F6F8F7;border-bottom:1px solid var(--line);cursor:pointer}
+.sz-h b{color:var(--primary)}.sz-h span{font-size:.76rem;color:var(--ink-soft)}
+.sz ul{list-style:none;margin:0;padding:4px 0}
+.sz li{display:flex;justify-content:space-between;gap:10px;padding:5px 12px;font-size:.86rem;cursor:pointer}
+.sz li:hover{background:var(--primary-soft)}
+.sz li b{font-variant-numeric:tabular-nums}.sz li b.zero{color:#B7C0BD;font-weight:400}
+.sz-empty{padding:10px 12px;font-size:.82rem;color:#A7B1AE}
 .zeronote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:10px}
 .zeronote[hidden]{display:none}
 details.maps{margin-top:12px}
@@ -665,18 +692,18 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
       <option value="cat">依類別分區</option>
       <option value="zone">依存放區塊分區</option>
     </select>
-    <button class="btn" id="expandAll" title="全部展開">⊞ 全部展開</button>
-    <button class="btn" id="collapseAll" title="全部收合">⊟ 全部收合</button>
-    <button class="btn" id="editToggle">✏️ 編輯模式</button>
+    <div class="k-seg invview"><button data-invview="card">圖卡</button><button data-invview="table">表格</button></div>
     <button class="btn" id="statForm" title="產生可列印的庫存數量統計表（列印／PDF／Word）">統計表</button>
-    <button class="btn primary" id="addItem">＋ 新增品項</button>
+    <button class="btn primary" id="editToggle" title="修改數量、刪除或新增品項">編輯／新增品項</button>
+    <button id="addItem" hidden></button>
+    <button id="expandAll" hidden></button><button id="collapseAll" hidden></button>
   </div>
   <div class="chipbar" id="catChips"></div>
   <div class="tablewrap">
     <table id="invTable">
       <thead>
         <tr>
-          <th style="width:38%">品名</th>
+          <th style="width:38%">品名 <span class="thtools"><button type="button" data-allexp="1">全部展開</button><button type="button" data-allexp="0">全部收合</button></span></th>
           <th class="num">單價</th>
           <th class="num">資(書房)</th>
           <th class="num">倉(Q棟)</th>
@@ -688,6 +715,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
       <tbody id="invBody"></tbody>
     </table>
   </div>
+  <div class="invcards" id="invCards" hidden></div>
   <div class="toolbar" style="margin-top:12px">
     <button class="btn" id="exportJson">匯出備份 (JSON)</button>
     <button class="btn" id="exportCsv">匯出報表 (CSV)</button>
@@ -696,13 +724,13 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
     <button class="btn warn" id="resetData">還原為原始統計資料</button>
   </div>
   <div class="zeronote" id="zeroNote" hidden></div>
-  <details class="mapcard maps" id="map-yd" open><summary>悅讀書房位置圖</summary>
-        <div class="hint">依手繪位置圖建置。點任一區域可查看該區品項與數量；在庫存總覽點品名旁的位置標籤也會跳到對應區域。</div>
+  <details class="mapcard maps" id="map-yd" open><summary>悅讀書房位置圖 <span class="k-seg mapseg"><button data-mapview="simple">簡易</button><button data-mapview="plan">平面圖</button></span></summary>
+        <div class="hint">點區域名稱看該區全部品項，點品名看詳細；在庫存總覽點位置標籤也會跳到對應區域。數字為書房的數量。</div>
     <div class="floor yd-floor" id="ydFloor"></div>
     <div style="margin-top:10px"><span class="door">大門</span></div>
   </details>
-  <details class="mapcard maps" id="map-q" open><summary>Q棟倉庫位置圖</summary>
-        <div class="hint">依手繪位置圖建置。點任一貨架可查看該區品項與數量。</div>
+  <details class="mapcard maps" id="map-q" open><summary>Q棟倉庫位置圖 <span class="k-seg mapseg"><button data-mapview="simple">簡易</button><button data-mapview="plan">平面圖</button></span></summary>
+        <div class="hint">點區域名稱看該區全部品項，點品名看詳細。數字為倉庫的數量。</div>
     <div class="floor q-floor" id="qFloor"></div>
     <div style="margin-top:10px"><span class="door">門口</span></div>
   </details>
@@ -1359,7 +1387,13 @@ function currentGroups(){
   }
   return [...groups].filter(([,g])=>g.items.length);
 }
+let invView = (()=>{ try{ return localStorage.getItem('rc-inv-view') || 'card'; }catch(_){ return 'card'; } })();
 function renderTable(){
+  const useCards = invView === 'card' && !editMode;
+  document.querySelector('#panel-inv .tablewrap').hidden = useCards;
+  document.getElementById('invCards').hidden = !useCards;
+  document.querySelectorAll('[data-invview]').forEach(b=>{ b.classList.toggle('on', b.dataset.invview === (editMode ? 'table' : invView)); b.disabled = editMode; });
+  if(useCards){ renderInvCards(); return; }
   document.getElementById('delHead').style.display = editMode?'':'none';
   const cols = editMode?7:6;
   const out = [], searching = qInput.value.trim() !== '';
@@ -1372,10 +1406,44 @@ function renderTable(){
   }
   const nz = items.filter(it=>totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
   zn.hidden = !nz; zn.innerHTML = nz ? `另有 <b>${nz}</b> 項目前沒有庫存，已移到「曾製作宣導品」。<button class="btn" data-gohist>查看</button>` : '';
-  invBody.innerHTML = out.length ? out.join('')
-    : `<tr><td colspan="${cols}" style="text-align:center;color:var(--ink-soft);padding:24px">沒有符合條件的品項</td></tr>`;
+  invBody.innerHTML = (out.length ? out.join('')
+    : `<tr><td colspan="${cols}" style="text-align:center;color:var(--ink-soft);padding:24px">沒有符合條件的品項</td></tr>`)
+    + (editMode ? `<tr class="addrow"><td colspan="${cols}"><button class="btn primary" data-additem>＋ 新增品項</button><span class="hint" style="margin:0 0 0 10px">直接修改數字即可儲存；按 ✕ 刪除品項；點位置欄的 ✎ 指定存放位置。</span></td></tr>` : '');
 }
 groupByEl.addEventListener('change', ()=>{ saveCollapse(); renderTable(); dirty.table=false; });
+// 圖卡檢視：依分區顯示照片卡片，點卡片看詳細
+function renderInvCards(){
+  const box = document.getElementById('invCards'), searching = qInput.value.trim() !== '', groups = currentGroups();
+  const nz = items.filter(it=>totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
+  zn.hidden = !nz; zn.innerHTML = nz ? `另有 <b>${nz}</b> 項目前沒有庫存，已移到「曾製作宣導品」。<button class="btn" data-gohist>查看</button>` : '';
+  if(!groups.length){ box.innerHTML = '<div class="k-empty">沒有符合條件的品項</div>'; return; }
+  box.innerHTML = `<div class="ic-bar"><span>${groups.reduce((a,[,g])=>a+g.items.length,0)} 項</span><span class="thtools"><button type="button" data-allexp="1">全部展開</button><button type="button" data-allexp="0">全部收合</button></span></div>` +
+    groups.map(([key,g])=>{
+      const closed = collapsedGroups.has(key) && !searching, total = g.items.reduce((a,it)=>a+totQty(it),0);
+      return `<div class="ic-grp ${closed?'closed':''}" data-grp="${esc(key)}"><span class="caret">▾</span>${esc(g.label)}<span class="grpmeta">${g.items.length} 項・共 ${total.toLocaleString()} 件</span></div>` +
+        (closed ? '' : `<div class="ic-grid">${g.items.map(it=>{ const src = getImg(it), r = roomQty(it), w = whQty(it);
+          return `<button class="bw-card" data-icard="${it.id}">
+            <div class="bw-img">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : '<span class="noimg">無照片</span>'}${totQty(it) <= 10 ? '<span class="bw-tag low">數量少</span>' : ''}</div>
+            <div class="bw-body"><div class="bw-name">${esc(it.name)}</div>
+              <div class="bw-meta">${it.price ? `$${it.price}` : ''}${it.note ? `${it.price ? '・' : ''}${esc(it.note)}` : ''}</div>
+              <div class="bw-badges"><span class="bw-b room ${r?'':'zero'}">書房 ${r}</span><span class="bw-b wh ${w?'':'zero'}">倉庫 ${w}</span></div>
+              ${it.sizes ? `<div class="bw-sizes">${it.sizes.map(z=>`<span>${esc(z.s)} ${(+z.room||0)+(+z.wh||0)}</span>`).join('')}</div>` : ''}
+              ${(it.loc||[]).length ? `<div class="bw-meta">${it.loc.map(zoneName).map(esc).join('、')}</div>` : ''}
+            </div></button>`; }).join('')}</div>`);
+    }).join('');
+}
+document.getElementById('invCards').addEventListener('click', e=>{
+  const g = e.target.closest('.ic-grp');
+  if(g){ const k = g.dataset.grp; collapsedGroups.has(k) ? collapsedGroups.delete(k) : collapsedGroups.add(k); saveCollapse(); renderTable(); return; }
+  const c = e.target.closest('[data-icard]'); if(c){ const it = byId(c.dataset.icard); if(it) openBrowseItem(it); }
+});
+document.getElementById('panel-inv').addEventListener('click', e=>{
+  const v = e.target.closest('[data-invview]');
+  if(v && !editMode){ invView = v.dataset.invview; try{ localStorage.setItem('rc-inv-view', invView); }catch(_){} renderTable(); dirty.table = false; return; }
+  const x = e.target.closest('[data-allexp]');
+  if(x){ e.stopPropagation(); document.getElementById(x.dataset.allexp === '1' ? 'expandAll' : 'collapseAll').click(); return; }
+  if(e.target.closest('[data-additem]')) document.getElementById('addItem').click();
+});
 document.getElementById('expandAll').onclick = ()=>{ collapsedGroups.clear(); saveCollapse(); renderTable(); dirty.table=false; };
 document.getElementById('collapseAll').onclick = ()=>{ currentGroups().forEach(([k])=>collapsedGroups.add(k)); saveCollapse(); renderTable(); dirty.table=false; };
 // 表格事件：委派到 tbody，只綁一次
@@ -1427,7 +1495,29 @@ function zoneHtml(z, extraCls=''){
   </div>`;
 }
 const ZMAP = Object.fromEntries(ZONES.map(z=>[z.id,z]));
+// 位置圖：預設「簡易檢視」（每區一張卡片列出品項與數量），可切換回平面圖
+let mapView = (()=>{ try{ return localStorage.getItem('rc-map-view') || 'simple'; }catch(_){ return 'simple'; } })();
+function simpleZones(map){
+  return ZONES.filter(z=>z.map===map).map(z=>{
+    const list = zoneItems(z.id).filter(i=>totQty(i) > 0);
+    const q = i => map==='q' ? whQty(i) : roomQty(i);
+    const tot = list.reduce((a,i)=>a+q(i),0);
+    return `<div class="sz" id="zone-${z.id}">
+      <div class="sz-h" data-z="${z.id}"><b>${esc(z.name)}</b><span>${list.length} 項・${tot.toLocaleString()} 件</span></div>
+      ${list.length ? `<ul>${list.map(i=>`<li data-icard="${i.id}"><span>${esc(i.name)}</span><b class="${q(i)?'':'zero'}">${q(i)}</b></li>`).join('')}</ul>` : '<div class="sz-empty">（空）</div>'}
+    </div>`;
+  }).join('');
+}
 function renderMaps(){
+  document.querySelectorAll('[data-mapview]').forEach(b=>b.classList.toggle('on', b.dataset.mapview === mapView));
+  if(mapView === 'simple'){
+    document.getElementById('ydFloor').className = 'simplezones'; document.getElementById('qFloor').className = 'simplezones';
+    document.getElementById('ydFloor').innerHTML = simpleZones('yd'); document.getElementById('qFloor').innerHTML = simpleZones('q');
+    document.querySelectorAll('details.maps .door').forEach(d=>d.parentElement.hidden = true);
+    return;
+  }
+  document.getElementById('ydFloor').className = 'floor yd-floor'; document.getElementById('qFloor').className = 'floor q-floor';
+  document.querySelectorAll('details.maps .door').forEach(d=>d.parentElement.hidden = false);
   const z = id => ZMAP[id];
   document.getElementById('ydFloor').innerHTML =
     zoneHtml(z('yd-wall'),'yd-wall') +
@@ -1440,7 +1530,12 @@ function renderMaps(){
     zoneHtml(z('q-cab'),'q-full');
 }
 ['ydFloor','qFloor'].forEach(id=>document.getElementById(id).addEventListener('click', e=>{
-  const el = e.target.closest('.zone'); if(el) openZone(el.dataset.z);
+  const it = e.target.closest('[data-icard]'); if(it){ const x = byId(it.dataset.icard); if(x) openBrowseItem(x); return; }
+  const el = e.target.closest('.zone,.sz-h'); if(el) openZone(el.dataset.z);
+}));
+document.querySelectorAll('details.maps').forEach(d=>d.addEventListener('click', e=>{
+  const b = e.target.closest('[data-mapview]'); if(!b) return;
+  e.preventDefault(); mapView = b.dataset.mapview; try{ localStorage.setItem('rc-map-view', mapView); }catch(_){} renderMaps();
 }));
 function gotoZone(zid){
   const z = ZMAP[zid];
@@ -1750,7 +1845,7 @@ document.getElementById('histGrid').addEventListener('click', e=>{
 document.getElementById('editToggle').onclick=function(){
   editMode=!editMode;
   this.classList.toggle('on',editMode);
-  this.textContent = editMode?'✔ 完成編輯':'✏️ 編輯模式';
+  this.textContent = editMode?'完成編輯':'編輯／新增品項';
   renderTable(); dirty.table=false;
 };
 function switchTab(t){
