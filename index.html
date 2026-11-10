@@ -2758,7 +2758,8 @@ function showInner(){
   kioskOn = false; document.body.classList.remove('kiosk-mode'); kioskEl.hidden = true;
   setStaff(null); kCart.clear();
   setCloudStatus(cloudUrl() ? (cloud.key ? '同步中…' : '未登入') : '未設定');
-  invalidate('all'); flush(); pullCloud();
+  invalidate('all'); flush();
+  Promise.resolve(pullCloud()).catch(()=>{}).then(autoPatch);
 }
 async function kRefresh(quiet){
   if(kLocal()){ renderKiosk(); return; }
@@ -3132,13 +3133,17 @@ document.getElementById('stOpen').onclick = ()=>{
     <div class="actions"><button class="btn" id="st-cancel">取消</button><button class="btn primary" id="st-ok">確認套用</button></div>`);
   sheet.querySelector('#st-cancel').onclick = closeSheet;
   sheet.querySelector('#st-ok').onclick = ()=>{
-    for(const r of rows){ if(r.del) continue; r.obj.room = r.r1; r.obj.wh = r.w1; }
-    items = items.filter(it=>!STOCKTAKE_1142.remove.includes(+it.id));
-    try{ localStorage.setItem(ST_DONE, new Date().toISOString()); }catch(_){}
-    closeSheet(); scheduleSave(); invalidate('all'); renderStBanner();
+    stApply(); closeSheet(); scheduleSave(); invalidate('all'); renderStBanner();
     toast(`已套用盤點：更新 ${n} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
   };
 };
+function stApply(){
+  const rows = stRows(), n = rows.filter(r=>r.chg).length;
+  for(const r of rows){ if(r.del) continue; r.obj.room = r.r1; r.obj.wh = r.w1; }
+  items = items.filter(it=>!STOCKTAKE_1142.remove.includes(+it.id));
+  try{ localStorage.setItem(ST_DONE, new Date().toISOString()); }catch(_){}
+  return n;
+}
 
 /* ================= 1151 學期新購宣導品（一次性新增，先不放照片） ================= */
 const NEW_1151 = [
@@ -3146,11 +3151,11 @@ const NEW_1151 = [
   {name:'六角矽膠按摩球',     price:45,  room:100, note:'1151學期新購 100 個'},
   {name:'粉嫩可愛圖案筆記本', price:50,  room:100, note:'1151學期新購 100 本'},
   {name:'炫彩磁吸手機架',     price:70,  room:100, note:'1151學期新購 100 個'},
-  {name:'城市型走側背包',     price:0,   room:0,   note:'1151學期新購（共 41,895 元），數量待補'},
-  {name:'湯匙造型盒餐具',     price:0,   room:0,   note:'1151學期新購（共 12,500 元），數量待補'},
-  {name:'矽藻土吸水杯墊',     price:0,   room:0,   note:'1151學期新購（共 4,600 元），數量待補'},
-  {name:'壓克力鑰匙圈',       price:0,   room:0,   note:'1151學期新購（共 2,600 元），數量待補'},
-  {name:'素面茄芷零錢包',     price:0,   room:0,   note:'1151學期新購（共 2,900 元），數量待補'},
+  {name:'城市型走側背包',     price:0,   room:100, note:'1151學期新購 100 個（共 41,895 元）'},
+  {name:'湯匙造型盒餐具',     price:0,   room:100, note:'1151學期新購 100 個（共 12,500 元）'},
+  {name:'矽藻土吸水杯墊',     price:0,   room:100, note:'1151學期新購 100 個（共 4,600 元）'},
+  {name:'壓克力鑰匙圈',       price:0,   room:100, note:'1151學期新購 100 個（共 2,600 元）'},
+  {name:'素面茄芷零錢包',     price:0,   room:100, note:'1151學期新購 100 個（共 2,900 元）'},
 ];
 const NEW_DONE = 'rc-new-1151';
 const newMissing = () => NEW_1151.filter(n=>!items.some(it=>it.name===n.name));
@@ -3164,23 +3169,34 @@ function renderNewBanner(){
 document.getElementById('newOpen').onclick = ()=>{
   const m = newMissing();
   openSheet(`<h2>🆕 新增 1151 學期新購宣導品</h2>
-    <div class="hint">依付款單據整理。數量寫明 100 個的已填入悅讀書房；其餘單據只有總金額，數量先填 0，請到時候在「編輯模式」補上。照片之後再加。</div>
+    <div class="hint">依付款單據整理。數量都先以 100 個填入悅讀書房，實際數量可在「編輯模式」修改。照片之後再加。</div>
     <div class="stwrap"><table class="sttable"><thead><tr><th>品項</th><th>單價</th><th>書房</th><th>倉庫</th></tr></thead><tbody>
     ${m.map(n=>`<tr class="chg"><td>${esc(n.name)}<div class="itemnote">${esc(n.note)}</div></td><td>${n.price?'$'+n.price:'—'}</td><td>${n.room}</td><td>0</td></tr>`).join('')}
     </tbody></table></div>
     <div class="actions"><button class="btn" id="nw-cancel">取消</button><button class="btn primary" id="nw-ok">確認新增 ${m.length} 項</button></div>`);
   sheet.querySelector('#nw-cancel').onclick = closeSheet;
   sheet.querySelector('#nw-ok').onclick = ()=>{
-    let id = Math.max(0, ...items.map(it=>+it.id||0));
-    // 放在宣導品的最後面
-    let pos = -1; items.forEach((it,i)=>{ if(it.cat==='宣導品') pos = i; });
-    const add = newMissing().map(n=>({id:++id, cat:'宣導品', name:n.name, price:n.price, note:n.note, room:n.room, wh:0, loc:[]}));
-    items.splice(pos<0 ? items.length : pos+1, 0, ...add);
-    try{ localStorage.setItem(NEW_DONE, new Date().toISOString()); }catch(_){}
-    closeSheet(); scheduleSave(); invalidate('all'); renderNewBanner();
-    toast(`已新增 ${add.length} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
+    const k = newApply(); closeSheet(); scheduleSave(); invalidate('all'); renderNewBanner();
+    toast(`已新增 ${k} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
   };
 };
+function newApply(){
+  let id = Math.max(0, ...items.map(it=>+it.id||0));
+  let pos = -1; items.forEach((it,i)=>{ if(it.cat==='宣導品') pos = i; });   // 放在宣導品的最後面
+  const add = newMissing().map(n=>({id:++id, cat:'宣導品', name:n.name, price:n.price, note:n.note, room:n.room, wh:0, loc:[]}));
+  items.splice(pos<0 ? items.length : pos+1, 0, ...add);
+  try{ localStorage.setItem(NEW_DONE, new Date().toISOString()); }catch(_){}
+  return add.length;
+}
+// 管理者進入時自動套用（先拿到雲端最新資料再套用，避免蓋掉）
+async function autoPatch(){
+  const msg = [];
+  if(stPending()) msg.push(`盤點更新 ${stApply()} 項、移除四部曲`);
+  if(newPending()) msg.push(`新增 ${newApply()} 項新購宣導品`);
+  if(!msg.length) return;
+  scheduleSave(); invalidate('all'); renderStBanner(); renderNewBanner();
+  toast('已自動套用：' + msg.join('；'));
+}
 
 /* ================= 一鍵產生「庫存數量統計表」（列印／PDF／Word） ================= */
 function rocToday(){ const d = new Date(); return `${d.getFullYear()-1911}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
