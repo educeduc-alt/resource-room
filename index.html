@@ -294,6 +294,16 @@ body.noscroll{overflow:hidden}
 .zone-itemlist li .q{font-variant-numeric:tabular-nums;color:var(--ink-soft);white-space:nowrap}
 
 /* ===== history list ===== */
+.zeronote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:10px}
+.zeronote[hidden]{display:none}
+details.maps{margin-top:12px}
+details.maps>summary{cursor:pointer;font-weight:700;color:var(--primary);font-size:1rem}
+details.maps .hint{margin-top:6px}
+.zcard{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+.zcard img,.zcard .zimg{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:#EEF1F0}
+.zcard .zimg{display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#9AA5A2}
+.zcard small{color:var(--ink-soft);font-size:.75rem}
+.zq{width:80px;padding:6px;border:1px solid var(--line);border-radius:8px;text-align:right;font-size:16px}
 .histgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .histgrid div{
   background:var(--card);border:1px solid var(--line);border-radius:8px;
@@ -625,8 +635,6 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
   <nav class="tabs">
     <button data-tab="inv" class="active">庫存總覽</button>
     <button data-tab="take">領用登記</button>
-    <button data-tab="yd">悅讀書房位置圖</button>
-    <button data-tab="q">Q棟倉庫位置圖</button>
     <button data-tab="hist">曾製作宣導品</button>
     <button data-tab="lib">圖書位置</button>
   </nav>
@@ -687,6 +695,17 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
     <input type="file" id="importFile" accept=".json" style="display:none">
     <button class="btn warn" id="resetData">還原為原始統計資料</button>
   </div>
+  <div class="zeronote" id="zeroNote" hidden></div>
+  <details class="mapcard maps" id="map-yd" open><summary>悅讀書房位置圖</summary>
+        <div class="hint">依手繪位置圖建置。點任一區域可查看該區品項與數量；在庫存總覽點品名旁的位置標籤也會跳到對應區域。</div>
+    <div class="floor yd-floor" id="ydFloor"></div>
+    <div style="margin-top:10px"><span class="door">大門</span></div>
+  </details>
+  <details class="mapcard maps" id="map-q" open><summary>Q棟倉庫位置圖</summary>
+        <div class="hint">依手繪位置圖建置。點任一貨架可查看該區品項與數量。</div>
+    <div class="floor q-floor" id="qFloor"></div>
+    <div style="margin-top:10px"><span class="door">門口</span></div>
+  </details>
   <details class="mapcard" id="unmatched" style="margin-top:12px"><summary>尚未對應品項的照片</summary>
     <div class="hint" style="margin-top:6px">這些照片無法確定是哪個品項，用下拉選單指定後，就會出現在該品項的照片裡。</div>
     <div class="ugrid"></div></details>
@@ -748,25 +767,6 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 </section>
 
 <!-- ================= 悅讀書房 ================= -->
-<section class="panel" id="panel-yd">
-  <div class="mapcard">
-    <h2>悅讀書房（資源教室）平面配置</h2>
-    <div class="hint">依手繪位置圖建置。點任一區域可查看該區品項與數量；在庫存總覽點品名旁的位置標籤也會跳到對應區域。</div>
-    <div class="floor yd-floor" id="ydFloor"></div>
-    <div style="margin-top:10px"><span class="door">大門</span></div>
-  </div>
-</section>
-
-<!-- ================= Q棟倉庫 ================= -->
-<section class="panel" id="panel-q">
-  <div class="mapcard">
-    <h2>Q棟地下室倉庫 平面配置</h2>
-    <div class="hint">依手繪位置圖建置。點任一貨架可查看該區品項與數量。</div>
-    <div class="floor q-floor" id="qFloor"></div>
-    <div style="margin-top:10px"><span class="door">門口</span></div>
-  </div>
-</section>
-
 <!-- ================= 圖書位置 ================= -->
 <section class="panel" id="panel-lib">
   <div class="mapcard libhero">
@@ -821,6 +821,11 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 
 <!-- ================= 曾製作 ================= -->
 <section class="panel" id="panel-hist">
+  <div class="mapcard">
+    <h2>目前沒有庫存的品項 <span class="pcount" id="zeroCount"></span></h2>
+    <div class="hint">數量變成 0 的品項會自動移到這裡，不會出現在庫存總覽和前台瀏覽頁。按「補數量」補進後，就會回到庫存總覽。</div>
+    <div class="histgrid zerogrid" id="zeroGrid"></div>
+  </div>
   <div class="mapcard">
     <h2>資源教室曾製作之宣導品（歷史紀錄）</h2>
     <div class="hint">已停產或已發完之品項，僅供參考，可作為未來再製選項。</div>
@@ -1031,15 +1036,15 @@ const debounce = (fn,ms) => { let t; return (...a)=>{ clearTimeout(t); t=setTime
 
 /* ============ 局部重繪排程：只重繪「目前看得到」的區塊，其餘標記待更新 ============ */
 function invalidate(...parts){
-  if(parts.includes('all')) parts = ['stats','chips','table','maps','take','log'];
+  if(parts.includes('all')) parts = ['stats','chips','table','maps','take','log','hist'];
   for(const p of parts) dirty[p] = true;
   flush();
 }
 function flush(){
   if(dirty.stats){ renderStats(); dirty.stats=false; }
   if(dirty.chips){ renderChips(); dirty.chips=false; }
-  if(currentTab==='inv' && dirty.table){ renderTable(); dirty.table=false; renderUnmatched(); }
-  if((currentTab==='yd'||currentTab==='q') && dirty.maps){ renderMaps(); dirty.maps=false; }
+  if(currentTab==='inv' && dirty.table){ renderTable(); dirty.table=false; renderUnmatched(); dirty.hist = true; }
+  if(currentTab==='inv' && dirty.maps){ renderMaps(); dirty.maps=false; }
   if(currentTab==='take'){
     if(dirty.take){ renderTakeForm(true); dirty.take=false; }
     if(dirty.log){ renderLog(); dirty.log=false; }
@@ -1290,6 +1295,7 @@ function locTags(it){
     + (editMode?`<span class="loctag none" data-edit="${it.id}">✎</span>`:'');
 }
 function passFilter(it, f, q){
+  if(totQty(it) <= 0) return false;   // 沒有庫存 → 移到「曾製作宣導品」
   if(activeCat && it.cat!==activeCat) return false;
   if(f==='room' && roomQty(it)<=0) return false;
   if(f==='wh' && whQty(it)<=0) return false;
@@ -1364,6 +1370,8 @@ function renderTable(){
       <span class="caret">▾</span>${esc(g.label)}<span class="grpmeta">${g.items.length} 項・共 ${total.toLocaleString()} 件</span></td></tr>`);
     if(!closed) for(const it of g.items) out.push(rowHtml(it, cols));
   }
+  const nz = items.filter(it=>totQty(it) <= 0).length, zn = document.getElementById('zeroNote');
+  zn.hidden = !nz; zn.innerHTML = nz ? `另有 <b>${nz}</b> 項目前沒有庫存，已移到「曾製作宣導品」。<button class="btn" data-gohist>查看</button>` : '';
   invBody.innerHTML = out.length ? out.join('')
     : `<tr><td colspan="${cols}" style="text-align:center;color:var(--ink-soft);padding:24px">沒有符合條件的品項</td></tr>`;
 }
@@ -1436,7 +1444,8 @@ function renderMaps(){
 }));
 function gotoZone(zid){
   const z = ZMAP[zid];
-  switchTab(z.map==='q'?'q':'yd');
+  switchTab('inv');
+  const box = document.getElementById(z.map==='q' ? 'map-q' : 'map-yd'); if(box) box.open = true;
   requestAnimationFrame(()=>{
     const el = document.getElementById('zone-'+zid);
     if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('hl'); setTimeout(()=>el.classList.remove('hl'),2200); }
@@ -1701,12 +1710,37 @@ $t('t-logcsv').onclick = ()=>{
 
 /* ============ 歷史紀錄（切到該分頁才載入圖片） ============ */
 function renderHist(){
+  const zero = items.filter(it=>totQty(it) <= 0);
+  document.getElementById('zeroCount').textContent = `（${zero.length} 項）`;
+  document.getElementById('zeroGrid').innerHTML = zero.length ? zero.map(it=>{ const src = getImg(it);
+    return `<div class="zcard">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async" data-zlb="${it.id}">` : '<div class="zimg">無照片</div>'}
+      <b>${esc(it.name)}</b><small>${esc(it.cat||'')}${it.price ? `・$${it.price}` : ''}</small>
+      <button class="btn" data-zfill="${it.id}">補數量</button></div>`; }).join('')
+    : '<div class="hint">目前每個品項都有庫存。</div>';
   const imgs = HIST_get();
   document.getElementById('histGrid').innerHTML = HISTORY.map((h,i)=>{
     const src = toBlobUrl(imgs[i]);
     return `<div>${src?`<img src="${src}" alt="" loading="lazy" decoding="async" data-hlb="${i}">`:''}${esc(h)}</div>`;
   }).join('');
 }
+document.getElementById('zeroGrid').addEventListener('click', e=>{
+  const im = e.target.closest('[data-zlb]'); if(im){ const it = byId(im.dataset.zlb); if(it) openGallery(it); return; }
+  const f = e.target.closest('[data-zfill]'); if(!f) return;
+  const it = byId(f.dataset.zfill); if(!it) return;
+  const rows = it.sizes ? it.sizes.map((z,i)=>({lbl:'尺寸 '+z.s, obj:z, i})) : [{lbl:'數量', obj:it}];
+  openSheet(`<h2>補數量：${esc(it.name)}</h2>
+    <table class="bw-qt"><thead><tr><th></th><th>悅讀書房</th><th>Q棟倉庫</th></tr></thead><tbody>
+    ${rows.map((r,k)=>`<tr><td>${esc(r.lbl)}</td><td><input class="zq" data-k="${k}" data-f="room" inputmode="numeric" value="${+r.obj.room||0}"></td><td><input class="zq" data-k="${k}" data-f="wh" inputmode="numeric" value="${+r.obj.wh||0}"></td></tr>`).join('')}
+    </tbody></table>
+    <div class="actions"><button class="btn" id="zf-cancel">取消</button><button class="btn primary" id="zf-ok">儲存</button></div>`);
+  sheet.querySelector('#zf-cancel').onclick = closeSheet;
+  sheet.querySelector('#zf-ok').onclick = ()=>{
+    sheet.querySelectorAll('.zq').forEach(inp=>{ rows[+inp.dataset.k].obj[inp.dataset.f] = Math.max(0, Math.floor(+inp.value||0)); });
+    closeSheet(); scheduleSave(); invalidate('all');
+    toast(totQty(it) > 0 ? `「${it.name}」已回到庫存總覽` : '已儲存');
+  };
+});
+document.getElementById('panel-inv').addEventListener('click', e=>{ if(e.target.closest('[data-gohist]')) switchTab('hist'); });
 document.getElementById('histGrid').addEventListener('click', e=>{
   const im = e.target.closest('[data-hlb]');
   if(im) openLightbox(im.src, HISTORY[+im.dataset.hlb]);
@@ -3241,7 +3275,7 @@ const BW = {q:'', cat:'', loc:'all', sort:'', view:'grid'};
 try{ Object.assign(BW, JSON.parse(localStorage.getItem('rc-browse') || '{}'), {q:''}); }catch(_){}
 const bwTot = (it, loc) => loc === 'room' ? roomQty(it) : loc === 'wh' ? whQty(it) : totQty(it);
 function renderBrowse(host, list){
-  host._list = list;
+  host._list = list.filter(it=>totQty(it) > 0);   // 沒有庫存的不顯示（在管理頁「曾製作宣導品」）
   if(!host.querySelector('.bw')){
     host.innerHTML = `<div class="bw">
       <div class="bw-tools">
