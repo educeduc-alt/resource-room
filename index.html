@@ -222,6 +222,7 @@ td .rowdel{
 .vbottom:empty,.viewer.single .vstrip{display:none}
 .vstrip{display:flex;gap:6px;overflow-x:auto;max-width:100%;scrollbar-width:thin}
 .vstrip img{height:56px;width:56px;object-fit:cover;border-radius:6px;opacity:.5;cursor:pointer;flex:0 0 auto;border:2px solid transparent}
+.vbtn.vdl{width:auto;border-radius:999px;padding:0 14px;font-size:.85rem}
 .vstrip img.on{opacity:1;border-color:#fff}
 @media (max-width:640px){ .vnav{display:none} .vbtn[data-v="zin"],.vbtn[data-v="zout"]{display:none} }
 body.noscroll{overflow:hidden}
@@ -915,7 +916,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
   <div class="vstage"><img class="vimg" alt="" draggable="false"></div>
   <div class="vtop"><span class="vcap"></span>
     <button class="vbtn" data-v="zout" title="縮小（-）">－</button><button class="vbtn" data-v="zin" title="放大（+）">＋</button>
-    <button class="vbtn" data-v="fs" title="全螢幕">⛶</button><button class="vbtn" data-v="close" title="關閉（Esc）">✕</button></div>
+    <button class="vbtn vdl" data-v="dl" title="下載這張原圖">下載原圖</button><button class="vbtn" data-v="fs" title="全螢幕">⛶</button><button class="vbtn" data-v="close" title="關閉（Esc）">✕</button></div>
   <button class="vnav prev" data-v="prev" title="上一張（←）">‹</button><button class="vnav next" data-v="next" title="下一張（→）">›</button>
   <div class="vbottom"><div class="vstrip"></div><button class="btn" data-v="unassign" hidden>這張不是這個品項，移回待對應</button></div>
 </div>
@@ -1146,13 +1147,22 @@ const HIRES = new Set([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1
 // 來源優先順序：Google 雲端硬碟上傳的原圖 > 新版上傳的大圖 > 實拍相簿 > 統計表高解析度照 > 舊版小圖
 const driveImg = (id, w) => `https://lh3.googleusercontent.com/d/${id}=w${w}`;
 const driveDl = id => `https://drive.google.com/uc?export=download&id=${id}`;
+// 原始檔（未壓縮）放在 o/ 資料夾，下載時用這份
+const ORIG_PNG = new Set([44]);
+function origOf(u){
+  let m;
+  if((m = u.match(/^(p\d+)\.jpg$/))) return `o/${m[1]}.jpg`;
+  if((m = u.match(/^i\/i(\d+)\.jpg$/))) return `o/i${m[1]}.${ORIG_PNG.has(+m[1]) ? 'png' : 'jpg'}`;
+  if((m = u.match(/^[ghw]\/([\w]+)\.jpg$/))) return `o/${m[1]}.jpg`;
+  return u;
+}
 function photoList(it){
   const out = [];
   if(it.imgId) out.push({src: driveImg(it.imgId, 2000), thumb: driveImg(it.imgId, 600), dl: driveDl(it.imgId)});
   if(it.img && it.imgHi){ const u = toBlobUrl(it.img); out.push({src:u, thumb:u, dl:u}); }
-  itemPhotos(it).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: photoFull(k), key:k}));
-  if(HIRES.has(+it.id)){ const u = `i/i${it.id}.jpg`; out.push({src:u, thumb:u, dl:u}); }
-  (EXTRA[it.id]||[]).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: photoFull(k)}));
+  itemPhotos(it).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: origOf(photoFull(k)), key:k}));
+  if(HIRES.has(+it.id)){ const u = `i/i${it.id}.jpg`; out.push({src:u, thumb:u, dl:origOf(u)}); }
+  (EXTRA[it.id]||[]).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: origOf(photoFull(k))}));
   if(!out.length && it.img){ const u = toBlobUrl(it.img); out.push({src:u, thumb:u, dl:u}); }
   if(!out.length){ const own = IMGS_get()[String(it.id)]; if(own){ const u = toBlobUrl(own); out.push({src:u, thumb:u, dl:u}); } }
   return out;
@@ -1164,7 +1174,8 @@ async function downloadImg(src, name){
   try{
     const blob = await (await fetch(src)).blob();
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `${name.replace(/[\\/:*?"<>|]/g,'_')}.jpg`; document.body.appendChild(a); a.click(); a.remove();
+    const ext = (src.match(/\.(png|jpe?g|gif|webp)(?:$|\?)/i) || [,'jpg'])[1].toLowerCase().replace('jpeg','jpg');
+    a.download = `${name.replace(/[\\/:*?"<>|]/g,'_')}.${ext}`; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   }catch(_){ window.open(src, '_blank'); }
 }
@@ -1261,6 +1272,7 @@ viewer.addEventListener('click', e=>{
   else if(v==='next') showV(V.idx+1);
   else if(v==='zin') zoomAt(V.z*1.6, innerWidth/2, innerHeight/2);
   else if(v==='zout') zoomAt(V.z/1.6, innerWidth/2, innerHeight/2);
+  else if(v==='dl'){ const p = V.list[V.idx]; downloadImg(p.dl || origOf(p.src), (V.cap || '照片') + (V.list.length > 1 ? `_${V.idx+1}` : '')); }
   else if(v==='fs'){ document.fullscreenElement ? document.exitFullscreen() : viewer.requestFullscreen?.().catch(()=>{}); }
   else if(v==='unassign'){
     const it = V.item, k = V.list[V.idx].key;
@@ -1368,9 +1380,13 @@ function pickPhoto(it){
       URL.revokeObjectURL(img.src);
       // 有連雲端：原圖（最長邊 2400px）存到 Google 雲端硬碟，資料裡只記檔案編號
       if(adminCloud()){
-        toast('上傳到 Google 雲端硬碟中…');
+        toast('上傳原圖到 Google 雲端硬碟中…');
         try{
-          const j = await api('upload', {data: shrink(2400), name: it.name});
+          // JPG 原檔直接上傳（不壓縮）；其他格式轉成同尺寸的高畫質 JPG
+          const data = f.type === 'image/jpeg' && f.size < 25e6
+            ? await new Promise((ok,no)=>{ const r = new FileReader(); r.onload = ()=>ok(r.result); r.onerror = no; r.readAsDataURL(f); })
+            : shrink(8000);
+          const j = await api('upload', {data, name: it.name});
           it.imgId = j.id; delete it.img; delete it.imgHi;
           scheduleSave(); invalidate('table','maps'); renderTakePhoto(); toast('已上傳到雲端硬碟「資源教室宣導品照片」資料夾'); return;
         }catch(err){ toast(/未知的操作/.test(err.message) ? '雲端程式還沒加上傳功能，先存在網站資料裡' : '⚠ 上傳失敗：' + err.message + '，先存在網站資料裡'); }
@@ -1961,7 +1977,7 @@ document.getElementById('zeroGrid').addEventListener('click', e=>{
 document.getElementById('panel-inv').addEventListener('click', e=>{ if(e.target.closest('[data-gohist]')) switchTab('hist'); });
 document.getElementById('histGrid').addEventListener('click', e=>{
   const im = e.target.closest('[data-hlb]');
-  if(im) openLightbox(im.src, HISTORY[+im.dataset.hlb]);
+  if(im){ const i = +im.dataset.hlb; openViewer([{src: im.getAttribute('src'), dl: HIST_HI.has(i) ? `o/h${i}.jpg` : im.getAttribute('src')}], 0, {cap: HISTORY[i]}); }
 });
 
 /* ============ 其他 ============ */
