@@ -336,6 +336,19 @@ details.maps>summary{display:flex;align-items:center;gap:10px}
 .bw-dl b{color:var(--ink-soft);font-weight:400;margin-right:4px}
 .bw-dl .btn{padding:5px 12px;font-size:.82rem}
 img.lowres{object-fit:scale-down!important;background:#F1F3F2}
+.semq{width:100%;max-width:320px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.9rem;margin:8px 0}
+.semwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px}
+.semtbl{border-collapse:collapse;width:100%;font-size:.84rem;background:#fff}
+.semtbl th{position:sticky;top:0;background:#F6F8F7;font-weight:600;color:var(--ink-soft);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}
+.semtbl td{padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.semtbl td:first-child{white-space:normal;min-width:160px}
+.bw-hist{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:10px;font-size:.8rem;color:var(--ink-soft)}
+.bw-hist b{font-weight:400;width:100%}
+.bw-hist span{background:#F3F5F4;border-radius:6px;padding:2px 8px}
+.whphotos{margin-top:14px}
+.whphotos b{font-size:.85rem;color:var(--ink-soft);font-weight:400}
+.whstrip{display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:4px}
+.whstrip img{height:88px;border-radius:8px;cursor:zoom-in;flex:0 0 auto}
 .zeronote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:10px}
 .zeronote[hidden]{display:none}
 details.maps{margin-top:12px}
@@ -753,6 +766,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
         <div class="hint">點區域名稱看該區全部品項，點品名看詳細。數字為倉庫的數量。</div>
     <div class="floor q-floor" id="qFloor"></div>
     <div style="margin-top:10px"><span class="door">門口</span></div>
+    <div class="whphotos"><b>倉庫實景（115.09.10 整理後）</b><div class="whstrip" id="whStrip"><img src="t/w/w01.jpg" alt="" loading="lazy" data-wh="0"><img src="t/w/w02.jpg" alt="" loading="lazy" data-wh="1"><img src="t/w/w03.jpg" alt="" loading="lazy" data-wh="2"><img src="t/w/w04.jpg" alt="" loading="lazy" data-wh="3"><img src="t/w/w05.jpg" alt="" loading="lazy" data-wh="4"><img src="t/w/w06.jpg" alt="" loading="lazy" data-wh="5"><img src="t/w/w07.jpg" alt="" loading="lazy" data-wh="6"><img src="t/w/w08.jpg" alt="" loading="lazy" data-wh="7"><img src="t/w/w09.jpg" alt="" loading="lazy" data-wh="8"><img src="t/w/w10.jpg" alt="" loading="lazy" data-wh="9"></div></div>
   </details>
   <details class="mapcard" id="unmatched" style="margin-top:12px"><summary>尚未對應品項的照片</summary>
     <div class="hint" style="margin-top:6px">這些照片無法確定是哪個品項，用下拉選單指定後，就會出現在該品項的照片裡。</div>
@@ -879,6 +893,12 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
     <div class="hint">已停產或已發完之品項，僅供參考，可作為未來再製選項。</div>
     <div class="histgrid" id="histGrid"></div>
   </div>
+  <div class="mapcard">
+    <h2>歷年庫存數量（舊資料）</h2>
+    <div class="hint">整理自舊資料夾「教耗材宣導品衣服」裡各學期的「資源教室歷年宣導品庫存數量統計」Word 檔。資＝悅讀書房、倉＝Q棟倉庫；空白表示那學期的統計表沒有這項。</div>
+    <input type="search" id="semQ" class="semq" placeholder="搜尋品名" autocomplete="off">
+    <div class="semwrap"><table class="semtbl" id="semTbl"></table></div>
+  </div>
 </section>
 </main>
 
@@ -1003,6 +1023,10 @@ const DEFAULT_ITEMS = [
   sizes:[{s:'L',room:2,wh:0},{s:'2XL',room:1,wh:0},{s:'3XL',room:1,wh:0}]},
 ];
 
+// 歷史品項的較清楚照片（取自舊資料「資源教室歷年宣導品」Word 檔）
+const HIST_HI = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]);
+// 舊資料：歷年宣導品庫存數量統計（110.2、112.2、113.2、114.2 學期 Word 檔）
+const HIST_SEM = {"labels": ["110.2 學期", "112.2 學期", "113.2 學期", "114.2 學期"], "rows": {"萬年曆": ["40份", "40份", "", ""], "資源教室簡介": ["18本", "18本", "資 資源教室小資訊、倉 便條紙", "資 資源教室小資訊、倉 便條紙"], "資源教室小資訊": ["16本", "16本", "", ""], "透明貼紙": ["227張", "115張", "", ""], "資源教室服務及就業規劃四部曲DM簡介": ["1198份", "823份", "資 775", "資 825"], "便條紙": ["82份", "0份", "", ""], "A4拉鍊袋": ["88個", "0個", "資 217", "資 143"], "摺疊筆袋": ["16個", "0個", "資 捲線器、倉 弘育美心照片面紙包", "資 捲線器、倉 弘育美心照片面紙包"], "資源教室B5手札": ["184個", "21個 9箱", "資 6箱", "資 33本、倉 235"], "資源教室L資料匣": ["1886個", "1530個", "資 868", "資 467"], "樹葉擠牙膏器": ["231個", "205個", "", ""], "時尚皮紋林錢包": ["58個", "51個", "資 49", "資 28"], "客製化LED閃字風扇": ["87個", "71個 3箱", "倉 200", "資 169、倉 200"], "炫彩迷你旋轉隨身碟": ["130個", "80個", "資 61", "資 4"], "萌系英雄聯盟捲線器": ["16個", "0個", "", ""], "不鏽鋼吸管組": ["88個", "75個", "資 63", "資 21"], "環保筷組": ["34個", "20個", "資 透明貼紙、倉 樹葉擠牙膏器", "資 透明貼紙、倉 樹葉擠牙膏器"], "輕便摺疊後背包": ["85個", "69個", "資 61", "資 50"], "瑞可真空廣口瓶": ["141個", "102個", "倉 24", "資 24、倉 26"], "軟Q多功能名片": ["759個", "758個", "", ""], "塗鴉印花滌綸布購物袋": ["9個", "180個", "資 130", "資 109"], "卡通造型矽膠杯墊": ["209個", "160個", "資 61", "資 25"], "弘育美心照片面紙包": ["35個", "0個", "", ""], "資源教室悠遊卡": ["88張", "77張", "資 87", "資 87、倉 27"], "弘育美心桌曆": ["4本", "4本", "", ""], "素雅帆布手提袋": ["79個", "34個", "資 藍芽耳機、倉 筆袋", "資 藍芽耳機、倉 筆袋"], "卡通捲線器": ["266個", "230個", "資 196", "資 170"], "便攜手提飲料杯套": ["336個", "94個", "資 63", "資 3"], "防滑三色筆": ["570個", "0個", "資 340", "資 219"], "彩樣捲捲購物袋": ["142個", "78個", "資 14", ""], "創意仿真餅乾文具筆袋": ["99個", "10個", "", ""], "手提伸縮矽膠杯": ["106個", "80個", "資 60", "資 20"], "迪士尼捏捏紓壓球": ["88個", "", "", ""], "百變怪獸造型卡套": ["234個", "170個", "資 97", "資 57"], "環保不鏽鋼吸管餐具5入組": ["86個", "20個", "資 91", ""], "彩樣兩用按摩器": ["75個", "45個", "資 8", "資 8"], "彩樣握力按摩器": ["70個", "20個", "", ""], "旅行收納六件套": ["83個", "71個", "倉 27", "倉 27"], "線圈束帶筆記本": ["70個", "50個", "資 輕巧摺疊衣架", "資 輕巧摺疊衣架、倉 彩樣捲捲購物袋 (86元)"], "環保隨身筆記本": ["221本", "154本", "資 57", "資 20"], "便利3C收納袋": ["129份", "51份", "", ""], "金屬翻轉隨身碟": ["244個", "136個", "資 77", "資 77"], "刺繡雙面隨身鏡": ["84個", "49個", "", ""], "可愛造型指甲剪": ["18個", "0個", "", ""], "伸縮摺疊手機架": ["53個", "31個", "資 42", "資 42"], "輕巧摺疊衣架": ["142個", "81個", "", ""], "甜心蝴蝶結擦手巾": ["143個", "114個", "資 44", "資 22"], "矽膠摺疊保鮮盒": ["64個", "58個", "資 8", "0"], "桌上型收納籃": ["100個", "89個", "資 68", "資 31"], "日式幾何束口保溫袋": ["96個", "49個", "資 32", "資 33"], "馬卡龍迷你行動電源": ["80個", "", "", ""], "手機架鑰匙圈": ["276個", "203個", "資 118", "資 87"], "手機自拍架": ["18個", "3個", "", ""], "防疫包": ["155個", "70個", "資 70", "資 66"], "冰霸杯": ["", "123個", "資 115", "資 115"], "冰霸杯套": ["", "16個", "資 95", "資 86"], "飲料提袋": ["", "55個", "", ""], "摺紙燈": ["", "100個", "資 94", "資 96"], "零錢包": ["", "100個", "資 95", "資 94"], "杯墊": ["", "100個", "資 17", "資 10"], "襪子": ["", "", "資 49、倉 120", "資 26、倉 120"], "軟Q多功能名片手機架": ["", "", "資 758", "資 647"], "畢業碗": ["", "", "資 6", "資 5"], "摺疊擴充行李袋": ["", "", "倉 36", "資 30、倉 32"], "氣囊手機支架": ["", "", "資 61", "資 61"], "仙鶴餐具三件組": ["", "", "資 150", "資 11"], "行李吊牌": ["", "", "資 100", "資 62"], "筆記本": ["", "", "資 100", ""], "茄芷袋仔": ["", "", "資 50、倉 100", "資 49、倉 98"], "環保飲料提袋": ["", "", "資 80", "資 55"], "積木": ["", "", "倉 106", "倉 106"], "警報器": ["", "", "資 124", "資 54"], "兩用式帆布袋": ["", "", "資 71、倉 120", "資 24(有裝東西)25(空 )"], "筆袋": ["", "", "資 69", ""], "立可帶": ["", "", "資 69", ""], "剪刀": ["", "", "資 67", ""], "標籤貼": ["", "", "資 100", ""], "釘書機": ["", "", "資 69", ""], "原子筆-藍": ["", "", "資 69", "資 69"], "原子筆-黑": ["", "", "資 69", "資 69"], "原子筆-紅": ["", "", "資 69", "資 69"], "螢光筆": ["", "", "資 69", "資 69"], "牛津健身包": ["", "", "資 37、倉 63", "資 37、倉 63"], "四格微波便當盒": ["", "", "資 50、倉 50", "資 50、倉 50"], "識別證套": ["", "", "資 100", ""], "垮包零錢包": ["", "", "資 100", ""], "韓版三色零錢包": ["", "", "資 100", ""], "手機掛繩": ["", "", "資 彩樣握力按摩器 (30元)、倉 刺繡雙面隨身鏡 (52元)", "資 彩樣握力按摩器 (30元)、倉 刺繡雙面隨身鏡 (52元)"], "記事本": ["", "", "", "資 40"], "圖片": ["", "", "", "資 圖片、倉 品名"]}};
 const HISTORY = ['萬年曆','資源教室簡介','資源教室小資訊','便條紙','A4拉鍊袋','摺疊筆袋','捲線器','弘育美心照片面紙包','弘育美心桌曆','素雅帆布手提袋','藍芽耳機','筆袋','可愛造型指甲剪','手機掛繩','彩樣握力按摩器 (30元)','刺繡雙面隨身鏡 (52元)','手機自拍架 (259元)','環保筷組 (60元)','透明貼紙','樹葉擠牙膏器','便利3C收納袋','線圈束帶筆記本','輕巧摺疊衣架','彩樣捲捲購物袋 (86元)','環保不鏽鋼吸管餐具5入組 (98元)','矽膠摺疊保鮮盒 (85元)'];
 
 /* ============ 圖片資料：延遲解析 + 轉 Blob URL（避免每次重繪複製大字串） ============ */
@@ -1110,6 +1134,11 @@ const GALLERY = {44:["p00","p01"],26:["p03","p05","p15","p22"],56:["p04","p36","
 GALLERY[79] = ["p58","p59","p60","p61","p62","p63","p64"];   // 城市型走側背包
 const UNMATCHED_PHOTOS = ["p02","p08","p09","p10","p11","p57","p65"];
 const photoFull = k => `${k}.jpg`, photoThumb = k => `t/${k}.jpg`;   // 原尺寸大圖／480px 縮圖
+// 舊資料補的照片：小背包實拍（垮包零錢包）放第一張；摺書燈、各地文化零錢包的款式圖放在最後
+GALLERY[55] = ['g/b55', ...(GALLERY[55]||[])];
+// p66（摺紙燈）、p67（零錢包）原圖只有約 200px，會放大成格子 → 改用統計表照片與款式圖
+delete GALLERY[41]; delete GALLERY[42];
+const EXTRA = {41: Array.from({length:17},(_,i)=>`g/z41_${String(i+1).padStart(2,'0')}`), 42: Array.from({length:9},(_,i)=>`g/l42_${String(i+1).padStart(2,'0')}`)};
 function itemPhotos(it){ return [...new Set([...(GALLERY[it.id]||[]), ...(it.photos||[])])]; }
 // 高解析度品項照片（取自 1142 統計表原檔，約 400–600px），比內建的 150px 小圖清楚
 const HIRES = new Set([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 55, 56, 57, 58, 59, 60, 61, 62, 81, 82, 83]);
@@ -1123,6 +1152,7 @@ function photoList(it){
   if(it.img && it.imgHi){ const u = toBlobUrl(it.img); out.push({src:u, thumb:u, dl:u}); }
   itemPhotos(it).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: photoFull(k), key:k}));
   if(HIRES.has(+it.id)){ const u = `i/i${it.id}.jpg`; out.push({src:u, thumb:u, dl:u}); }
+  (EXTRA[it.id]||[]).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: photoFull(k)}));
   if(!out.length && it.img){ const u = toBlobUrl(it.img); out.push({src:u, thumb:u, dl:u}); }
   if(!out.length){ const own = IMGS_get()[String(it.id)]; if(own){ const u = toBlobUrl(own); out.push({src:u, thumb:u, dl:u}); } }
   return out;
@@ -1607,6 +1637,10 @@ function renderMaps(){
     zoneHtml(z('q-left')) + zoneHtml(z('q-right')) +
     zoneHtml(z('q-cab'),'q-full');
 }
+document.getElementById('whStrip').addEventListener('click', e=>{
+  const im = e.target.closest('[data-wh]'); if(!im) return;
+  openViewer(Array.from({length:10},(_,k)=>({src:`w/w${String(k+1).padStart(2,'0')}.jpg`, thumb:`t/w/w${String(k+1).padStart(2,'0')}.jpg`})), +im.dataset.wh, {cap:'Q棟倉庫實景（115.09.10 整理後）'});
+});
 ['ydFloor','qFloor'].forEach(id=>document.getElementById(id).addEventListener('click', e=>{
   const it = e.target.closest('[data-icard]'); if(it){ const x = byId(it.dataset.icard); if(x) openBrowseItem(x); return; }
   const el = e.target.closest('.zone,.sz-h'); if(el) openZone(el.dataset.z);
@@ -1883,7 +1917,17 @@ $t('t-logcsv').onclick = ()=>{
 };
 
 /* ============ 歷史紀錄（切到該分頁才載入圖片） ============ */
+function renderSemTable(){
+  const q = (document.getElementById('semQ').value||'').trim();
+  const cur = n => { const it = items.find(x=>semKey(x.name) === n); return it ? (it.pending ? '尚未到貨' : `資 ${roomQty(it)}${whQty(it) ? `、倉 ${whQty(it)}` : ''}`) : ''; };
+  const rows = Object.entries(HIST_SEM.rows).filter(([n])=>!q || n.includes(q));
+  document.getElementById('semTbl').innerHTML = `<thead><tr><th>品名</th>${HIST_SEM.labels.map(l=>`<th>${l}</th>`).join('')}<th>目前</th></tr></thead><tbody>` +
+    rows.map(([n,v])=>`<tr><td>${esc(n)}</td>${v.map(x=>`<td>${esc(x)}</td>`).join('')}<td><b>${esc(cur(n))}</b></td></tr>`).join('') + '</tbody>';
+}
+const semKey = n => String(n).split('\n')[0].replace(/[（(].*?[)）]/g,'').replace(/\s+/g,'').replace('滌淪','滌綸');
+document.getElementById('semQ').addEventListener('input', debounce(renderSemTable, 150));
 function renderHist(){
+  renderSemTable();
   const zero = items.filter(it=>!it.pending && totQty(it) <= 0);
   document.getElementById('zeroCount').textContent = `（${zero.length} 項）`;
   document.getElementById('zeroGrid').innerHTML = zero.length ? zero.map(it=>{ const src = getImg(it);
@@ -1893,7 +1937,7 @@ function renderHist(){
     : '<div class="hint">目前每個品項都有庫存。</div>';
   const imgs = HIST_get();
   document.getElementById('histGrid').innerHTML = HISTORY.map((h,i)=>{
-    const src = toBlobUrl(imgs[i]);
+    const src = HIST_HI.has(i) ? `h/h${i}.jpg` : toBlobUrl(imgs[i]);
     return `<div>${src?`<img src="${src}" alt="" loading="lazy" decoding="async" data-hlb="${i}">`:''}${esc(h)}</div>`;
   }).join('');
 }
@@ -3533,6 +3577,8 @@ function openBrowseItem(it){
     ${it.note ? `<div class="hint" style="margin-bottom:8px">備註：${esc(it.note)}</div>` : ''}
     <table class="bw-qt"><thead><tr><th></th><th>書房</th><th>倉庫</th><th>合計</th></tr></thead><tbody>${rows}</tbody></table>
     ${(it.loc||[]).length ? `<div class="hint" style="margin-top:8px">放在：${it.loc.map(zoneName).map(esc).join('、')}</div>` : ''}
+    ${(()=>{ const h = HIST_SEM.rows[semKey(it.name)]; if(!h || !h.some(Boolean)) return '';
+      return `<div class="bw-hist"><b>歷年庫存</b>${h.map((x,k)=>x ? `<span>${HIST_SEM.labels[k].replace(' 學期','')}：${esc(x)}</span>` : '').join('')}</div>`; })()}
     ${(()=>{ const dl = dlSources(it); return dl.length ? `<div class="bw-dl"><b>下載圖片</b>${dl.map((u,k)=>`<button class="btn" data-dlsrc="${k}">${dl.length > 1 ? `第 ${k+1} 張` : '下載原圖'}</button>`).join('')}</div>` : ''; })()}
     </div>`);
   const dls = dlSources(it);
