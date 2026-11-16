@@ -53,6 +53,9 @@ function handle_(p){
       case 'save':
         if(role !== 'admin') return out_({ok:false, err:'需要管理密碼'});
         return out_(save_(s, p));
+      case 'upload':
+        if(role !== 'admin') return out_({ok:false, err:'需要管理密碼'});
+        return out_(upload_(p));
     }
     return out_({ok:false, err:'未知的操作'});
   }catch(err){
@@ -208,6 +211,25 @@ function save_(s, p){
   write_(s);
   sheetStock_(s);
   return {ok:true, ver:s.ver, merged:missed.length, state:s};
+}
+
+/* ---------- 照片：存到雲端硬碟「資源教室宣導品照片」資料夾，任何人有連結可看 ---------- */
+function photoFolder_(){
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('PHOTO_FOLDER_ID');
+  if(id){ try{ return DriveApp.getFolderById(id); }catch(_){} }
+  const f = DriveApp.createFolder('資源教室宣導品照片');
+  props.setProperty('PHOTO_FOLDER_ID', f.getId());
+  return f;
+}
+function upload_(p){
+  const raw = String(p.data || '');
+  if(!raw) return {ok:false, err:'沒有照片資料'};
+  const bytes = Utilities.base64Decode(raw.split(',').pop());
+  const name = String(p.name || '照片').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60) + '.jpg';
+  const file = photoFolder_().createFile(Utilities.newBlob(bytes, 'image/jpeg', name));
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return {ok:true, id:file.getId()};
 }
 
 /* ---------- 試算表（方便直接在 Google 試算表查看） ---------- */

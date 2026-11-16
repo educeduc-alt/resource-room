@@ -335,6 +335,7 @@ details.maps>summary{display:flex;align-items:center;gap:10px}
 .bw-dl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;font-size:.85rem}
 .bw-dl b{color:var(--ink-soft);font-weight:400;margin-right:4px}
 .bw-dl .btn{padding:5px 12px;font-size:.82rem}
+img.lowres{object-fit:scale-down!important;background:#F1F3F2}
 .zeronote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:10px}
 .zeronote[hidden]{display:none}
 details.maps{margin-top:12px}
@@ -1112,26 +1113,24 @@ const photoFull = k => `${k}.jpg`, photoThumb = k => `t/${k}.jpg`;   // 原尺�
 function itemPhotos(it){ return [...new Set([...(GALLERY[it.id]||[]), ...(it.photos||[])])]; }
 // 高解析度品項照片（取自 1142 統計表原檔，約 400–600px），比內建的 150px 小圖清楚
 const HIRES = new Set([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 55, 56, 57, 58, 59, 60, 61, 62, 81, 82, 83]);
-function getImg(it){
-  if(it.img && it.imgHi) return toBlobUrl(it.img);           // 新版上傳的大圖
-  if(HIRES.has(+it.id)) return `i/i${it.id}.jpg`;
-  if(it.img) return toBlobUrl(it.img);
-  const own = IMGS_get()[String(it.id)];
-  if(own) return toBlobUrl(own);
-  const ps = itemPhotos(it);
-  return ps.length ? photoThumb(ps[0]) : null;
-}
-// 下載用：盡量給最清楚的那張（相簿原圖 > 高解析度品項照 > 上傳的照片）
-function dlSources(it){
+// ---- 每個品項的照片清單（第一張＝卡片上看到的那張，點開也從這張開始，下載也一樣）----
+// 來源優先順序：Google 雲端硬碟上傳的原圖 > 新版上傳的大圖 > 實拍相簿 > 統計表高解析度照 > 舊版小圖
+const driveImg = (id, w) => `https://lh3.googleusercontent.com/d/${id}=w${w}`;
+const driveDl = id => `https://drive.google.com/uc?export=download&id=${id}`;
+function photoList(it){
   const out = [];
-  if(it.img && it.imgHi) out.push(toBlobUrl(it.img));
-  itemPhotos(it).forEach(k=>out.push(photoFull(k)));
-  if(HIRES.has(+it.id)) out.push(`i/i${it.id}.jpg`);
-  if(!out.length && it.img) out.push(toBlobUrl(it.img));
-  if(!out.length){ const own = IMGS_get()[String(it.id)]; if(own) out.push(toBlobUrl(own)); }
+  if(it.imgId) out.push({src: driveImg(it.imgId, 2000), thumb: driveImg(it.imgId, 600), dl: driveDl(it.imgId)});
+  if(it.img && it.imgHi){ const u = toBlobUrl(it.img); out.push({src:u, thumb:u, dl:u}); }
+  itemPhotos(it).forEach(k=>out.push({src: photoFull(k), thumb: photoThumb(k), dl: photoFull(k), key:k}));
+  if(HIRES.has(+it.id)){ const u = `i/i${it.id}.jpg`; out.push({src:u, thumb:u, dl:u}); }
+  if(!out.length && it.img){ const u = toBlobUrl(it.img); out.push({src:u, thumb:u, dl:u}); }
+  if(!out.length){ const own = IMGS_get()[String(it.id)]; if(own){ const u = toBlobUrl(own); out.push({src:u, thumb:u, dl:u}); } }
   return out;
 }
+function getImg(it){ const l = photoList(it); return l.length ? l[0].thumb : null; }
+const dlSources = it => photoList(it).map(x=>x.dl);
 async function downloadImg(src, name){
+  if(/^https:\/\/drive\.google\.com\//.test(src)){ window.open(src, '_blank'); return; }   // 雲端硬碟會直接下載原檔
   try{
     const blob = await (await fetch(src)).blob();
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
@@ -1153,10 +1152,16 @@ document.addEventListener('click', e=>{
 const dlBtn = it => getImg(it) ? `<span class="dlimg" role="button" tabindex="0" data-dlimg="${it.id}" title="下載清楚的原圖（可用於海報）">下載圖片</span>` : '';
 function thumbHtml(it, cls='thumb'){
   const src = getImg(it);
-  const n = itemPhotos(it).length;
+  const n = photoList(it).length > 1 ? photoList(it).length : 0;
   if(src) return `<span class="thumbwrap"><img class="${cls}" src="${src}" alt="" loading="lazy" decoding="async" data-lb="${it.id}">${n?`<span class="phcount" data-lb="${it.id}">${n} 張</span>`:''}</span>`;
   return `<div class="${cls} ph ${editMode?'editable':''}" data-ph="${it.id}" title="${editMode?'點擊上傳照片':''}">${editMode?'＋':'無照片'}</div>`;
 }
+// 照片比顯示框小時，不放大（避免出現小格子），改成原尺寸置中
+document.addEventListener('load', e=>{
+  const im = e.target; if(!(im instanceof HTMLImageElement) || im.classList.contains('vimg')) return;
+  const need = Math.max(im.clientWidth, im.clientHeight) * Math.min(2, window.devicePixelRatio || 1);
+  im.classList.toggle('lowres', need > 0 && Math.max(im.naturalWidth, im.naturalHeight) < need * 0.6);
+}, true);
 const overlay = document.getElementById('overlay');
 const sheet = document.getElementById('sheet');
 function openSheet(html){ sheet.innerHTML = `<button class="close">✕</button>` + html; overlay.classList.add('show'); }
@@ -1166,8 +1171,8 @@ const viewer = document.getElementById('viewer'), vImg = viewer.querySelector('.
 let V = null;   // {list:[{src,thumb}], idx, cap, item, z, x, y}
 function openLightbox(src, cap){ openViewer([{src}], 0, {cap}); }
 function openGallery(it, idx=0){
-  const ps = itemPhotos(it); if(!ps.length){ openLightbox(getImg(it), it.name); return; }
-  openViewer(ps.map(k=>({src:photoFull(k), thumb:photoThumb(k), key:k})), idx, {cap:it.name, item:it});
+  const l = photoList(it); if(!l.length) return;
+  openViewer(l, idx, {cap:it.name, item:it});
 }
 function openViewer(list, idx, opt={}){
   V = {list, idx:0, cap:opt.cap||'', item:opt.item||null, z:1, x:0, y:0};
@@ -1326,13 +1331,21 @@ function pickPhoto(it){
   inp.onchange=()=>{
     const f=inp.files[0]; if(!f) return;
     const img=new Image();
-    img.onload=()=>{
-      const c=document.createElement('canvas');
-      const k=Math.min(1, 1200/Math.max(img.width,img.height));   // 保留 1200px，下載做海報才清楚
-      c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      it.img=c.toDataURL('image/jpeg',.85); it.imgHi = true;
+    img.onload=async ()=>{
+      const shrink = max => { const c=document.createElement('canvas'), k=Math.min(1, max/Math.max(img.width,img.height));
+        c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        return c.toDataURL('image/jpeg', max > 1500 ? .92 : .85); };
       URL.revokeObjectURL(img.src);
+      // 有連雲端：原圖（最長邊 2400px）存到 Google 雲端硬碟，資料裡只記檔案編號
+      if(adminCloud()){
+        toast('上傳到 Google 雲端硬碟中…');
+        try{
+          const j = await api('upload', {data: shrink(2400), name: it.name});
+          it.imgId = j.id; delete it.img; delete it.imgHi;
+          scheduleSave(); invalidate('table','maps'); renderTakePhoto(); toast('已上傳到雲端硬碟「資源教室宣導品照片」資料夾'); return;
+        }catch(err){ toast(/未知的操作/.test(err.message) ? '雲端程式還沒加上傳功能，先存在網站資料裡' : '⚠ 上傳失敗：' + err.message + '，先存在網站資料裡'); }
+      }
+      it.img = shrink(1200); it.imgHi = true;
       scheduleSave(); invalidate('table','maps'); renderTakePhoto(); toast('已加入照片');
     };
     img.src=URL.createObjectURL(f);
@@ -3279,7 +3292,7 @@ kioskEl.addEventListener('click', e=>{
   const im = t.closest('[data-kimg]');
   if(im){ const it = kList().find(x=>String(x.id) === im.dataset.kimg); if(!it) return;
     const ps = itemPhotos(it);
-    ps.length ? openViewer(ps.map(k=>({src:photoFull(k), thumb:photoThumb(k)})), 0, {cap: it.name}) : openLightbox(getImg(it), it.name); return; }
+    openViewer(photoList(it), 0, {cap: it.name}); return; }
   if(t.id === 'k-go'){ kConfirm(); return; }
   if(t.id === 'k-clear'){ if(confirm('清空已選的物品？')){ kCart.clear(); renderKiosk(); } return; }
   if(t.id === 'k-refresh'){ kRefresh(); toast('更新庫存中…'); return; }
@@ -3510,11 +3523,11 @@ function drawBrowse(host){
       </div></button>`; }).join('');
 }
 function openBrowseItem(it){
-  const src = getImg(it), ps = itemPhotos(it);
+  const pl = photoList(it), src = pl.length ? pl[0].src : null;
   const rows = it.sizes ? it.sizes.map(z=>`<tr><td>${esc(z.s)}</td><td>${+z.room||0}</td><td>${+z.wh||0}</td><td><b>${(+z.room||0)+(+z.wh||0)}</b></td></tr>`).join('')
     : `<tr><td>數量</td><td>${roomQty(it)}</td><td>${whQty(it)}</td><td><b>${totQty(it)}</b></td></tr>`;
   openSheet(`<div class="bw-detail">
-    ${src ? `<div class="bw-dimg" data-bwphoto><img src="${ps.length ? photoFull(ps[0]) : src}" alt="">${ps.length > 1 ? `<span>共 ${ps.length} 張，點一下看大圖</span>` : '<span>點一下看大圖</span>'}</div>` : ''}
+    ${src ? `<div class="bw-dimg" data-bwphoto><img src="${src}" alt="">${pl.length > 1 ? `<span>共 ${pl.length} 張，點一下看大圖</span>` : '<span>點一下看大圖</span>'}</div>` : ''}
     <h2>${esc(it.name)}</h2>
     <div class="bw-meta" style="margin-bottom:8px">${esc(it.cat||'')}${it.price ? `・單價 $${it.price}` : ''}</div>
     ${it.note ? `<div class="hint" style="margin-bottom:8px">備註：${esc(it.note)}</div>` : ''}
@@ -3525,7 +3538,7 @@ function openBrowseItem(it){
   const dls = dlSources(it);
   sheet.querySelectorAll('[data-dlsrc]').forEach(b=>b.onclick = ()=>downloadImg(dls[+b.dataset.dlsrc], dls.length > 1 ? `${it.name}_${+b.dataset.dlsrc+1}` : it.name));
   const ph = sheet.querySelector('[data-bwphoto]');
-  if(ph) ph.onclick = ()=>{ ps.length ? openViewer(ps.map(k=>({src:photoFull(k), thumb:photoThumb(k)})), 0, {cap: it.name}) : openLightbox(src, it.name); };
+  if(ph) ph.onclick = ()=>openViewer(pl, 0, {cap: it.name});
 }
 // 管理者也能開瀏覽頁
 const bwOv = document.getElementById('browseOv');
