@@ -3113,7 +3113,7 @@ function showKiosk(view, fromHistory){
   kioskOn = true; document.body.classList.add('kiosk-mode'); kioskEl.hidden = false;
   window.scrollTo(0,0); closeSheet();
   document.getElementById('k-backh').hidden = kView === 'browse';
-  if(kView === 'staff' && !kLocal() && !staff){ kAutoLogin(); return; }
+  if(kView === 'staff' && !kLocal() && !staff){ kSetup(); return; }
   kHeadUser();
   if(!kItems) try{ const c = JSON.parse(localStorage.getItem(kView === 'browse' ? 'rc-browse-cache' : 'rc-kiosk-cache') || 'null'); if(c) kItems = c; }catch(_){}
   kioskEl.querySelector('.k-body').innerHTML = '';
@@ -3155,29 +3155,18 @@ async function kRefresh(quiet){
   }
 }
 function kSetNote(t, bad){ const n = document.getElementById('k-note'); if(n){ n.textContent = t; n.classList.toggle('bad', !!bad); } }
-// 這台裝置記住工讀生代碼與上次登入的名字：按「工讀生」就自動登入（按「登出」後下次要再點一下名字）
-const SK_CODE = 'rc-staff-code', SK_AUTO = 'rc-staff-auto', SK_NAMES = 'rc-staff-names';
+// 不自動登入、不記住代碼（避免別人拿同一台裝置亂登入）；只記最近登入的名字方便點選，代碼每次都要自己輸入
+const SK_NAMES = 'rc-staff-names';
 const lsGet = k => { try{ return localStorage.getItem(k) || ''; }catch(_){ return ''; } };
 const lsSet = (k,v) => { try{ v ? localStorage.setItem(k, v) : localStorage.removeItem(k); }catch(_){} };
 const recentNames = () => { try{ return JSON.parse(lsGet(SK_NAMES) || '[]'); }catch(_){ return []; } };
+lsSet('rc-staff-code', ''); lsSet('rc-staff-auto', '');   // 清掉舊版存過的代碼
 function rememberStaff(code, name){
-  lsSet(SK_CODE, code); lsSet(SK_AUTO, name);
   lsSet(SK_NAMES, JSON.stringify([name, ...recentNames().filter(n=>n !== name)].slice(0, 6)));
-}
-async function kAutoLogin(){
-  const code = lsGet(SK_CODE), name = lsGet(SK_AUTO);
-  if(!code || !name){ kSetup(); return; }
-  kioskEl.querySelector('.k-body').innerHTML = '<div class="k-empty">自動登入中…</div>';
-  kioskEl.querySelector('.k-cart').hidden = true;
-  try{ await api('auth', {}, {key:'', code}); }
-  catch(err){ if(/代碼錯誤/.test(err.message)){ lsSet(SK_CODE, ''); kSetup('工讀生代碼已更換，請重新輸入'); } else kSetup(err.message); return; }
-  setStaff({code, name, last: Date.now()});
-  kItems = null; showKiosk('staff', true);
-  toast(`已自動登入：${name}（不是你？按右上「${name}・登出」換人）`);
 }
 const kApi = (op, data) => api(op, data, {key:'', code: staff && staff.code});   // 工讀生畫面一律用工讀生身分
 function kSetup(msg){
-  const pre = (()=>{ try{ return sessionStorage.getItem('rc-staff-prefill') || ''; }catch(_){ return ''; } })() || lsGet(SK_CODE);
+  const pre = (()=>{ try{ return sessionStorage.getItem('rc-staff-prefill') || ''; }catch(_){ return ''; } })() || '';
   const names = recentNames();
   kHeadUser();
   kioskEl.querySelector('.k-sub').textContent = '請先登入';
@@ -3421,7 +3410,7 @@ kioskEl.addEventListener('click', e=>{
   if(t.id === 'k-clear'){ if(confirm('清空已選的物品？')){ kCart.clear(); renderKiosk(); } return; }
   if(t.id === 'k-refresh'){ kRefresh(); toast('更新庫存中…'); return; }
   if(t.id === 'k-admin'){ kUnlock(); return; }
-  if(t.closest('#k-logout')){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要登出嗎？')) return; lsSet(SK_AUTO, ''); kLogout('已登出，下一位按「工讀生」點自己的名字即可'); return; }
+  if(t.closest('#k-logout')){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要登出嗎？')) return; kLogout('已登出'); return; }
   if(t.id === 'k-backh'){ kBack(); return; }
 });
 kioskEl.addEventListener('change', e=>{ if(e.target.matches('[data-kq]')) kSet(e.target.closest('.kstep').dataset.key, e.target.value); });
