@@ -1139,6 +1139,8 @@ const photoFull = k => `${k}.jpg`, photoThumb = k => `t/${k}.jpg`;   // 原尺�
 GALLERY[55] = ['g/b55', ...(GALLERY[55]||[])];
 // p66（摺紙燈）、p67（零錢包）原圖只有約 200px，會放大成格子 → 改用統計表照片與款式圖
 delete GALLERY[41]; delete GALLERY[42];
+// 1151 新購到貨品項實拍（115.11.19）
+GALLERY[76] = ['g/n76_2','g/n76_1']; GALLERY[77] = ['g/n77_2','g/n77_1']; GALLERY[78] = ['g/n78_1'];
 const EXTRA = {41: Array.from({length:17},(_,i)=>`g/z41_${String(i+1).padStart(2,'0')}`), 42: Array.from({length:9},(_,i)=>`g/l42_${String(i+1).padStart(2,'0')}`)};
 function itemPhotos(it){ return [...new Set([...(GALLERY[it.id]||[]), ...(it.photos||[])])]; }
 // 高解析度品項照片（取自 1142 統計表原檔，約 400–600px），比內建的 150px 小圖清楚
@@ -3761,6 +3763,16 @@ function paperApply(){
 const PENDING_1151 = ['動物造型紓壓球','六角矽膠按摩球','粉嫩可愛圖案筆記本','炫彩磁吸手機架'];
 const pendApplyNeeded = () => items.some(it=>PENDING_1151.includes(it.name) && !it.pending && !it.arrived && /1151學期新購/.test(it.note||''));
 function pendApply(){ let n = 0; items.forEach(it=>{ if(PENDING_1151.includes(it.name) && !it.pending && !it.arrived){ it.pending = true; it.room = 0; it.wh = 0; it.note = '1151學期新購，已訂購 100 個，尚未到貨'; n++; } }); return n; }
+// 115.11.19 到貨：六角矽膠按摩球、粉嫩可愛圖案筆記本、炫彩磁吸手機架各 100 個入悅讀書房（動物造型紓壓球仍未到）
+const ARRIVED_1151 = ['六角矽膠按摩球','粉嫩可愛圖案筆記本','炫彩磁吸手機架'];
+const arriveNeeded = () => items.some(it=>ARRIVED_1151.includes(it.name) && it.pending);
+function arriveApply(){
+  const ts = new Date('2026-11-19T17:00:00+08:00').toISOString(); let n = 0;
+  items.forEach(it=>{ if(!ARRIVED_1151.includes(it.name) || !it.pending) return;
+    delete it.pending; it.arrived = true; it.room = 100; it.wh = it.wh || 0; it.note = '1151學期新購';
+    log.unshift({ts, itemId:it.id, name:it.name, size:null, from:'room', qty:100, dir:1, person:'', purpose:'到貨入庫', by:'管理者', src:'admin', remain:100}); n++; });
+  return n;
+}
 async function autoPatch(){
   const msg = [];
   if(pendApplyNeeded()) msg.push(`${pendApply()} 項尚未到貨的品項先移出庫存`);
@@ -3768,8 +3780,9 @@ async function autoPatch(){
   if(stPending()) msg.push(`盤點更新 ${stApply()} 項、移除四部曲`);
   if(newPending()) msg.push(`新增 ${newApply()} 項新購宣導品`);
   if(audPending()){ audApply(); msg.push('依盤點表分出對外／內部品項'); }
+  if(arriveNeeded()) msg.push(`${arriveApply()} 項新購宣導品到貨入庫（各 100 個）`);
   if(!msg.length) return;
-  scheduleSave(); invalidate('all'); renderStBanner(); renderNewBanner();
+  scheduleSave(); invalidate('all'); renderStBanner(); renderNewBanner(); renderPendBanner();
   toast('已自動套用：' + msg.join('；'));
 }
 
