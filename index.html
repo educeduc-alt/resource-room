@@ -503,13 +503,16 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .kiosk.restock{--mode:var(--ok);--mode-soft:#E1F1E7}
 .k-head{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;display:flex;align-items:center;gap:8px;
   padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top));box-shadow:0 2px 8px rgba(0,0,0,.12)}
-.k-head>div{flex:1;min-width:0}
+.k-head .k-ttl{flex:1;min-width:0}
+.k-sw{display:flex;gap:6px;flex:0 0 auto}
+.k-tools{max-width:1100px;margin:0 auto;padding:10px 12px 0;display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--ink-soft)}
+.k-tools .k-sp{flex:1}
+.k-tbtn{border:1px solid var(--line);background:#fff;color:var(--primary);border-radius:999px;padding:6px 12px;font-family:inherit;font-size:.84rem;cursor:pointer;white-space:nowrap}
 .k-title{font-size:1.12rem;font-weight:700;letter-spacing:.06em}
 .k-sub{font-size:.74rem;opacity:.8}
 .k-role{background:rgba(255,255,255,.95)!important;color:var(--primary)!important;font-weight:700}
-@media (max-width:480px){ .k-head{flex-wrap:wrap} .k-head>div{flex:1 1 55%;min-width:0} .k-head .k-backh{flex:0 0 auto} #k-refresh{margin-left:auto} }
+@media (max-width:480px){ .k-head{flex-wrap:wrap} .k-head .k-ttl{flex:1 1 100%;order:2} .k-sw{order:1} }
 .k-hbtn{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
-#k-refresh{font-size:1.1rem;padding:6px 11px}
 .k-body{max-width:1100px;margin:0 auto;padding:12px 12px 0}
 .k-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
 .k-back{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-family:inherit;font-size:.92rem;cursor:pointer;color:var(--ink)}
@@ -667,10 +670,12 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .kdone li span{color:var(--ink-soft);white-space:nowrap}
 .kdone .kbig{width:100%;background:var(--primary)}
 /* 內部：右上角按鈕與雲端設定 */
-.hdr-actions{position:absolute;top:12px;right:14px;display:flex;gap:6px}
-.hdr-actions button{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 12px;font-family:inherit;font-size:.8rem;cursor:pointer;white-space:nowrap}
-.hdr-actions button.bad{background:var(--accent)}
-@media (max-width:640px){ header h1{padding-right:0} .hdr-actions{position:static;margin-top:8px} }
+.hdr-actions{display:flex;gap:6px;margin-bottom:8px}
+.adm-tools{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.adm-tools .k-sp{flex:1}
+.adm-tools .k-tbtn.bad{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hdr-actions button{border:none;background:rgba(255,255,255,.95);color:var(--primary);font-weight:700;border-radius:999px;padding:6px 12px;font-family:inherit;font-size:.8rem;cursor:pointer;white-space:nowrap}
+@media (max-width:640px){ header h1{padding-right:0} }
 .cs-status{font-size:.85rem;color:var(--ok)}
 .cs-status.bad{color:var(--accent)}
 .cs-link{display:flex;gap:6px;margin:6px 0}
@@ -681,17 +686,14 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <body>
 
 <div id="kiosk" class="kiosk" hidden>
-  <div class="k-head"><button class="k-hbtn k-backh" id="k-backh" hidden>‹ 上一步</button><div><div class="k-title">資源教室 宣導品</div><div class="k-sub">瀏覽庫存</div></div>
-    <button class="k-hbtn" id="k-refresh" title="更新庫存">更新</button>
-    <button class="k-hbtn" id="k-tobrowse" hidden>瀏覽</button>
-    <button class="k-hbtn k-role" id="k-tostaff">工讀生</button>
-    <button class="k-hbtn" id="k-logout" hidden>登出</button>
-    <button class="k-hbtn k-role" id="k-admin">管理者</button></div>
+  <div class="k-head"><div class="k-sw"><button class="k-hbtn k-role" id="k-tobrowse" hidden>目前庫存</button><button class="k-hbtn k-role" id="k-tostaff">工讀生</button><button class="k-hbtn k-role" id="k-admin">管理者</button></div>
+    <div class="k-ttl"><div class="k-title">資源教室 宣導品</div><div class="k-sub">瀏覽庫存</div></div></div>
+  <div class="k-tools"><span id="k-who"></span><button class="k-tbtn" id="k-logout" hidden>登出</button><span class="k-sp"></span><button class="k-tbtn" id="k-refresh" title="從雲端重新載入庫存">↻ 更新庫存</button></div>
   <div class="k-body"></div>
   <div class="k-cart" hidden><button class="btn" id="k-clear" hidden>清空</button><div class="k-sum"></div><button class="kbig" id="k-go" disabled>確認領出 →</button></div>
 </div>
 <header>
-  <div class="hdr-actions"><button id="browseBtn" title="回到前台瀏覽頁">前台</button><button id="cloudBtn" title="雲端同步設定">雲端：未設定</button><button id="lockBtn" title="登出管理者，回到前台">登出管理</button></div>
+  <div class="hdr-actions"><button id="browseBtn" title="回到目前庫存瀏覽頁">目前庫存</button><button id="staffBtn" title="到工讀生登記">工讀生</button></div>
   <h1>資源教室宣導品倉庫管理</h1>
   <div class="sub">114-2 學期庫存 ・ 115.01.22 統計基準 ・ 資＝悅讀書房(資源教室)、倉＝Q棟地下室倉庫</div>
   <nav class="tabs">
@@ -703,6 +705,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 </header>
 
 <main>
+<div class="adm-tools"><button class="k-tbtn" id="cloudBtn" title="雲端同步設定">雲端：未設定</button><span class="k-sp"></span><button class="k-tbtn" id="lockBtn" title="登出管理者，回到目前庫存">登出管理</button></div>
 <!-- ================= 庫存總覽 ================= -->
 <section class="panel show" id="panel-inv">
   <div class="stbanner" id="stBanner" hidden>
@@ -909,7 +912,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 </section>
 </main>
 
-<footer class="note">修改會自動存在<b>這台電腦的這個瀏覽器</b>裡；設定右上角「雲端同步」後，工讀生手機的登記與其他電腦都會同步。請定期在庫存總覽按「匯出備份」保存 JSON 檔（含圖書位置），到另一台電腦按「匯入備份」即可接續使用。</footer>
+<footer class="note">修改會自動存在<b>這台電腦的這個瀏覽器</b>裡；設定頁面上方的「雲端」後，工讀生手機的登記與其他電腦都會同步。請定期在庫存總覽按「匯出備份」保存 JSON 檔（含圖書位置），到另一台電腦按「匯入備份」即可接續使用。</footer>
 
 <!-- 位置編輯 / 區域檢視 modal -->
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -3112,7 +3115,6 @@ function showKiosk(view, fromHistory){
   if(view) kView = view;
   kioskOn = true; document.body.classList.add('kiosk-mode'); kioskEl.hidden = false;
   window.scrollTo(0,0); closeSheet();
-  document.getElementById('k-backh').hidden = kView === 'browse';
   if(kView === 'staff' && !kLocal() && !staff){ kSetup(); return; }
   kHeadUser();
   if(!kItems) try{ const c = JSON.parse(localStorage.getItem(kView === 'browse' ? 'rc-browse-cache' : 'rc-kiosk-cache') || 'null'); if(c) kItems = c; }catch(_){}
@@ -3137,7 +3139,7 @@ async function kRefresh(quiet){
       renderKiosk();
     }catch(err){
       const host = kioskEl.querySelector('.bw-host');
-      if(host && !kItems) host.innerHTML = `<div class="k-empty">${/代碼錯誤/.test(err.message) ? '瀏覽頁需要管理者更新雲端程式後才能使用。<br>工讀生請按右上「工讀生」登入。' : '⚠ 無法載入庫存：' + esc(err.message)}</div>`;
+      if(host && !kItems) host.innerHTML = `<div class="k-empty">${/代碼錯誤/.test(err.message) ? '瀏覽頁需要管理者更新雲端程式後才能使用。<br>工讀生請按左上「工讀生」登入。' : '⚠ 無法載入庫存：' + esc(err.message)}</div>`;
     }
     return;
   }
@@ -3181,7 +3183,7 @@ function kSetup(msg){
     <div class="kc-err" id="k-err" hidden></div>
     <button class="kbig" id="k-start" type="submit">登入</button>
     </form>
-    <button class="btn" id="k-cancel">← 回瀏覽頁</button>
+    <button class="btn" id="k-cancel">← 回目前庫存</button>
     <p style="font-size:.78rem">關掉網頁、按「登出」或閒置 ${IDLE_MIN} 分鐘會自動登出。</p></div>`;
   kioskEl.querySelector('.k-cart').hidden = true;
   let busy = false;
@@ -3210,7 +3212,8 @@ function kSetup(msg){
 function kHeadUser(){
   const b = document.getElementById('k-logout');
   b.hidden = !staff || kLocal() || kView !== 'staff';
-  if(staff) b.textContent = `${staff.name}・登出`;
+  b.textContent = '登出';
+  document.getElementById('k-who').textContent = (staff && !b.hidden) ? `工讀生：${staff.name}` : '';
   document.getElementById('k-tostaff').hidden = kView === 'staff';
   document.getElementById('k-tobrowse').hidden = kView !== 'staff';
   kioskEl.querySelector('.k-title').textContent = kView === 'staff' ? '資源教室 工讀生登記' : '資源教室 宣導品';
@@ -3399,7 +3402,7 @@ kioskEl.addEventListener('click', e=>{
   if(t.closest('[data-kall]')){ kAll = !kAll; renderKiosk(); return; }
   if(t.closest('[data-kadd]')){ kAddItem(); return; }
   if(t.id === 'k-tostaff'){ kFrom = null; kView = 'staff'; kPush(); showKiosk('staff'); return; }
-  if(t.id === 'k-tobrowse'){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要回瀏覽頁嗎？')) return; kCart.clear(); kFrom = null; kView = 'browse'; kPush(); showKiosk('browse'); return; }
+  if(t.id === 'k-tobrowse'){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要回目前庫存嗎？')) return; kCart.clear(); kFrom = null; kView = 'browse'; kPush(); showKiosk('browse'); return; }
   const c = t.closest('[data-kcat]');
   if(c){ kCat = c.dataset.kcat; renderKiosk(); return; }
   const im = t.closest('[data-kimg]');
@@ -3411,7 +3414,6 @@ kioskEl.addEventListener('click', e=>{
   if(t.id === 'k-refresh'){ kRefresh(); toast('更新庫存中…'); return; }
   if(t.id === 'k-admin'){ kUnlock(); return; }
   if(t.closest('#k-logout')){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要登出嗎？')) return; kLogout('已登出'); return; }
-  if(t.id === 'k-backh'){ kBack(); return; }
 });
 kioskEl.addEventListener('change', e=>{ if(e.target.matches('[data-kq]')) kSet(e.target.closest('.kstep').dataset.key, e.target.value); });
 kioskEl.addEventListener('focusin', e=>{ if(e.target.matches('[data-kq]')) e.target.select(); });
@@ -3658,7 +3660,8 @@ function openBrowseItem(it){
 }
 // 管理者也能開瀏覽頁
 const bwOv = document.getElementById('browseOv');
-document.getElementById('browseBtn').onclick = ()=>{ kItems = null; showKiosk('browse'); };
+document.getElementById('browseBtn').onclick = ()=>{ kItems = null; kFrom = null; kView = 'browse'; kPush(); showKiosk('browse'); };
+document.getElementById('staffBtn').onclick = ()=>{ kItems = null; kFrom = null; kView = 'staff'; kPush(); showKiosk('staff'); };
 bwOv.querySelector('[data-bwclose]').onclick = ()=>{ bwOv.hidden = true; document.body.classList.remove('noscroll'); };
 
 /* ---- 進入內部管理 ---- */
