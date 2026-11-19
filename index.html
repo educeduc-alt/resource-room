@@ -507,7 +507,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .k-title{font-size:1.12rem;font-weight:700;letter-spacing:.06em}
 .k-sub{font-size:.74rem;opacity:.8}
 .k-role{background:rgba(255,255,255,.95)!important;color:var(--primary)!important;font-weight:700}
-@media (max-width:480px){ .k-head{flex-wrap:wrap} .k-head>div{flex:1 1 100%} #k-refresh{margin-left:auto} }
+@media (max-width:480px){ .k-head{flex-wrap:wrap} .k-head>div{flex:1 1 55%;min-width:0} .k-head .k-backh{flex:0 0 auto} #k-refresh{margin-left:auto} }
 .k-hbtn{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
 #k-refresh{font-size:1.1rem;padding:6px 11px}
 .k-body{max-width:1100px;margin:0 auto;padding:12px 12px 0}
@@ -630,6 +630,11 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .k-setup h2{color:var(--primary)}
 .k-setup p{font-size:.9rem;color:var(--ink-soft)}
 .k-setup .bad{color:var(--accent)}
+.k-lastloc{font-size:.72rem;background:rgba(255,255,255,.25);border-radius:999px;padding:1px 9px}
+.k-backh{margin-right:2px;font-weight:700}
+.k-names{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-size:.8rem;color:var(--ink-soft)}
+.k-names button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-family:inherit;font-size:.9rem;cursor:pointer;color:var(--primary)}
+.k-names button:hover{background:var(--primary-soft)}
 .k-form{display:flex;flex-direction:column;gap:12px}
 .k-setup input{padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;text-align:center}
 .k-setup .kbig{background:var(--primary)}
@@ -676,7 +681,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <body>
 
 <div id="kiosk" class="kiosk" hidden>
-  <div class="k-head"><div><div class="k-title">資源教室 宣導品</div><div class="k-sub">瀏覽庫存</div></div>
+  <div class="k-head"><button class="k-hbtn k-backh" id="k-backh" hidden>‹ 上一步</button><div><div class="k-title">資源教室 宣導品</div><div class="k-sub">瀏覽庫存</div></div>
     <button class="k-hbtn" id="k-refresh" title="更新庫存">更新</button>
     <button class="k-hbtn" id="k-tobrowse" hidden>瀏覽</button>
     <button class="k-hbtn k-role" id="k-tostaff">工讀生</button>
@@ -3084,12 +3089,31 @@ const kObj = (it, size) => size != null && it.sizes ? it.sizes[size] : it;
 const kStock = (it, size, from=kFrom) => +((kObj(it,size)||{})[from]) || 0;
 const fromName = f => f === 'wh' ? 'Q棟倉庫' : '悅讀書房';
 
+/* ---- 前台導覽：瀏覽 → 工讀生（選地點）→ 某個地點；左上「上一步」與手機返回鍵都能退回上一層 ---- */
+const kNavState = () => ({k:1, view:kView, from:kFrom});
+function kPush(){ try{ history.pushState(kNavState(), ''); }catch(_){} }
+function kBack(){ if(history.state && history.state.k && history.state.view !== 'browse') history.back(); else kGoUp(); }
+function kGoUp(){
+  if(kView === 'staff' && kFrom){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要離開嗎？')) return false; kCart.clear(); kFrom = null; kioskEl.querySelector('.k-body').innerHTML = ''; renderKiosk(); window.scrollTo(0,0); return true; }
+  if(kView === 'staff'){ kCart.clear(); kFrom = null; showKiosk('browse'); return true; }
+  return true;
+}
+addEventListener('popstate', e=>{
+  if(!kioskOn) return;
+  const st = e.state && e.state.k ? e.state : {view:'browse', from:null};
+  // 從某個地點退回時，有沒送出的物品要先確認
+  if(kCart.size && (st.view !== 'staff' || st.from !== kFrom) && !confirm('還有選好但沒送出的物品，確定要離開嗎？')){ kPush(); return; }
+  kCart.clear(); kFrom = st.from || null;
+  if(st.view === 'staff'){ kView = 'staff'; showKiosk('staff', true); }
+  else showKiosk('browse', true);
+});
 // 前台：view＝'browse'（瀏覽，不用登入）或 'staff'（工讀生登記，需要登入）
-function showKiosk(view){
+function showKiosk(view, fromHistory){
   if(view) kView = view;
   kioskOn = true; document.body.classList.add('kiosk-mode'); kioskEl.hidden = false;
   window.scrollTo(0,0); closeSheet();
-  if(kView === 'staff' && !kLocal() && !staff){ kSetup(); return; }
+  document.getElementById('k-backh').hidden = kView === 'browse';
+  if(kView === 'staff' && !kLocal() && !staff){ kAutoLogin(); return; }
   kHeadUser();
   if(!kItems) try{ const c = JSON.parse(localStorage.getItem(kView === 'browse' ? 'rc-browse-cache' : 'rc-kiosk-cache') || 'null'); if(c) kItems = c; }catch(_){}
   kioskEl.querySelector('.k-body').innerHTML = '';
@@ -3131,9 +3155,30 @@ async function kRefresh(quiet){
   }
 }
 function kSetNote(t, bad){ const n = document.getElementById('k-note'); if(n){ n.textContent = t; n.classList.toggle('bad', !!bad); } }
+// 這台裝置記住工讀生代碼與上次登入的名字：按「工讀生」就自動登入（按「登出」後下次要再點一下名字）
+const SK_CODE = 'rc-staff-code', SK_AUTO = 'rc-staff-auto', SK_NAMES = 'rc-staff-names';
+const lsGet = k => { try{ return localStorage.getItem(k) || ''; }catch(_){ return ''; } };
+const lsSet = (k,v) => { try{ v ? localStorage.setItem(k, v) : localStorage.removeItem(k); }catch(_){} };
+const recentNames = () => { try{ return JSON.parse(lsGet(SK_NAMES) || '[]'); }catch(_){ return []; } };
+function rememberStaff(code, name){
+  lsSet(SK_CODE, code); lsSet(SK_AUTO, name);
+  lsSet(SK_NAMES, JSON.stringify([name, ...recentNames().filter(n=>n !== name)].slice(0, 6)));
+}
+async function kAutoLogin(){
+  const code = lsGet(SK_CODE), name = lsGet(SK_AUTO);
+  if(!code || !name){ kSetup(); return; }
+  kioskEl.querySelector('.k-body').innerHTML = '<div class="k-empty">自動登入中…</div>';
+  kioskEl.querySelector('.k-cart').hidden = true;
+  try{ await api('auth', {}, {key:'', code}); }
+  catch(err){ if(/代碼錯誤/.test(err.message)){ lsSet(SK_CODE, ''); kSetup('工讀生代碼已更換，請重新輸入'); } else kSetup(err.message); return; }
+  setStaff({code, name, last: Date.now()});
+  kItems = null; showKiosk('staff', true);
+  toast(`已自動登入：${name}（不是你？按右上「${name}・登出」換人）`);
+}
 const kApi = (op, data) => api(op, data, {key:'', code: staff && staff.code});   // 工讀生畫面一律用工讀生身分
 function kSetup(msg){
-  const pre = (()=>{ try{ return sessionStorage.getItem('rc-staff-prefill') || ''; }catch(_){ return ''; } })();
+  const pre = (()=>{ try{ return sessionStorage.getItem('rc-staff-prefill') || ''; }catch(_){ return ''; } })() || lsGet(SK_CODE);
+  const names = recentNames();
   kHeadUser();
   kioskEl.querySelector('.k-sub').textContent = '請先登入';
   kioskEl.querySelector('.k-body').innerHTML = `<div class="k-setup">
@@ -3143,6 +3188,7 @@ function kSetup(msg){
     <form id="k-form" class="k-form" autocomplete="off" novalidate>
     <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(pre)}">
     <input id="k-name" placeholder="你的名字（登記人）" autocomplete="name">
+    ${names.length ? `<div class="k-names"><span>最近登入：</span>${names.map(n=>`<button type="button" data-kname="${esc(n)}">${esc(n)}</button>`).join('')}</div>` : ''}
     <div class="kc-err" id="k-err" hidden></div>
     <button class="kbig" id="k-start" type="submit">登入</button>
     </form>
@@ -3164,12 +3210,13 @@ function kSetup(msg){
     try{ await api('auth', {}, {key:'', code}); }
     catch(err){ busy = false; btn.disabled = false; btn.textContent = '登入';
       showErr(/代碼錯誤/.test(err.message) ? '工讀生代碼不正確，請確認後再試' : err.message); return; }
-    setStaff({code, name, last: Date.now()});
+    setStaff({code, name, last: Date.now()}); rememberStaff(code, name);
     kFrom = null; kCart.clear();
-    kItems = null; showKiosk('staff');
+    kItems = null; showKiosk('staff', true);
   };
   kioskEl.querySelector('#k-form').addEventListener('submit', e=>{ e.preventDefault(); document.activeElement && document.activeElement.blur(); go(); });
-  kioskEl.querySelector('#k-cancel').onclick = ()=>showKiosk('browse');
+  kioskEl.querySelector('#k-cancel').onclick = ()=>kBack();
+  kioskEl.querySelectorAll('[data-kname]').forEach(b=>b.onclick = ()=>{ kioskEl.querySelector('#k-name').value = b.dataset.kname; if(kioskEl.querySelector('#k-code').value.trim()) go(); else kioskEl.querySelector('#k-code').focus(); });
 }
 function kHeadUser(){
   const b = document.getElementById('k-logout');
@@ -3208,7 +3255,7 @@ function kLandingHtml(){
     <h2>要到哪裡拿東西／放東西／盤點？</h2>
     <div class="k-locs">${LOCS.map(L=>{
       const n = list.filter(it=>kInStock(it, L.k)).length;
-      return `<button class="k-loc ${L.k}" data-kfrom="${L.k}"><span class="k-ln">${L.name}</span>
+      return `<button class="k-loc ${L.k}" data-kfrom="${L.k}"><span class="k-ln">${L.name}</span>${(()=>{ try{ return sessionStorage.getItem('rc-last-loc') === L.k ? '<span class="k-lastloc">上次去過</span>' : ''; }catch(_){ return ''; } })()}
         <span class="k-ls">${L.sub}・${(!kLocal() && !kItems) ? '載入中…' : n + ' 項有庫存'}</span><span class="k-lgo">進入 →</span></button>`; }).join('')}</div></div>`;
 }
 const kBodyHtml = () => `
@@ -3358,14 +3405,12 @@ kioskEl.addEventListener('click', e=>{
     if(kCart.size && !confirm('切換「領出／補進／盤點」會清空目前選的或改的數量，確定嗎？')) return;
     kMode = v; kCart.clear(); renderKiosk(); return; }
   const f = t.closest('[data-kfrom]');
-  if(f){ kFrom = f.dataset.kfrom; kCat = ''; kAll = false; kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); renderKiosk(); window.scrollTo(0,0); return; }
-  if(t.closest('[data-kback]')){
-    if(kCart.size && !confirm('換地點會清空已選的物品，確定嗎？')) return;
-    kCart.clear(); kFrom = null; renderKiosk(); window.scrollTo(0,0); return; }
+  if(f){ kFrom = f.dataset.kfrom; kCat = ''; kAll = false; try{ sessionStorage.setItem('rc-last-loc', kFrom); }catch(_){} kPush(); kioskEl.querySelector('.k-body').innerHTML = kBodyHtml(); renderKiosk(); window.scrollTo(0,0); return; }
+  if(t.closest('[data-kback]')){ kBack(); return; }
   if(t.closest('[data-kall]')){ kAll = !kAll; renderKiosk(); return; }
   if(t.closest('[data-kadd]')){ kAddItem(); return; }
-  if(t.id === 'k-tostaff'){ showKiosk('staff'); return; }
-  if(t.id === 'k-tobrowse'){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要回瀏覽頁嗎？')) return; kCart.clear(); kFrom = null; showKiosk('browse'); return; }
+  if(t.id === 'k-tostaff'){ kFrom = null; kView = 'staff'; kPush(); showKiosk('staff'); return; }
+  if(t.id === 'k-tobrowse'){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要回瀏覽頁嗎？')) return; kCart.clear(); kFrom = null; kView = 'browse'; kPush(); showKiosk('browse'); return; }
   const c = t.closest('[data-kcat]');
   if(c){ kCat = c.dataset.kcat; renderKiosk(); return; }
   const im = t.closest('[data-kimg]');
@@ -3376,7 +3421,8 @@ kioskEl.addEventListener('click', e=>{
   if(t.id === 'k-clear'){ if(confirm('清空已選的物品？')){ kCart.clear(); renderKiosk(); } return; }
   if(t.id === 'k-refresh'){ kRefresh(); toast('更新庫存中…'); return; }
   if(t.id === 'k-admin'){ kUnlock(); return; }
-  if(t.closest('#k-logout')){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要登出嗎？')) return; kLogout('已登出，下一位請登入'); return; }
+  if(t.closest('#k-logout')){ if(kCart.size && !confirm('還有選好但沒送出的物品，確定要登出嗎？')) return; lsSet(SK_AUTO, ''); kLogout('已登出，下一位按「工讀生」點自己的名字即可'); return; }
+  if(t.id === 'k-backh'){ kBack(); return; }
 });
 kioskEl.addEventListener('change', e=>{ if(e.target.matches('[data-kq]')) kSet(e.target.closest('.kstep').dataset.key, e.target.value); });
 kioskEl.addEventListener('focusin', e=>{ if(e.target.matches('[data-kq]')) e.target.select(); });
@@ -3988,7 +4034,7 @@ async function wordStatForm(v){
 let stateReady = false;
 document.body.classList.add('kiosk-mode');   // 一律先顯示瀏覽頁
 invalidate('all');
-Promise.all([loadState(), loadLib()]).then(()=>{ stateReady = true; showKiosk('browse'); });
+Promise.all([loadState(), loadLib()]).then(()=>{ stateReady = true; try{ history.replaceState({k:1, view:'browse', from:null}, ''); }catch(_){} showKiosk('browse'); });
 </script>
 </body>
 </html>
