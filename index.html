@@ -630,6 +630,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 .k-setup h2{color:var(--primary)}
 .k-setup p{font-size:.9rem;color:var(--ink-soft)}
 .k-setup .bad{color:var(--accent)}
+.k-form{display:flex;flex-direction:column;gap:12px}
 .k-setup input{padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;text-align:center}
 .k-setup .kbig{background:var(--primary)}
 /* 確認視窗 */
@@ -2943,9 +2944,15 @@ const adminCloud = () => !!(cloudUrl() && cloud.key && isAdmin());
 async function api(op, data={}, auth={}){
   const url = cloudUrl(); if(!url) throw new Error('尚未設定雲端網址');
   const body = JSON.stringify({op, code: auth.code ?? (staff && staff.code), key: auth.key ?? cloud.key, ...data});
-  let r, j;
-  try{ r = await fetch(url, {method:'POST', body}); }catch(_){ throw new Error('連不上雲端，請檢查網路'); }
-  try{ j = await r.json(); }catch(_){ throw new Error('雲端回應格式不對（網址是否正確、是否設定「所有人」可存取？）'); }
+  // 手機網路不穩或 Google 偶爾回傳非 JSON 時，自動再試（最多 3 次）
+  let r, j, lastErr;
+  for(let t = 0; t < 3; t++){
+    if(t) await new Promise(ok=>setTimeout(ok, 700 * t));
+    try{ r = await fetch(url, {method:'POST', body, cache:'no-store'}); }catch(_){ lastErr = new Error('連不上雲端，請檢查網路'); continue; }
+    try{ j = JSON.parse(await r.text()); }catch(_){ lastErr = new Error('雲端暫時沒有回應，請再試一次'); continue; }
+    lastErr = null; break;
+  }
+  if(lastErr) throw lastErr;
   if(!j.ok){ const e = new Error(j.err || '雲端錯誤'); e.res = j; throw e; }
   return j;
 }
@@ -3133,26 +3140,36 @@ function kSetup(msg){
     <h2>工讀生登入</h2>
     <p>${pre ? '代碼已自動帶入，' : '請輸入管理者給你的<b>工讀生代碼</b>，並'}填上你的名字。</p>
     ${msg ? `<p class="bad">${esc(msg)}</p>` : ''}
-    <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off" value="${esc(pre)}" ${pre ? 'type="password"' : ''}>
+    <form id="k-form" class="k-form" autocomplete="off" novalidate>
+    <input id="k-code" inputmode="numeric" placeholder="工讀生代碼" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(pre)}">
     <input id="k-name" placeholder="你的名字（登記人）" autocomplete="name">
-    <button class="kbig" id="k-start">登入</button>
+    <div class="kc-err" id="k-err" hidden></div>
+    <button class="kbig" id="k-start" type="submit">登入</button>
+    </form>
     <button class="btn" id="k-cancel">← 回瀏覽頁</button>
     <p style="font-size:.78rem">關掉網頁、按「登出」或閒置 ${IDLE_MIN} 分鐘會自動登出。</p></div>`;
   kioskEl.querySelector('.k-cart').hidden = true;
+  let busy = false;
+  const errBox = kioskEl.querySelector('#k-err');
+  const showErr = t => { errBox.hidden = !t; errBox.textContent = t || ''; };
   const go = async ()=>{
-    const code = kioskEl.querySelector('#k-code').value.trim(), name = kioskEl.querySelector('#k-name').value.trim();
-    if(!code){ toast('請輸入工讀生代碼'); return; }
-    if(!name){ toast('請輸入你的名字'); kioskEl.querySelector('#k-name').focus(); return; }
+    if(busy) return;
+    // 全形數字、空白、輸入法殘留都轉成一般半形再比對
+    const code = kioskEl.querySelector('#k-code').value.normalize('NFKC').replace(/\s+/g,'');
+    const name = kioskEl.querySelector('#k-name').value.trim();
+    if(!code){ showErr('請輸入工讀生代碼'); kioskEl.querySelector('#k-code').focus(); return; }
+    if(!name){ showErr('請輸入你的名字'); kioskEl.querySelector('#k-name').focus(); return; }
+    showErr(''); busy = true;
     const btn = kioskEl.querySelector('#k-start'); btn.disabled = true; btn.textContent = '登入中…';
     try{ await api('auth', {}, {key:'', code}); }
-    catch(err){ btn.disabled = false; btn.textContent = '登入'; toast('⚠ ' + err.message); return; }
+    catch(err){ busy = false; btn.disabled = false; btn.textContent = '登入';
+      showErr(/代碼錯誤/.test(err.message) ? '工讀生代碼不正確，請確認後再試' : err.message); return; }
     setStaff({code, name, last: Date.now()});
     kFrom = null; kCart.clear();
     kItems = null; showKiosk('staff');
   };
-  kioskEl.querySelector('#k-start').onclick = go;
+  kioskEl.querySelector('#k-form').addEventListener('submit', e=>{ e.preventDefault(); document.activeElement && document.activeElement.blur(); go(); });
   kioskEl.querySelector('#k-cancel').onclick = ()=>showKiosk('browse');
-  kioskEl.querySelectorAll('.k-setup input').forEach(i=>i.addEventListener('keydown', e=>{ if(e.key === 'Enter') go(); }));
 }
 function kHeadUser(){
   const b = document.getElementById('k-logout');
