@@ -39,6 +39,10 @@ nav.tabs button{
   font-family:inherit;white-space:nowrap;
 }
 nav.tabs button.active{background:var(--paper);color:var(--primary);font-weight:700}
+nav.subtabs{display:flex;gap:4px;background:#E4EBE8;border-radius:12px;padding:4px;margin:0 0 12px;overflow-x:auto}
+nav.subtabs[hidden]{display:none}
+nav.subtabs button{flex:1 0 auto;border:none;background:transparent;color:var(--ink-soft);padding:9px 14px;border-radius:9px;font-family:inherit;font-size:.92rem;cursor:pointer;white-space:nowrap}
+nav.subtabs button.active{background:#fff;color:var(--primary);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 main{max-width:1080px;margin:0 auto;padding:16px 14px}
 .panel{display:none}
 .panel.show{display:block}
@@ -487,8 +491,8 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 .as-ph img{width:100%;height:100%;object-fit:cover;display:block}
 .as-main{flex:1;min-width:0}
 .as-name{font-weight:700;color:var(--ink);font-size:.95rem}
-.as-codes{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0;font-size:.76rem;align-items:center}
-.as-code{border-radius:6px;padding:1px 7px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.02em}
+.as-codes{display:flex;flex-wrap:wrap;gap:8px;margin:5px 0;font-size:.82rem;align-items:center}
+.as-code{white-space:nowrap;border-radius:7px;padding:3px 10px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.03em;font-size:1.05rem;font-weight:700}
 .as-code.p{background:#E6EEF8;color:#2B5A8A}
 .as-code.i{background:#EAF3EC;color:#2E6B45}
 .as-meta{font-size:.76rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -498,7 +502,7 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 .as-edit .as-bigph{width:100%;max-height:260px;border-radius:12px;border:2px dashed #C9D3CF;display:flex;align-items:center;justify-content:center;min-height:140px;color:var(--ink-soft);margin-bottom:10px;overflow:hidden;cursor:pointer;background:#F7F9F8}
 .as-edit .as-bigph img{max-width:100%;max-height:260px;display:block}
 .as-edit .as-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
-@media (max-width:640px){ .as-ph{flex-basis:60px;height:60px} .as-loc{max-width:40%;font-size:.8rem} .as-edit .as-grid{grid-template-columns:1fr} }
+@media (max-width:640px){ .as-row{flex-wrap:wrap;row-gap:4px} .as-ph{flex-basis:60px;height:60px} .as-main{flex-basis:calc(100% - 72px)} .as-loc{flex-basis:100%;max-width:none;text-align:left;padding-left:72px;font-size:.88rem} .as-code{font-size:1rem;padding:3px 8px} .as-edit .as-grid{grid-template-columns:1fr} }
 
 .pooltools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .pooltools input[type=search]{flex:1 1 260px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.9rem}
@@ -724,15 +728,14 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
   <h1>資源教室宣導品倉庫管理</h1>
   <div class="sub">114-2 學期庫存 ・ 115.01.22 統計基準 ・ 資＝悅讀書房(資源教室)、倉＝Q棟地下室倉庫</div>
   <nav class="tabs">
-    <button data-tab="inv" class="active">庫存總覽</button>
-    <button data-tab="take">領用登記</button>
-    <button data-tab="hist">曾製作宣導品</button>
+    <button data-tab="inv" data-group="promo" class="active">宣導品</button>
     <button data-tab="lib">圖書位置</button>
     <button data-tab="asset">財產位置</button>
   </nav>
 </header>
 
 <main>
+<nav class="subtabs" id="promoSub"><button data-tab="inv" class="active">庫存總覽</button><button data-tab="take">領用登記</button><button data-tab="hist">曾製作宣導品</button></nav>
 <div class="adm-tools"><button class="k-tbtn" id="cloudBtn" title="雲端同步設定">雲端：未設定</button><span class="k-sp"></span><button class="k-tbtn" id="lockBtn" title="登出管理者，回到目前庫存">登出管理</button></div>
 <!-- ================= 庫存總覽 ================= -->
 <section class="panel show" id="panel-inv">
@@ -2044,10 +2047,17 @@ document.getElementById('editToggle').onclick=function(){
 };
 function switchTab(t){
   currentTab = t;
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  const promo = ['inv','take','hist'].includes(t);
+  if(promo) document.querySelector('nav.tabs [data-group=promo]').dataset.tab = t;   // 回到「宣導品」時停在上次看的子分頁
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.group === 'promo' ? promo : b.dataset.tab===t));
+  document.querySelectorAll('#promoSub button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.getElementById('promoSub').hidden = !promo;
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show',p.id==='panel-'+t));
   flush();
 }
+document.getElementById('promoSub').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-tab]'); if(b) switchTab(b.dataset.tab);
+});
 document.querySelector('nav.tabs').addEventListener('click', e=>{
   const b = e.target.closest('button[data-tab]'); if(b) switchTab(b.dataset.tab);
 });
