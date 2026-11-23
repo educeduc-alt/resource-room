@@ -477,6 +477,15 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 .bgrip:hover{background:var(--primary-soft);color:var(--primary)}
 .bookcard .bgrip{vertical-align:-6px}
 .pcount{font-size:.8rem;font-weight:400;color:var(--ink-soft)}
+.bw-khead{grid-column:1/-1;font-weight:700;color:var(--primary);font-size:1rem;margin:10px 2px 0;padding-bottom:4px;border-bottom:2px solid #DCE7E3}
+.bw-krow td{font-weight:700;color:var(--primary);background:#EEF4F1;padding:6px 10px}
+.bw-spots{display:flex;flex-direction:column;gap:4px;margin:6px 0 4px}
+.bw-spotb{font-size:.8rem;border-radius:8px;padding:4px 8px;background:#E8F1EE;color:var(--ink)}
+.bw-spotb.wh{background:#F6EEDF}
+.bw-spotb.zero{opacity:.45}
+.bw-spotb span{display:block;font-size:.72rem;color:var(--ink-soft);margin-top:1px}
+.bw-spot{font-size:.7rem;color:var(--ink-soft);font-weight:400}
+.bw-spotrow td{font-size:.8rem;color:var(--ink-soft)}
 /* 財產位置 */
 .as-tools{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .as-tools input{flex:1 1 240px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:.95rem}
@@ -3802,6 +3811,18 @@ function kAddItem(){
 /* ================= 瀏覽頁：好看、好找的庫存目錄（工讀生與管理者共用） ================= */
 const BW = {q:'', cat:'', loc:'all', sort:'', view:'grid', aud:''};
 try{ Object.assign(BW, JSON.parse(localStorage.getItem('rc-browse') || '{}'), {q:''}); }catch(_){}
+// 宣導品的種類（依品名自動判斷），瀏覽頁預設依種類分組排序
+const BW_KINDS = [
+  ['3C／手機周邊', /手機|隨身碟|風扇|捲線器|悠遊卡/],
+  ['文具／紙品', /筆|手札|資料匣|記事本|DM|簡介|拉鍊袋|卡套|識別證/],
+  ['杯瓶餐具', /杯|瓶|吸管|餐具|碗|便當/],
+  ['生活小物', /防疫|襪|擦手巾|毛巾|吊牌|鑰匙圈|按摩|紓壓|警報器|積木|摺紙燈|收納籃/],
+  ['袋子／包包', /袋|包|收納/],
+];
+const bwKind = it => { for(const [k, re] of BW_KINDS) if(re.test(it.name||'')) return k; return '其他'; };
+const BW_KIND_ORDER = ['袋子／包包','杯瓶餐具','3C／手機周邊','文具／紙品','生活小物','其他'];
+// 卡片上分開顯示各存放點：悅讀書房、Q棟倉庫各自的數量與櫃位
+const bwSpots = (it, map) => (it.loc||[]).filter(z=>z.startsWith(map === 'q' ? 'q-' : 'yd-')).map(zoneName).join('、');
 const bwTot = (it, loc) => loc === 'room' ? roomQty(it) : loc === 'wh' ? whQty(it) : totQty(it);
 function renderBrowse(host, list){
   host._inner = !!(staff || isAdmin());   // 工讀生、管理者看得到內部用品
@@ -3811,8 +3832,8 @@ function renderBrowse(host, list){
       <div class="bw-tools">
         <input type="search" class="bw-q" placeholder="搜尋品名、備註" autocomplete="off">
         <div class="bw-row">
-          <div class="k-seg bw-loc"><button data-bwloc="all">全部</button><button data-bwloc="room">悅讀書房</button><button data-bwloc="wh">Q棟倉庫</button></div>
-          <select class="bw-sort"><option value="">依類別</option><option value="name">依品名</option><option value="desc">數量多→少</option><option value="asc">數量少→多</option></select>
+          <div class="k-seg bw-loc"><button data-bwloc="all">資源教室</button><button data-bwloc="room">悅讀書房</button><button data-bwloc="wh">Q棟倉庫</button></div>
+          <select class="bw-sort"><option value="">依種類</option><option value="name">依品名</option><option value="desc">數量多→少</option><option value="asc">數量少→多</option></select>
           <div class="k-seg bw-view"><button data-bwview="grid">圖卡</button><button data-bwview="list">清單</button></div>
         </div>
         <div class="k-seg bw-aud" hidden><button data-bwaud="">全部</button><button data-bwaud="out">給外部看</button><button data-bwaud="in">內部看</button></div>
@@ -3849,7 +3870,8 @@ function drawBrowse(host){
   const q = BW.q.trim().toLowerCase();
   let shown = list.filter(it => (!BW.cat || it.cat === BW.cat) && (!q || (it.name + ' ' + (it.note||'')).toLowerCase().includes(q))
     && (BW.loc === 'all' || bwTot(it, BW.loc) > 0 || (it.loc||[]).some(l=>l.startsWith(BW.loc === 'wh' ? 'q-' : 'yd-'))));
-  if(BW.sort === 'name') shown = shown.slice().sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
+  if(!BW.sort) shown = shown.slice().sort((a,b)=>BW_KIND_ORDER.indexOf(bwKind(a)) - BW_KIND_ORDER.indexOf(bwKind(b)) || a.name.localeCompare(b.name,'zh-Hant'));
+  else if(BW.sort === 'name') shown = shown.slice().sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
   else if(BW.sort === 'desc') shown = shown.slice().sort((a,b)=>bwTot(b,BW.loc) - bwTot(a,BW.loc));
   else if(BW.sort === 'asc') shown = shown.slice().sort((a,b)=>bwTot(a,BW.loc) - bwTot(b,BW.loc));
   const r = shown.reduce((s,i)=>s+roomQty(i),0), w = shown.reduce((s,i)=>s+whQty(i),0);
@@ -3860,36 +3882,39 @@ function drawBrowse(host){
   const badge = (n, cls, lbl) => `<span class="bw-b ${cls} ${n ? '' : 'zero'}">${lbl} ${n}</span>`;
   const status = it => { const t = bwTot(it, BW.loc); return !t ? '<span class="bw-tag out">沒有庫存</span>' : t <= 10 ? '<span class="bw-tag low">數量少</span>' : ''; };
   if(BW.view === 'list'){
-    out.innerHTML = `<table class="bw-tbl"><thead><tr><th></th><th>品名</th><th>書房</th><th>倉庫</th><th>合計</th></tr></thead><tbody>
-      ${shown.map(it=>{ const src = getImg(it); return `<tr data-bwit="${it.id}">
+    let lastK = '';
+    out.innerHTML = `<table class="bw-tbl"><thead><tr><th></th><th>品名</th>${BW.loc !== 'wh' ? '<th>悅讀書房</th>' : ''}${BW.loc !== 'room' ? '<th>Q棟倉庫</th>' : ''}</tr></thead><tbody>
+      ${shown.map(it=>{ const src = getImg(it), k = bwKind(it), head = !BW.sort && k !== lastK ? `<tr class="bw-krow"><td colspan="4">${esc(k)}</td></tr>` : ''; lastK = k; return head + `<tr data-bwit="${it.id}">
         <td class="bw-th">${src ? `<img src="${src}" alt="" loading="lazy">` : ''}</td>
         <td><b>${esc(it.name)}</b> ${status(it)}<div class="bw-meta">${esc(it.cat||'')}${it.price ? `・$${it.price}` : ''}${it.sizes ? `・${it.sizes.map(z=>esc(z.s)).join('/')}` : ''}</div></td>
-        <td class="n">${roomQty(it) || '—'}</td><td class="n">${whQty(it) || '—'}</td><td class="n"><b>${totQty(it)}</b></td></tr>`; }).join('')}
+        ${BW.loc !== 'wh' ? `<td class="n">${roomQty(it) || '—'}<div class="bw-spot">${esc(bwSpots(it,'yd'))}</div></td>` : ''}${BW.loc !== 'room' ? `<td class="n">${whQty(it) || '—'}<div class="bw-spot">${esc(bwSpots(it,'q'))}</div></td>` : ''}</tr>`; }).join('')}
       </tbody></table>`;
     return;
   }
-  out.innerHTML = shown.map(it=>{ const src = getImg(it), t = bwTot(it, BW.loc);
-    return `<button class="bw-card ${t ? '' : 'none'}" data-bwit="${it.id}">
+  let lastK = '';
+  out.innerHTML = shown.map(it=>{ const src = getImg(it), t = bwTot(it, BW.loc), k = bwKind(it), head = !BW.sort && k !== lastK ? `<div class="bw-khead">${esc(k)}</div>` : ''; lastK = k;
+    const spot = (n, cls, lbl, map) => `<div class="bw-spotb ${cls} ${n ? '' : 'zero'}"><b>${lbl}</b> ${n}${bwSpots(it,map) ? `<span>${esc(bwSpots(it,map))}</span>` : ''}</div>`;
+    return head + `<button class="bw-card ${t ? '' : 'none'}" data-bwit="${it.id}">
       <div class="bw-img">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : '<span class="noimg">無照片</span>'}${status(it)}</div>
       <div class="bw-body">
         <div class="bw-name">${esc(it.name)}</div>
         <div class="bw-meta">${esc(it.cat||'')}${it.price ? `・$${it.price}` : ''}</div>
-        <div class="bw-badges">${badge(roomQty(it),'room','書房')}${badge(whQty(it),'wh','倉庫')}</div>
+        <div class="bw-spots">${BW.loc !== 'wh' ? spot(roomQty(it),'room','悅讀書房','yd') : ''}${BW.loc !== 'room' ? spot(whQty(it),'wh','Q棟倉庫','q') : ''}</div>
         ${it.sizes ? `<div class="bw-sizes">${it.sizes.map(z=>`<span>${esc(z.s)} ${(+z.room||0)+(+z.wh||0)}</span>`).join('')}</div>` : ''}
         ${dlBtn(it)}
       </div></button>`; }).join('');
 }
 function openBrowseItem(it){
   const pl = photoList(it), src = pl.length ? pl[0].src : null;
-  const rows = it.sizes ? it.sizes.map(z=>`<tr><td>${esc(z.s)}</td><td>${+z.room||0}</td><td>${+z.wh||0}</td><td><b>${(+z.room||0)+(+z.wh||0)}</b></td></tr>`).join('')
-    : `<tr><td>數量</td><td>${roomQty(it)}</td><td>${whQty(it)}</td><td><b>${totQty(it)}</b></td></tr>`;
+  const rows = (it.sizes ? it.sizes.map(z=>`<tr><td>${esc(z.s)}</td><td>${+z.room||0}</td><td>${+z.wh||0}</td></tr>`).join('')
+    : `<tr><td>數量</td><td>${roomQty(it)}</td><td>${whQty(it)}</td></tr>`) +
+    `<tr class="bw-spotrow"><td>放在</td><td>${esc(bwSpots(it,'yd')) || '—'}</td><td>${esc(bwSpots(it,'q')) || '—'}</td></tr>`;
   openSheet(`<div class="bw-detail">
     ${src ? `<div class="bw-dimg" data-bwphoto><img src="${src}" alt="">${pl.length > 1 ? `<span>共 ${pl.length} 張，點一下看大圖</span>` : '<span>點一下看大圖</span>'}</div>` : ''}
     <h2>${esc(it.name)}</h2>
     <div class="bw-meta" style="margin-bottom:8px">${esc(it.cat||'')}${it.price ? `・單價 $${it.price}` : ''}</div>
     ${it.note ? `<div class="hint" style="margin-bottom:8px">備註：${esc(it.note)}</div>` : ''}
-    <table class="bw-qt"><thead><tr><th></th><th>書房</th><th>倉庫</th><th>合計</th></tr></thead><tbody>${rows}</tbody></table>
-    ${(it.loc||[]).length ? `<div class="hint" style="margin-top:8px">放在：${it.loc.map(zoneName).map(esc).join('、')}</div>` : ''}
+    <table class="bw-qt"><thead><tr><th></th><th>悅讀書房</th><th>Q棟倉庫</th></tr></thead><tbody>${rows}</tbody></table>
     ${(()=>{ const h = HIST_SEM.rows[semKey(it.name)]; if(!h || !h.some(Boolean)) return '';
       return `<div class="bw-hist"><b>歷年庫存</b>${h.map((x,k)=>x ? `<span>${HIST_SEM.labels[k].replace(' 學期','')}：${esc(x)}</span>` : '').join('')}</div>`; })()}
     ${(()=>{ const dl = dlSources(it); return dl.length ? `<div class="bw-dl"><b>下載圖片</b>${dl.map((u,k)=>`<button class="btn" data-dlsrc="${k}">${dl.length > 1 ? `第 ${k+1} 張` : '下載原圖'}</button>`).join('')}</div>` : ''; })()}
