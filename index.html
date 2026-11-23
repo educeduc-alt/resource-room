@@ -483,20 +483,12 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 .as-locs{display:flex;align-items:center;gap:8px;margin:4px 0 6px;font-size:.86rem;color:var(--ink-soft)}
 .as-locs select{flex:0 1 320px;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-family:inherit;font-size:.9rem;background:#fff;color:var(--ink)}
 .as-pill{display:inline-block;border-radius:999px;padding:5px 12px;background:#E3F0EC;color:var(--primary);font-weight:700;font-size:.88rem;white-space:nowrap;cursor:pointer;border:1px solid #C5DDD5}
+.as-pill:hover{background:var(--primary);color:#fff}
 .as-pill.none{background:#FFF4E0;color:#A86F12;border-color:#F0D9A8}
 .as-pill.chk{background:#FDECEC;color:#B23B3B;border-color:#F2C4C4}
-.as-locd{font-size:.74rem;color:var(--ink-soft);margin-top:4px}
-.as-locd.q{color:#8A5A12}.as-locd.y{color:#2B5A8A}
-.as-pill{cursor:default}
-.as-area{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-family:inherit;font-size:.92rem;cursor:pointer;color:var(--ink)}
-.as-area small{color:var(--ink-soft);margin-left:2px}
-.as-area.on{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700}
-.as-area.on small{color:#D5E8E2}
-.as-cat{font-weight:700;color:var(--primary);font-size:1rem;margin:14px 2px 2px;padding-bottom:4px;border-bottom:2px solid #DCE7E3}
-.as-cat span{font-weight:400;font-size:.8rem;color:var(--ink-soft);margin-left:4px}
-.as-locs{flex-wrap:wrap}
+.as-locd{font-size:.76rem;color:var(--ink-soft);margin-top:3px}
 .as-tags{display:flex;flex-wrap:wrap;gap:6px;max-height:168px;overflow:auto;padding:2px;margin-bottom:8px}
-.as-tags .as-pill{font-weight:400;font-size:.9rem;padding:6px 14px;cursor:pointer}
+.as-tags .as-pill{font-weight:400;font-size:.84rem;padding:4px 11px}
 .as-tags .as-pill.on{background:var(--primary);color:#fff;font-weight:700}
 .as-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .as-row{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer}
@@ -2999,40 +2991,33 @@ function renderLib(){ renderLibMap(); renderLibResults(); renderLibBatches(); re
    財產位置：學校財產（財產編號）＋單位自管物品（物品編號），含位置與照片
    資料放在 lib.assets（只有管理者看得到，跟圖書位置一起同步到雲端）
    ================================================================ */
-let asKind = 'all', asArea = '', asLimit = 150;
+let asKind = 'all', asLoc = '', asLimit = 120;
 const asList = () => (lib && Array.isArray(lib.assets)) ? lib.assets : [];
-// 存放區域：資源教室／悅讀書房／Q棟倉庫（每筆位置照原本寫的顯示，不合併）
-const AS_AREAS = ['資源教室','悅讀書房','Q棟倉庫'];
-const asAreaOf = loc => /Q棟|^倉庫$/.test(loc||'') ? 'Q棟倉庫' : /悅讀/.test(loc||'') ? '悅讀書房' : '資源教室';
-// 種類：依名稱自動分類，排序時同類放在一起
-const AS_CATS = [
-  ['桌遊／牌卡', /桌遊|牌卡|撲克|象棋|海盜桶|轉盤遊戲|尋寶日|生涯規劃全系列/],
-  ['螢幕架／小型收納', /螢幕架|文件資料櫃|紙抽屜|置物書架/],
-  ['螢幕', /螢幕|顯示器/],
-  ['輔具', /擴視機|閱讀機|溝通輔具|輪椅|斜坡板|升降桌|放大滑鼠|辭典|翻譯機/],
-  ['電腦／平板', /電腦|筆電|平板|主機|iPad|Surface|硬碟|記憶體|網路卡|網路儲存|防毒/],
-  ['影音設備', /攝影機|相機|投影機|單槍|音響|喇叭|麥克風|錄音筆|擴音|播放器|補光燈|電子白板|簡報|耳機|訓練機|電話|呼叫器|藍芽傳輸|KTV/],
-  ['電腦周邊', /鍵盤|滑鼠|掃描器|擷取器|延長線|電源線|USB|旅充|行動電源|轉接頭|標籤機/],
-  ['風扇／家電', /扇|冷氣|電鍋|烤箱|吹風機|空壓機|伸縮管|打氣機|噴霧|消毒/],
-  ['櫃子／收納', /櫃|書架|收納|抽屜|防潮箱|角鋼架|鐵力士|烙架|烙鐵架|置物|隔間|隔屏|擋板/],
-  ['桌椅', /桌|椅|沙發|茶几/],
-  ['辦公文具', /複合機|列表機|相片輸出機|白板|黑白版|佈告|行事曆|碎紙機|裁刀|裁紙刀|熱熔膠|熱膠槍|錫雕|手推車|計算機/],
-  ['設施／裝修', /窗簾|百葉窗|閱讀燈|嵌燈|吊燈|地板|自動門|工程/],
+// 位置＝一個膠囊標籤（loc）＋細節說明（locNote）；舊資料的長位置文字自動拆成標籤＋細節
+const AS_PEOPLE = '微姍|家銘|曉臻|梅青|雨欣|心榆|望謙|佳瑩|偉芳|儀芳|翔鴻|博瑜|婉柔|以珊|昭宏';
+const AS_RULES = [
+  [/請確認|^？/, '待確認'], [/學生借用/, '學生借用中'], [/白色密碼鎖櫃/, '課輔二白色密碼鎖櫃'],
+  [/1050416000|6尺鐵櫃/, '學生區6尺鐵櫃'], [/大鐵櫃/, '大鐵櫃'], [/設備鐵櫃/, '設備鐵櫃'], [/資教鐵櫃/, '資教鐵櫃'],
+  [/學生電腦區旁鐵櫃|學生電腦區旁烙鐵架/, '學生電腦區旁鐵櫃'], [/四層(抽屜)?櫃/, '學生區四層抽屜櫃'], [/抽屜櫃/, '學生區抽屜櫃'],
+  [/防潮箱/, '防潮箱'], [/曉臻後面櫃子/, '曉臻後面櫃子'], [/器材櫃/, '器材櫃'], [/Q棟|^倉庫$/, 'Q棟倉庫'], [/住宿組/, '住宿組'],
+  [/悅讀/, '悅讀書房'], [/課輔(室)?[（(]?一/, '課輔一'], [/課輔(室)?[（(]?二/, '課輔二'], [/抒壓室/, '抒壓室'],
+  [/諮輔|志工室|諮商一/, '諮輔中心'], [/號電腦|學生電腦|電腦區|學生區/, '學生區'], [/工讀桌/, '工讀桌'],
+  [/冰箱/, '冰箱旁'], [/影印機/, '影印機旁'], [/門後|門邊|門口|大門|門底|門$/, '門口'], [/望謙/, '望謙座位'],
+  [/學生置物櫃|學生櫃/, '學生置物櫃'], [/窗/, '窗邊'], [/大桌/, '大桌旁'],
+  [new RegExp('(' + AS_PEOPLE + ')'), m => m[1] + '座位'],
 ];
-const asCatOf = a => { for(const [c, re] of AS_CATS) if(re.test(a.name||'')) return c; return '其他'; };
-const AS_CAT_ORDER = ['電腦／平板','螢幕','電腦周邊','影音設備','輔具','桌遊／牌卡','桌椅','櫃子／收納','螢幕架／小型收納','風扇／家電','辦公文具','設施／裝修','其他'];
+function asTagOf(loc){
+  const s0 = String(loc||'').trim(); if(!s0) return ['', ''];
+  for(const [re, tag] of AS_RULES){ const m = s0.match(re); if(m){ const t = typeof tag === 'function' ? tag(m) : tag; return [t, s0 === t ? '' : s0]; } }
+  return [s0, ''];
+}
 function asMigrate(){
   let n = 0;
-  asList().forEach(a=>{
-    if(a.tv === 3) return;
-    if(a.tv === 2 && a.locNote){ a.loc = a.locNote; delete a.locNote; }   // 上一版拆成「標籤＋細節」的，還原成原本寫的位置
-    if(!a.area) a.area = asAreaOf(a.loc);
-    a.tv = 3; n++;
-  });
+  asList().forEach(a=>{ if(a.tv === 2) return; const [t, d] = asTagOf(a.loc); a.loc = t; if(d && !a.locNote) a.locNote = d; a.tv = 2; n++; });
   if(n) store.set(LIB_KEY, JSON.stringify(lib)).then(markCloudChange).catch(()=>{});
 }
-const asAreaCls = a => a.area === 'Q棟倉庫' ? ' q' : a.area === '悅讀書房' ? ' y' : '';
-const asPill = a => a.loc ? `<span class="as-pill${/請確認|^？/.test(a.loc)?' chk':''}">📍 ${esc(a.loc)}</span>` : '<span class="as-pill none">位置未填</span>';
+const asTags = () => { const c = {}; asList().forEach(a=>{ if(!a.scrap && a.loc) c[a.loc] = (c[a.loc]||0)+1; }); return Object.entries(c).sort((x,y)=>y[1]-x[1]||x[0].localeCompare(y[0],'zh-Hant')); };
+const asPill = a => a.loc ? `<span class="as-pill${a.loc==='待確認'?' chk':''}" data-asloc="${esc(a.loc)}">📍 ${esc(a.loc)}</span>` : '<span class="as-pill none">位置未填</span>';
 function asSave(msg){
   store.set(LIB_KEY, JSON.stringify(lib)).then(()=>{ if(msg) toast(msg); markCloudChange(); }).catch(()=>toast('⚠ 儲存失敗'));
   renderAssets();
@@ -3043,9 +3028,9 @@ function asMatch(a, q){
   if(asKind === 'i' && a.kind !== 'i') return false;
   if(asKind === 'nophoto' && (a.imgId || a.img)) return false;
   if(asKind === 'scrap'){ if(!a.scrap) return false; } else if(a.scrap) return false;
-  if(asArea && (a.area || '資源教室') !== asArea) return false;
+  if(asLoc && (asLoc === '（未填）' ? a.loc : a.loc !== asLoc)) return false;
   if(!q) return true;
-  return [a.name,a.no,a.code,a.loc,a.note,a.brand,a.model,asCatOf(a)].some(v=>String(v||'').toLowerCase().includes(q));
+  return [a.name,a.no,a.code,a.loc,a.locNote,a.note,a.brand,a.model].some(v=>String(v||'').toLowerCase().includes(q));
 }
 function renderAssets(){
   const host = document.getElementById('asList'); if(!host) return;
@@ -3057,27 +3042,26 @@ function renderAssets(){
   document.getElementById('asImport').hidden = all.length > 0;
   const kinds = [['all','全部'],['p','財產編號'],['i','物品編號'],['nophoto','還沒有照片'],['scrap','已報廢']];
   document.getElementById('asKind').innerHTML = kinds.map(([k,t])=>`<button class="chip${asKind===k?' on':''}" data-askind="${k}">${t}</button>`).join('');
-  document.getElementById('asLocs').innerHTML = all.length ? `<span>存放地點</span>` +
-    AS_AREAS.map(ar=>`<button class="as-area${asArea===ar?' on':''}" data-asarea="${ar}">${ar} <small>${live.filter(a=>(a.area||'資源教室')===ar).length}</small></button>`).join('') : '';
+  const tags = asTags(), noLoc = live.filter(a=>!a.loc).length;
+  document.getElementById('asLocs').innerHTML = all.length ? `<span>依位置</span><select id="asLocSel"><option value="">全部位置（${tags.length} 個）</option>` +
+    tags.map(([l,n])=>`<option value="${esc(l)}"${asLoc===l?' selected':''}>${esc(l)}（${n}）</option>`).join('') +
+    (noLoc ? `<option value="（未填）"${asLoc==='（未填）'?' selected':''}>位置未填（${noLoc}）</option>` : '') + `</select>` +
+    (asLoc ? `<button class="chip on" data-asloc="${esc(asLoc)}">✕ 清除</button>` : '') : '';
   if(!all.length){
     host.innerHTML = `<div class="k-empty" style="padding:30px 10px;text-align:center;color:var(--ink-soft)">還沒有財產資料。<br>請按上方「匯入清冊檔」，選擇「財產清冊.json」。</div>`; return;
   }
-  const order = (a)=>{ const c = AS_CAT_ORDER.indexOf(asCatOf(a)); return c < 0 ? 99 : c; };
-  const rows = all.filter(a=>asMatch(a,q)).map((a,i)=>({a, i, c: order(a)}))
-    .sort((x,y)=> x.c - y.c || String(x.a.name).localeCompare(String(y.a.name),'zh-Hant') || String(x.a.no||x.a.code).localeCompare(String(y.a.no||y.a.code)) || x.i - y.i).map(x=>x.a);
-  const cnt = {}; rows.forEach(a=>{ const c = asCatOf(a); cnt[c] = (cnt[c]||0)+1; });
-  let last = '';
-  host.innerHTML = (rows.length ? '' : '<div style="padding:20px;text-align:center;color:var(--ink-soft)">找不到符合的項目</div>') + rows.slice(0, asLimit).map(a=>{
-    const cat = asCatOf(a), head = cat !== last ? `<div class="as-cat">${esc(cat)} <span>${cnt[cat]} 筆</span></div>` : ''; last = cat;
+  const rows = all.filter(a=>asMatch(a,q));
+  const show = rows.slice(0, asLimit);
+  host.innerHTML = (rows.length ? '' : '<div style="padding:20px;text-align:center;color:var(--ink-soft)">找不到符合的項目</div>') + show.map(a=>{
     const src = asPhotoSrc(a, 300);
     const codes = [a.no ? `<span class="as-code p">財 ${esc(a.no)}</span>` : '', a.code ? `<span class="as-code i">物 ${esc(a.code)}</span>` : '',
       a.kind==='p' && a.stat ? `<span>${esc(a.stat)}</span>` : '', a.date ? `<span>建檔 ${esc(a.date)}</span>` : ''].filter(Boolean).join('');
     const meta = [[a.brand,a.model].filter(Boolean).join(' '), a.note].filter(Boolean).join('・');
-    return head + `<div class="as-row${a.scrap?' scrap':''}" data-as="${esc(a.id)}">
+    return `<div class="as-row${a.scrap?' scrap':''}" data-as="${esc(a.id)}">
       <div class="as-ph${src?' has':''}" data-asph="${esc(a.id)}">${src ? `<img src="${esc(src)}" loading="lazy" alt="">` : '＋<br>加照片'}</div>
       <div class="as-main"><div class="as-name">${esc(a.name)}</div><div class="as-codes">${codes}</div>${meta ? `<div class="as-meta" title="${esc(meta)}">${esc(meta)}</div>` : ''}</div>
-      <div class="as-loc">${asPill(a)}<div class="as-locd${asAreaCls(a)}">${esc(a.area || '資源教室')}</div></div></div>`;
-  }).join('') + (rows.length > asLimit ? `<div class="as-more"><button class="btn" data-asmore>再顯示 ${Math.min(150, rows.length-asLimit)} 筆（共 ${rows.length} 筆）</button></div>` : '');
+      <div class="as-loc">${asPill(a)}${a.locNote ? `<div class="as-locd">${esc(a.locNote)}</div>` : ''}</div></div>`;
+  }).join('') + (rows.length > asLimit ? `<div class="as-more"><button class="btn" data-asmore>再顯示 ${Math.min(120, rows.length-asLimit)} 筆（共 ${rows.length} 筆）</button></div>` : '');
 }
 function asPickPhoto(a, done){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
@@ -3112,18 +3096,18 @@ function asEdit(a){
       <div class="as-bigph" id="asBig">${src ? `<img src="${esc(src)}" alt="">` : '＋ 點這裡加照片（拍放置的位置或物品本身）'}</div>
       ${src ? `<div class="actions" style="margin:-4px 0 10px;justify-content:flex-start"><button class="btn" id="asRePh">換照片</button><button class="btn" id="asViewPh">看大圖</button><button class="btn warn" id="asDelPh">移除照片</button></div>` : ''}
       ${f('name','名稱')}
-      <div class="field"><label>存放地點</label>
-        <div class="as-tags" id="asAreaPick">${AS_AREAS.map(ar=>`<span class="as-pill${(a.area||'資源教室')===ar?' on':''}" data-pick="${ar}">${ar}</span>`).join('')}</div></div>
-      <div class="field"><label>放置位置</label><input data-af="loc" value="${esc(a.loc||'')}" placeholder="例如：大鐵櫃、梅青後方(上)、課輔二白色密碼鎖櫃" list="asLocList">
-        <datalist id="asLocList">${[...new Set(asList().map(x=>x.loc).filter(Boolean))].map(l=>`<option value="${esc(l)}">`).join('')}</datalist></div>
+      <div class="field"><label>放置位置（點一個標籤，或在下面輸入新位置）</label>
+        <div class="as-tags" id="asTagPick">${asTags().map(([t])=>`<span class="as-pill${a.loc===t?' on':''}" data-pick="${esc(t)}">${esc(t)}</span>`).join('')}</div>
+        <input data-af="loc" id="asLocIn" value="${esc(a.loc||'')}" placeholder="位置標籤，例如：大鐵櫃"></div>
+      ${f('locNote','位置細節','例如：上層左邊、門後第二格')}
       <div class="as-grid">${f('no','財產編號（10 碼）')}${f('code','物品編號（L106…）')}${a.kind==='p' ? f('brand','廠牌') + f('model','型號') : f('date','建檔日期')}</div>
       ${f('note','備註')}
       <label style="display:flex;gap:8px;align-items:center;margin:6px 0 12px;font-size:.9rem"><input type="checkbox" data-af="scrap" ${a.scrap?'checked':''}> 已報廢（平常不顯示）</label>
       <div class="actions">${isNew ? '' : '<button class="btn warn" id="asDel" style="margin-right:auto">刪除這筆</button>'}<button class="btn" id="asCancel">取消</button><button class="btn primary" id="asOk">儲存</button></div></div>`);
     const collect = ()=>{ sheet.querySelectorAll('[data-af]').forEach(i=>{ const k = i.dataset.af; if(i.type === 'checkbox'){ if(i.checked) a[k] = true; else delete a[k]; } else a[k] = i.value.trim(); }); };
-    let pickedArea = a.area || '資源教室';
-    sheet.querySelector('#asAreaPick').onclick = e=>{ const p = e.target.closest('[data-pick]'); if(!p) return;
-      pickedArea = p.dataset.pick; sheet.querySelectorAll('#asAreaPick .as-pill').forEach(x=>x.classList.toggle('on', x === p)); };
+    sheet.querySelector('#asTagPick').onclick = e=>{ const p = e.target.closest('[data-pick]'); if(!p) return;
+      sheet.querySelector('#asLocIn').value = p.dataset.pick; sheet.querySelectorAll('#asTagPick .as-pill').forEach(x=>x.classList.toggle('on', x === p)); };
+    sheet.querySelector('#asLocIn').oninput = e=>{ const v = e.target.value.trim(); sheet.querySelectorAll('#asTagPick .as-pill').forEach(x=>x.classList.toggle('on', x.dataset.pick === v)); };
     const pick = ()=>{ collect(); asPickPhoto(a, ()=>{ if(isNew && !asList().includes(a)) return; draw(); }); };
     sheet.querySelector('#asBig').onclick = ()=> src ? openViewer([{src: asPhotoSrc(a,2000), thumb: asPhotoSrc(a,600), dl: a.imgId ? driveDl(a.imgId) : a.img}], 0, {cap: a.name}) : pick();
     const re = sheet.querySelector('#asRePh'); if(re) re.onclick = pick;
@@ -3135,19 +3119,20 @@ function asEdit(a){
     sheet.querySelector('#asOk').onclick = ()=>{
       collect();
       if(!a.name){ toast('請填名稱'); return; }
-      a.kind = a.no && !a.code ? 'p' : (a.kind || 'i'); a.area = pickedArea; a.tv = 3;
+      a.kind = a.no && !a.code ? 'p' : (a.kind || 'i'); a.tv = 2;
       if(isNew){ if(!Array.isArray(lib.assets)) lib.assets = []; lib.assets.unshift(a); }
       closeSheet(); asSave('已儲存');
     };
   };
   draw();
 }
-document.getElementById('asQ').addEventListener('input', debounce(()=>{ asLimit = 150; renderAssets(); }, 150));
+document.getElementById('asLocs').addEventListener('change', e=>{ if(e.target.id === 'asLocSel'){ asLoc = e.target.value; asLimit = 120; renderAssets(); } });
+document.getElementById('asQ').addEventListener('input', debounce(()=>{ asLimit = 120; renderAssets(); }, 150));
 document.getElementById('panel-asset').addEventListener('click', e=>{
   const t = e.target;
-  const k = t.closest('[data-askind]'); if(k){ asKind = k.dataset.askind; asLimit = 150; renderAssets(); return; }
-  const ar = t.closest('[data-asarea]'); if(ar){ asArea = asArea === ar.dataset.asarea ? '' : ar.dataset.asarea; asLimit = 150; renderAssets(); return; }
-  if(t.closest('[data-asmore]')){ asLimit += 150; renderAssets(); return; }
+  const k = t.closest('[data-askind]'); if(k){ asKind = k.dataset.askind; asLimit = 120; renderAssets(); return; }
+  const l = t.closest('[data-asloc]'); if(l){ asLoc = asLoc === l.dataset.asloc ? '' : l.dataset.asloc; asLimit = 120; renderAssets(); window.scrollTo({top: document.getElementById('panel-asset').offsetTop - 60, behavior:'smooth'}); return; }
+  if(t.closest('[data-asmore]')){ asLimit += 120; renderAssets(); return; }
   const ph = t.closest('[data-asph]');
   if(ph){ const a = asList().find(x=>x.id === ph.dataset.asph); if(!a) return;
     if(a.imgId || a.img) openViewer([{src: asPhotoSrc(a,2000), thumb: asPhotoSrc(a,600), dl: a.imgId ? driveDl(a.imgId) : a.img}], 0, {cap: `${a.name}｜${a.loc || '位置未填'}`});
@@ -3157,8 +3142,8 @@ document.getElementById('panel-asset').addEventListener('click', e=>{
 });
 document.getElementById('asAdd').onclick = ()=>asEdit(null);
 document.getElementById('asCsv').onclick = ()=>{
-  const rows = [['類別','種類','財產編號','物品編號','名稱','廠牌','型號','建檔日期','存放地點','放置位置','備註','盤點','已報廢','照片']];
-  asList().forEach(a=>rows.push([a.kind==='p'?'財產':'物品', asCatOf(a), a.no||'', a.code||'', a.name, a.brand||'', a.model||'', a.date||'', a.area||'資源教室', a.loc||'', a.note||'', a.stat||'', a.scrap?'是':'', a.imgId ? 'https://drive.google.com/file/d/' + a.imgId : '']));
+  const rows = [['類別','財產編號','物品編號','名稱','廠牌','型號','建檔日期','放置位置','位置細節','備註','盤點','已報廢','照片']];
+  asList().forEach(a=>rows.push([a.kind==='p'?'財產':'物品', a.no||'', a.code||'', a.name, a.brand||'', a.model||'', a.date||'', a.loc||'', a.locNote||'', a.note||'', a.stat||'', a.scrap?'是':'', a.imgId ? 'https://drive.google.com/file/d/' + a.imgId : '']));
   download(`財產盤點位置_${today()}.csv`, toCsv(rows), 'text/csv');
 };
 document.getElementById('asImport').onclick = ()=>{
