@@ -980,7 +980,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div id="toast"></div>
 <div class="bw-ov" id="browseOv" hidden>
-  <div class="k-head"><div><div class="k-title">資源教室 庫存瀏覽</div><div class="k-sub">宣導品・文具・團體服</div></div><button class="k-hbtn" data-bwclose>✕ 關閉</button></div>
+  <div class="k-head"><div><div class="k-title">資源教室 庫存瀏覽</div><div class="k-sub">宣導品</div></div><button class="k-hbtn" data-bwclose>✕ 關閉</button></div>
   <div class="k-body"><div class="bw-host"></div></div>
 </div>
 <div class="viewer" id="viewer" hidden>
@@ -3521,7 +3521,7 @@ function renderKiosk(){
   const body = kioskEl.querySelector('.k-body');
   if(kView === 'browse'){
     kioskEl.querySelector('.k-cart').hidden = true; kioskEl.classList.remove('restock','counting');
-    kioskEl.querySelector('.k-sub').textContent = '宣導品・文具・團體服　瀏覽庫存';
+    kioskEl.querySelector('.k-sub').textContent = '宣導品　瀏覽庫存';
     if(!body.querySelector('.bw-host')) body.innerHTML = `<div class="bw-host"></div>`;
     if(!kLocal() && !kItems) body.querySelector('.bw-host').innerHTML = '<div class="k-empty">載入中…</div>';
     else renderBrowse(body.querySelector('.bw-host'), kList());
@@ -3854,11 +3854,13 @@ function drawBrowse(host){
   const audBar = host.querySelector('.bw-aud'); audBar.hidden = !host._inner;
   if(!host._inner) BW.aud = '';
   audBar.querySelectorAll('[data-bwaud]').forEach(b=>b.classList.toggle('on', b.dataset.bwaud === (BW.aud||'')));
-  const list = host._list.filter(it=>!BW.aud || audOf(it) === BW.aud), cats = [...new Set(list.map(i=>i.cat).filter(Boolean))];
-  if(BW.cat && !cats.includes(BW.cat)) BW.cat = '';
+  // 瀏覽頁目前只顯示宣導品（文具、團體服先不放）；要恢復就把類別加回 BW_CATS
+  const BW_CATS = ['宣導品'];
+  const list = host._list.filter(it=>(!BW.aud || audOf(it) === BW.aud) && BW_CATS.includes(it.cat)), cats = BW_CATS.filter(c=>list.some(i=>i.cat === c));
+  BW.cat = cats.length === 1 ? cats[0] : (cats.includes(BW.cat) ? BW.cat : '');
   host.querySelectorAll('[data-bwloc]').forEach(b=>b.classList.toggle('on', b.dataset.bwloc === BW.loc));
   host.querySelectorAll('[data-bwview]').forEach(b=>b.classList.toggle('on', b.dataset.bwview === BW.view));
-  host.querySelector('.bw-cats').innerHTML = ['', ...cats].map(c=>`<button class="${c===BW.cat?'on':''}" data-bwcat="${esc(c)}">${c ? esc(c) : '全部類別'}（${list.filter(i=>!c || i.cat===c).length}）</button>`).join('');
+  host.querySelector('.bw-cats').innerHTML = (cats.length > 1 ? ['', ...cats] : cats).map(c=>`<button class="${c===BW.cat?'on':''}" data-bwcat="${esc(c)}">${c ? esc(c) : '全部類別'}（${list.filter(i=>!c || i.cat===c).length}）</button>`).join('');
   const q = BW.q.trim().toLowerCase();
   let shown = list.filter(it => (!BW.cat || it.cat === BW.cat) && (!q || (it.name + ' ' + (it.note||'')).toLowerCase().includes(q))
     && (BW.loc === 'all' || bwTot(it, BW.loc) > 0 || (it.loc||[]).some(l=>l.startsWith(BW.loc === 'wh' ? 'q-' : 'yd-'))));
