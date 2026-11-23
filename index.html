@@ -480,7 +480,16 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 /* 財產位置 */
 .as-tools{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .as-tools input{flex:1 1 240px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:.95rem}
-.as-locs .chip{font-size:.76rem}
+.as-locs{display:flex;align-items:center;gap:8px;margin:4px 0 6px;font-size:.86rem;color:var(--ink-soft)}
+.as-locs select{flex:0 1 320px;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-family:inherit;font-size:.9rem;background:#fff;color:var(--ink)}
+.as-pill{display:inline-block;border-radius:999px;padding:5px 12px;background:#E3F0EC;color:var(--primary);font-weight:700;font-size:.88rem;white-space:nowrap;cursor:pointer;border:1px solid #C5DDD5}
+.as-pill:hover{background:var(--primary);color:#fff}
+.as-pill.none{background:#FFF4E0;color:#A86F12;border-color:#F0D9A8}
+.as-pill.chk{background:#FDECEC;color:#B23B3B;border-color:#F2C4C4}
+.as-locd{font-size:.76rem;color:var(--ink-soft);margin-top:3px}
+.as-tags{display:flex;flex-wrap:wrap;gap:6px;max-height:168px;overflow:auto;padding:2px;margin-bottom:8px}
+.as-tags .as-pill{font-weight:400;font-size:.84rem;padding:4px 11px}
+.as-tags .as-pill.on{background:var(--primary);color:#fff;font-weight:700}
 .as-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .as-row{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer}
 .as-row:hover{border-color:var(--primary)}
@@ -496,13 +505,12 @@ tr.grp .grpmeta{font-weight:400;letter-spacing:0;color:var(--ink-soft);margin-le
 .as-code.p{background:#E6EEF8;color:#2B5A8A}
 .as-code.i{background:#EAF3EC;color:#2E6B45}
 .as-meta{font-size:.76rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.as-loc{flex:0 0 auto;max-width:34%;text-align:right;font-weight:700;color:var(--primary);font-size:.88rem}
-.as-loc.none{color:#B9862B;font-weight:400}
+.as-loc{flex:0 0 auto;max-width:36%;text-align:right}
 .as-more{text-align:center;margin:8px 0}
 .as-edit .as-bigph{width:100%;max-height:260px;border-radius:12px;border:2px dashed #C9D3CF;display:flex;align-items:center;justify-content:center;min-height:140px;color:var(--ink-soft);margin-bottom:10px;overflow:hidden;cursor:pointer;background:#F7F9F8}
 .as-edit .as-bigph img{max-width:100%;max-height:260px;display:block}
 .as-edit .as-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
-@media (max-width:640px){ .as-row{flex-wrap:wrap;row-gap:4px} .as-ph{flex-basis:60px;height:60px} .as-main{flex-basis:calc(100% - 72px)} .as-loc{flex-basis:100%;max-width:none;text-align:left;padding-left:72px;font-size:.88rem} .as-code{font-size:1rem;padding:3px 8px} .as-edit .as-grid{grid-template-columns:1fr} }
+@media (max-width:640px){ .as-row{flex-wrap:wrap;row-gap:4px} .as-ph{flex-basis:60px;height:60px} .as-main{flex-basis:calc(100% - 72px)} .as-loc{flex-basis:100%;max-width:none;text-align:left;padding-left:72px} .as-code{font-size:1rem;padding:3px 8px} .as-edit .as-grid{grid-template-columns:1fr} }
 
 .pooltools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .pooltools input[type=search]{flex:1 1 260px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.9rem}
@@ -730,7 +738,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
   <nav class="tabs">
     <button data-tab="inv" data-group="promo" class="active">宣導品</button>
     <button data-tab="lib">圖書位置</button>
-    <button data-tab="asset">財產位置</button>
+    <button data-tab="asset">財產盤點位置</button>
   </nav>
 </header>
 
@@ -943,7 +951,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 </section>
 <section class="panel" id="panel-asset">
   <div class="mapcard">
-    <h2>財產位置 <span class="pcount" id="asCount"></span></h2>
+    <h2>財產盤點位置 <span class="pcount" id="asCount"></span></h2>
     <div class="hint">學校財產（10 碼<b>財產編號</b>）與單位自管物品（L106 開頭的<b>物品編號</b>）。點一筆可以改位置、備註；左邊方框可以加照片，之後看照片就知道東西放在哪、長什麼樣子。照片會存到 Google 雲端硬碟。</div>
     <div class="as-tools">
       <input type="search" id="asQ" placeholder="搜尋名稱、編號、位置…" autocomplete="off">
@@ -952,7 +960,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
       <button class="btn" id="asImport">匯入清冊檔</button>
     </div>
     <div class="chipbar" id="asKind"></div>
-    <div class="chipbar as-locs" id="asLocs"></div>
+    <div class="as-locs" id="asLocs"></div>
     <div id="asList" class="as-list"></div>
   </div>
 </section>
@@ -2985,7 +2993,31 @@ function renderLib(){ renderLibMap(); renderLibResults(); renderLibBatches(); re
    ================================================================ */
 let asKind = 'all', asLoc = '', asLimit = 120;
 const asList = () => (lib && Array.isArray(lib.assets)) ? lib.assets : [];
-const asLocKey = l => String(l||'').replace(/[（(].*?[）)]/g,'').replace(/(上方|下方|旁邊|旁|內|裡|上面|後面|後方|那裡|那)$/,'').trim() || '（未填）';
+// 位置＝一個膠囊標籤（loc）＋細節說明（locNote）；舊資料的長位置文字自動拆成標籤＋細節
+const AS_PEOPLE = '微姍|家銘|曉臻|梅青|雨欣|心榆|望謙|佳瑩|偉芳|儀芳|翔鴻|博瑜|婉柔|以珊|昭宏';
+const AS_RULES = [
+  [/請確認|^？/, '待確認'], [/學生借用/, '學生借用中'], [/白色密碼鎖櫃/, '課輔二白色密碼鎖櫃'],
+  [/1050416000|6尺鐵櫃/, '學生區6尺鐵櫃'], [/大鐵櫃/, '大鐵櫃'], [/設備鐵櫃/, '設備鐵櫃'], [/資教鐵櫃/, '資教鐵櫃'],
+  [/學生電腦區旁鐵櫃|學生電腦區旁烙鐵架/, '學生電腦區旁鐵櫃'], [/四層(抽屜)?櫃/, '學生區四層抽屜櫃'], [/抽屜櫃/, '學生區抽屜櫃'],
+  [/防潮箱/, '防潮箱'], [/曉臻後面櫃子/, '曉臻後面櫃子'], [/器材櫃/, '器材櫃'], [/Q棟|^倉庫$/, 'Q棟倉庫'], [/住宿組/, '住宿組'],
+  [/悅讀/, '悅讀書房'], [/課輔(室)?[（(]?一/, '課輔一'], [/課輔(室)?[（(]?二/, '課輔二'], [/抒壓室/, '抒壓室'],
+  [/諮輔|志工室|諮商一/, '諮輔中心'], [/號電腦|學生電腦|電腦區|學生區/, '學生區'], [/工讀桌/, '工讀桌'],
+  [/冰箱/, '冰箱旁'], [/影印機/, '影印機旁'], [/門後|門邊|門口|大門|門底|門$/, '門口'], [/望謙/, '望謙座位'],
+  [/學生置物櫃|學生櫃/, '學生置物櫃'], [/窗/, '窗邊'], [/大桌/, '大桌旁'],
+  [new RegExp('(' + AS_PEOPLE + ')'), m => m[1] + '座位'],
+];
+function asTagOf(loc){
+  const s0 = String(loc||'').trim(); if(!s0) return ['', ''];
+  for(const [re, tag] of AS_RULES){ const m = s0.match(re); if(m){ const t = typeof tag === 'function' ? tag(m) : tag; return [t, s0 === t ? '' : s0]; } }
+  return [s0, ''];
+}
+function asMigrate(){
+  let n = 0;
+  asList().forEach(a=>{ if(a.tv === 2) return; const [t, d] = asTagOf(a.loc); a.loc = t; if(d && !a.locNote) a.locNote = d; a.tv = 2; n++; });
+  if(n) store.set(LIB_KEY, JSON.stringify(lib)).then(markCloudChange).catch(()=>{});
+}
+const asTags = () => { const c = {}; asList().forEach(a=>{ if(!a.scrap && a.loc) c[a.loc] = (c[a.loc]||0)+1; }); return Object.entries(c).sort((x,y)=>y[1]-x[1]||x[0].localeCompare(y[0],'zh-Hant')); };
+const asPill = a => a.loc ? `<span class="as-pill${a.loc==='待確認'?' chk':''}" data-asloc="${esc(a.loc)}">📍 ${esc(a.loc)}</span>` : '<span class="as-pill none">位置未填</span>';
 function asSave(msg){
   store.set(LIB_KEY, JSON.stringify(lib)).then(()=>{ if(msg) toast(msg); markCloudChange(); }).catch(()=>toast('⚠ 儲存失敗'));
   renderAssets();
@@ -2996,12 +3028,13 @@ function asMatch(a, q){
   if(asKind === 'i' && a.kind !== 'i') return false;
   if(asKind === 'nophoto' && (a.imgId || a.img)) return false;
   if(asKind === 'scrap'){ if(!a.scrap) return false; } else if(a.scrap) return false;
-  if(asLoc && asLocKey(a.loc) !== asLoc) return false;
+  if(asLoc && (asLoc === '（未填）' ? a.loc : a.loc !== asLoc)) return false;
   if(!q) return true;
-  return [a.name,a.no,a.code,a.loc,a.note,a.brand,a.model].some(v=>String(v||'').toLowerCase().includes(q));
+  return [a.name,a.no,a.code,a.loc,a.locNote,a.note,a.brand,a.model].some(v=>String(v||'').toLowerCase().includes(q));
 }
 function renderAssets(){
   const host = document.getElementById('asList'); if(!host) return;
+  asMigrate();
   const all = asList();
   const q = document.getElementById('asQ').value.trim().toLowerCase();
   const live = all.filter(a=>!a.scrap);
@@ -3009,10 +3042,11 @@ function renderAssets(){
   document.getElementById('asImport').hidden = all.length > 0;
   const kinds = [['all','全部'],['p','財產編號'],['i','物品編號'],['nophoto','還沒有照片'],['scrap','已報廢']];
   document.getElementById('asKind').innerHTML = kinds.map(([k,t])=>`<button class="chip${asKind===k?' on':''}" data-askind="${k}">${t}</button>`).join('');
-  const cnt = {}; live.forEach(a=>{ const k = asLocKey(a.loc); cnt[k] = (cnt[k]||0)+1; });
-  const locs = Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,18);
-  document.getElementById('asLocs').innerHTML = all.length ? `<span style="font-size:.78rem;color:var(--ink-soft);align-self:center">依位置：</span>` +
-    locs.map(([l,n])=>`<button class="chip${asLoc===l?' on':''}" data-asloc="${esc(l)}">${esc(l)} ${n}</button>`).join('') : '';
+  const tags = asTags(), noLoc = live.filter(a=>!a.loc).length;
+  document.getElementById('asLocs').innerHTML = all.length ? `<span>依位置</span><select id="asLocSel"><option value="">全部位置（${tags.length} 個）</option>` +
+    tags.map(([l,n])=>`<option value="${esc(l)}"${asLoc===l?' selected':''}>${esc(l)}（${n}）</option>`).join('') +
+    (noLoc ? `<option value="（未填）"${asLoc==='（未填）'?' selected':''}>位置未填（${noLoc}）</option>` : '') + `</select>` +
+    (asLoc ? `<button class="chip on" data-asloc="${esc(asLoc)}">✕ 清除</button>` : '') : '';
   if(!all.length){
     host.innerHTML = `<div class="k-empty" style="padding:30px 10px;text-align:center;color:var(--ink-soft)">還沒有財產資料。<br>請按上方「匯入清冊檔」，選擇「財產清冊.json」。</div>`; return;
   }
@@ -3026,7 +3060,7 @@ function renderAssets(){
     return `<div class="as-row${a.scrap?' scrap':''}" data-as="${esc(a.id)}">
       <div class="as-ph${src?' has':''}" data-asph="${esc(a.id)}">${src ? `<img src="${esc(src)}" loading="lazy" alt="">` : '＋<br>加照片'}</div>
       <div class="as-main"><div class="as-name">${esc(a.name)}</div><div class="as-codes">${codes}</div>${meta ? `<div class="as-meta" title="${esc(meta)}">${esc(meta)}</div>` : ''}</div>
-      <div class="as-loc${a.loc?'':' none'}">${a.loc ? '📍 ' + esc(a.loc) : '位置未填'}</div></div>`;
+      <div class="as-loc">${asPill(a)}${a.locNote ? `<div class="as-locd">${esc(a.locNote)}</div>` : ''}</div></div>`;
   }).join('') + (rows.length > asLimit ? `<div class="as-more"><button class="btn" data-asmore>再顯示 ${Math.min(120, rows.length-asLimit)} 筆（共 ${rows.length} 筆）</button></div>` : '');
 }
 function asPickPhoto(a, done){
@@ -3062,12 +3096,18 @@ function asEdit(a){
       <div class="as-bigph" id="asBig">${src ? `<img src="${esc(src)}" alt="">` : '＋ 點這裡加照片（拍放置的位置或物品本身）'}</div>
       ${src ? `<div class="actions" style="margin:-4px 0 10px;justify-content:flex-start"><button class="btn" id="asRePh">換照片</button><button class="btn" id="asViewPh">看大圖</button><button class="btn warn" id="asDelPh">移除照片</button></div>` : ''}
       ${f('name','名稱')}
-      ${f('loc','放置位置','例如：大鐵櫃、梅青後方、課輔二白色密碼鎖櫃')}
+      <div class="field"><label>放置位置（點一個標籤，或在下面輸入新位置）</label>
+        <div class="as-tags" id="asTagPick">${asTags().map(([t])=>`<span class="as-pill${a.loc===t?' on':''}" data-pick="${esc(t)}">${esc(t)}</span>`).join('')}</div>
+        <input data-af="loc" id="asLocIn" value="${esc(a.loc||'')}" placeholder="位置標籤，例如：大鐵櫃"></div>
+      ${f('locNote','位置細節','例如：上層左邊、門後第二格')}
       <div class="as-grid">${f('no','財產編號（10 碼）')}${f('code','物品編號（L106…）')}${a.kind==='p' ? f('brand','廠牌') + f('model','型號') : f('date','建檔日期')}</div>
       ${f('note','備註')}
       <label style="display:flex;gap:8px;align-items:center;margin:6px 0 12px;font-size:.9rem"><input type="checkbox" data-af="scrap" ${a.scrap?'checked':''}> 已報廢（平常不顯示）</label>
       <div class="actions">${isNew ? '' : '<button class="btn warn" id="asDel" style="margin-right:auto">刪除這筆</button>'}<button class="btn" id="asCancel">取消</button><button class="btn primary" id="asOk">儲存</button></div></div>`);
     const collect = ()=>{ sheet.querySelectorAll('[data-af]').forEach(i=>{ const k = i.dataset.af; if(i.type === 'checkbox'){ if(i.checked) a[k] = true; else delete a[k]; } else a[k] = i.value.trim(); }); };
+    sheet.querySelector('#asTagPick').onclick = e=>{ const p = e.target.closest('[data-pick]'); if(!p) return;
+      sheet.querySelector('#asLocIn').value = p.dataset.pick; sheet.querySelectorAll('#asTagPick .as-pill').forEach(x=>x.classList.toggle('on', x === p)); };
+    sheet.querySelector('#asLocIn').oninput = e=>{ const v = e.target.value.trim(); sheet.querySelectorAll('#asTagPick .as-pill').forEach(x=>x.classList.toggle('on', x.dataset.pick === v)); };
     const pick = ()=>{ collect(); asPickPhoto(a, ()=>{ if(isNew && !asList().includes(a)) return; draw(); }); };
     sheet.querySelector('#asBig').onclick = ()=> src ? openViewer([{src: asPhotoSrc(a,2000), thumb: asPhotoSrc(a,600), dl: a.imgId ? driveDl(a.imgId) : a.img}], 0, {cap: a.name}) : pick();
     const re = sheet.querySelector('#asRePh'); if(re) re.onclick = pick;
@@ -3079,18 +3119,19 @@ function asEdit(a){
     sheet.querySelector('#asOk').onclick = ()=>{
       collect();
       if(!a.name){ toast('請填名稱'); return; }
-      a.kind = a.no && !a.code ? 'p' : (a.kind || 'i');
+      a.kind = a.no && !a.code ? 'p' : (a.kind || 'i'); a.tv = 2;
       if(isNew){ if(!Array.isArray(lib.assets)) lib.assets = []; lib.assets.unshift(a); }
       closeSheet(); asSave('已儲存');
     };
   };
   draw();
 }
+document.getElementById('asLocs').addEventListener('change', e=>{ if(e.target.id === 'asLocSel'){ asLoc = e.target.value; asLimit = 120; renderAssets(); } });
 document.getElementById('asQ').addEventListener('input', debounce(()=>{ asLimit = 120; renderAssets(); }, 150));
 document.getElementById('panel-asset').addEventListener('click', e=>{
   const t = e.target;
   const k = t.closest('[data-askind]'); if(k){ asKind = k.dataset.askind; asLimit = 120; renderAssets(); return; }
-  const l = t.closest('[data-asloc]'); if(l){ asLoc = asLoc === l.dataset.asloc ? '' : l.dataset.asloc; asLimit = 120; renderAssets(); return; }
+  const l = t.closest('[data-asloc]'); if(l){ asLoc = asLoc === l.dataset.asloc ? '' : l.dataset.asloc; asLimit = 120; renderAssets(); window.scrollTo({top: document.getElementById('panel-asset').offsetTop - 60, behavior:'smooth'}); return; }
   if(t.closest('[data-asmore]')){ asLimit += 120; renderAssets(); return; }
   const ph = t.closest('[data-asph]');
   if(ph){ const a = asList().find(x=>x.id === ph.dataset.asph); if(!a) return;
@@ -3101,9 +3142,9 @@ document.getElementById('panel-asset').addEventListener('click', e=>{
 });
 document.getElementById('asAdd').onclick = ()=>asEdit(null);
 document.getElementById('asCsv').onclick = ()=>{
-  const rows = [['類別','財產編號','物品編號','名稱','廠牌','型號','建檔日期','放置位置','備註','盤點','已報廢','照片']];
-  asList().forEach(a=>rows.push([a.kind==='p'?'財產':'物品', a.no||'', a.code||'', a.name, a.brand||'', a.model||'', a.date||'', a.loc||'', a.note||'', a.stat||'', a.scrap?'是':'', a.imgId ? 'https://drive.google.com/file/d/' + a.imgId : '']));
-  download(`財產位置_${today()}.csv`, toCsv(rows), 'text/csv');
+  const rows = [['類別','財產編號','物品編號','名稱','廠牌','型號','建檔日期','放置位置','位置細節','備註','盤點','已報廢','照片']];
+  asList().forEach(a=>rows.push([a.kind==='p'?'財產':'物品', a.no||'', a.code||'', a.name, a.brand||'', a.model||'', a.date||'', a.loc||'', a.locNote||'', a.note||'', a.stat||'', a.scrap?'是':'', a.imgId ? 'https://drive.google.com/file/d/' + a.imgId : '']));
+  download(`財產盤點位置_${today()}.csv`, toCsv(rows), 'text/csv');
 };
 document.getElementById('asImport').onclick = ()=>{
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
