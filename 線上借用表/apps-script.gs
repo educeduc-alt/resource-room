@@ -37,13 +37,17 @@ function handle(body) {
   const uid = /^u[0-9a-f]{64}$/.test(req.uid || '') ? req.uid : null;
   if (req.op === 'login') return out({ ok: admin, code: admin ? '' : 'denied' });
   if (req.pw && !admin) return out({ ok: false, code: 'denied', message: '管理密碼不正確' });
+  // 資料版本：沒有人改過資料時，輪詢直接回「沒有變動」，不用讀試算表
+  const props = PropertiesService.getScriptProperties();
+  if (req.op === 'read' && req.rev && req.rev === props.getProperty('rev')) return out({ ok: true, unchanged: true, rev: req.rev });
+  const bump = () => props.setProperty('rev', Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
   const write = ['set', 'update', 'delete', 'batch', 'arr'].includes(req.op);
   const lock = write ? LockService.getScriptLock() : null;
   if (write) lock.waitLock(25000);
   try {
     const st = load();
     if (req.op === 'read') {
-      return out({ ok: true, results: (req.reads || []).map(r => r.kind === 'doc'
+      return out({ ok: true, rev: props.getProperty('rev') || '', results: (req.reads || []).map(r => r.kind === 'doc'
         ? { data: canRead(r.path, admin, uid) && st.m[r.path] !== undefined ? st.m[r.path] : null }
         : { docs: listCol(st, r.path, admin, uid) }) });
     }
@@ -66,7 +70,7 @@ function handle(body) {
       doc[field] = arr; doc.updatedAt = req.at || '';
       if (!admin) doc = sanitize(req.path, old, doc);
       putDoc(st, req.path, doc);
-      SpreadsheetApp.flush(); rebuild(st, root);
+      SpreadsheetApp.flush(); rebuild(st, root); bump();
       return out({ ok: true });
     }
     if (write) {
@@ -86,7 +90,7 @@ function handle(body) {
         roots[w.path.split('/')[0]] = true;
       }
       SpreadsheetApp.flush();
-      Object.keys(roots).forEach(r => rebuild(st, r));
+      Object.keys(roots).forEach(r => rebuild(st, r)); bump();
       return out({ ok: true });
     }
     return out({ ok: false, code: 'invalid_argument', message: 'unknown op' });
@@ -226,10 +230,6 @@ function rebuild(st, root) {
     rows = list.map((e, i) => [i + 1, e.at, e.shift, e.dept, e.name,
       [e.pc ? '電腦 ' + e.pc : '', e.print ? '印表機（彩色）' : '', e.copy ? '影印機（黑白）' : '', e.scan ? '掃描資料' : ''].filter(String).join('、'),
       e.paper || '', e.reason === '其他' ? '其他：' + (e.reasonNote || '') : e.reason]);
-  } else if (root === 'roster') {
-    name = '借用名單';
-    head = ['學號', '姓名', '系級', '類別', '證明有效期限', '備註'];
-    rows = docs('roster').map(r => [r.no, r.name, r.dept, r.category, r.validUntil, r.note]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   } else if (root === 'catalog') {
     name = '器材清單';
     head = ['代碼', '名稱', '類別', '數量', '借出中', '可長期借用', '說明'];
@@ -249,4 +249,4 @@ function writeSheet(name, head, rows) {
 }
 
 /* 手動執行一次可建立所有分頁、確認權限 */
-function 初始化() { const st = load(); ['catalog', 'requests', 'loans', 'surveys', 'usage', 'roster'].forEach(r => rebuild(st, r)); }
+function 初始化() { const st = load(); ['catalog', 'requests', 'loans', 'surveys', 'usage'].forEach(r => rebuild(st, r)); }

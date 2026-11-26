@@ -95,11 +95,6 @@ th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;verti
 td.wrap{white-space:normal;min-width:140px}
 th{background:var(--sunk);font-weight:500;font-size:.82rem;color:var(--muted);position:sticky;top:0}
 tr:last-child td{border-bottom:0}
-.qrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-.qrcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;min-width:0}
-.qrbox{background:var(--qr-bg);padding:6px;border-radius:6px;width:100%;max-width:150px;aspect-ratio:1}
-.qrbox svg{width:100%;height:100%;display:block}
-.qrcard b{font-size:.92rem;line-height:1.3}
 .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .scale label{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.78rem;color:var(--muted);text-align:center;line-height:1.25}
 .scale label b{font-size:1.15rem;color:var(--fg)}
@@ -123,8 +118,6 @@ details.rules ol{padding-left:1.3em;margin:6px 0}
 #toast:empty{display:none}
 .apply-head{display:flex;gap:20px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
 .apply-head>div{flex:1 1 320px;min-width:0}
-.apply-qr{flex:0 0 180px;max-width:180px}
-@media (max-width:520px){.apply-qr{flex-basis:100%;max-width:none}.apply-qr .qrbox{max-width:140px}}
 .rules-doc{max-width:860px}
 .eyebrow{margin:0;color:var(--accent);font-weight:700;letter-spacing:.12em;font-size:.82rem}
 .rule{border-top:1px solid var(--line);padding-top:4px;margin-top:20px}
@@ -136,8 +129,6 @@ ol.cn>li::before{content:counter(cn,cjk-ideographic) "、";color:var(--accent);f
 .rtable td{vertical-align:middle}
 a.btn{display:inline-flex;align-items:center;min-height:44px;padding:9px 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;font-weight:500}
 a.btn.primary{background:var(--action);border-color:var(--action);color:#fff;box-shadow:0 5px 14px rgba(197,106,45,.2)}
-.demo-bar{background:var(--warn-soft);border-bottom:1px solid var(--line);font-size:.88rem}
-.demo-bar .wrap{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:8px}
 .seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);margin-bottom:14px}
 .seg a{padding:7px 16px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500}
 .seg a[aria-current]{background:var(--accent);color:var(--accent-fg)}
@@ -187,7 +178,6 @@ details.inv summary{cursor:pointer;font-weight:700;color:var(--accent)}
 a.btn.big{font-size:1.1rem;padding:12px 26px}
 details.fullrules{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
 details.fullrules>summary{cursor:pointer;font-weight:700;color:var(--accent);padding:6px 0}
-.whocard{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:0 0 16px}
 .submitbar{position:sticky;bottom:0;z-index:4;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));margin-top:8px;box-shadow:0 -6px 18px rgba(0,0,0,.06)}
 .submitbar button{flex:1;min-height:56px;font-size:1.15rem;font-weight:700}
 .sent{background:var(--ok-soft);border:1px solid var(--ok);border-radius:12px;padding:14px 18px;margin-bottom:14px}
@@ -246,8 +236,6 @@ const nowStr=()=>{const d=new Date();return ymd(d)+' '+pad(d.getHours())+':'+pad
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const local={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const toast=(m)=>{const t=$('#toast');t.textContent=m;clearTimeout(toast._t);toast._t=setTimeout(()=>t.textContent='',3200)};
-const queues={};
-const serial=(key,fn)=>{const p=(queues[key]||Promise.resolve()).then(fn);queues[key]=p.catch(()=>{});return p};
 const TIMES=[];for(let m=8*60;m<=20*60;m+=30)TIMES.push(pad(Math.floor(m/60))+':'+pad(m%60));
 const overlap=(a1,a2,b1,b2)=>a1<b2&&b1<a2;
 function normDate(v){
@@ -267,7 +255,6 @@ const STATUS={pending:['待審核','warn'],approved:['已核准・待領取','ok
 const Q=[['q1','空間環境整潔、舒適'],['q2','器材設備狀況良好'],['q3','借用流程方便、清楚'],['q4','老師與工讀生的協助'],['q5','整體滿意度']];
 const SCALE=['非常不滿意','不滿意','普通','滿意','非常滿意'];
 const SCALE_COLORS=['var(--bad)','var(--warn)','var(--line)','var(--info)','var(--ok)'];
-const SURVEY_TARGETS=['悅讀書房','課輔室','資源教室器材借用','休閒性器材','資源教室整體服務'];
 /* 課輔二／悅讀書房借用登記表的節次 */
 const PERIODS=[['1','08:10','09:00'],['2','09:10','10:00'],['3','10:10','11:00'],['4','11:05','11:55'],['午','11:55','12:50'],['5','12:50','13:40'],['6','13:45','14:35'],['7','14:40','15:30'],['8','15:35','16:25'],['9','16:35','17:25'],['10','17:30','18:15'],['A','18:20','19:05'],['B','19:10','19:55']];
 const pLabel=p=>p==='午'?'午休':`第 ${p} 節`;
@@ -295,7 +282,6 @@ const S={db:null,user:null,uid:null,admin:false,ready:false,noDb:false,
   got:{},notes:{},preselect:null,stale:false};
 const chipFor=st=>{const [t,c]=STATUS[st]||[st,''];return `<span class="chip ${c}">${h(t)}</span>`};
 const item=code=>S.catalog.find(c=>c.code===code);
-const rosterMap=()=>Object.fromEntries(S.roster.map(r=>[String(r.no).toUpperCase(),r]));
 function weekOf(date){const st=S.config.semesterStart;if(!st)return null;return Math.floor((new Date(date+'T00:00:00')-new Date(st+'T00:00:00'))/864e5/7)+1}
 function leisureSlot(date){const w=weekOf(date);if(w==null)return null;if(w===10||w===11)return{label:`期中考週（第 ${w} 週）`,start:'18:00',end:'20:00'};if(w===19)return{label:'期末考週（第 19 週）',start:'10:00',end:'15:00'};return false}
 function eventOn(date){return (S.config.eventDays||[]).find(e=>e.date===date)}
@@ -339,16 +325,13 @@ function repaint(keys){
   const o=$('#office');o.textContent=S.config.office?`　聯絡：${S.config.office}`:'';
   const v=V[curView];if(!v)return;
   if(v.deps&&!v.deps.some(k=>keys.includes(k)))return;
-  if(isAdminView(curView)||curView==='roster'){
+  if(isAdminView(curView)){
     if(!S.ready)return;
     if(isAdminView(curView)&&!S.admin){location.hash='login';return}
   }
   v.paint&&v.paint(curParam);
 }
 function gateNotice(){
-  if(S.noDb)return `<div class="note warn">這個頁面目前無法連線到資料庫。請登入 claude.ai 並從資源教室提供的連結開啟；若仍看到此訊息，請向資源教室老師確認你的分享權限（需為「參與者」以上）。</div>`;
-  if(S.offline)return `<div class="note warn">目前連不上資料庫，畫面可能不是最新的。請檢查網路後重新整理。</div>`;
-  if(S.ready&&!S.uid&&!S.gas)return `<div class="note warn">無法辨識你的帳號，因此無法送出申請。請先登入後再開啟此頁。</div>`;
   if(S.stale)return `<div class="note">資料連線較慢，目前顯示的內容可能不是最新的。</div>`;
   return '';
 }
@@ -412,7 +395,6 @@ function cellWho(c,code,d,p){const all=allRequests();
   const r=all.find(x=>x.status==='pending'&&x.type==='space'&&x.code===code&&x.date===d&&reqHit(x,p));return r?`（待審）${r.name}`:''}
 
 /* ===== 申請借用 ===== */
-function segNav(cur){return `<nav class="seg" aria-label="申請類型"><a href="#borrow" ${cur==='borrow'?'aria-current="page"':''}>申請借用設備</a><a href="#usage" ${cur==='usage'?'aria-current="page"':''}>設備使用登記</a></nav>`}
 V.apply={
   shell(){return `<div id="a-gate"></div>
 <div class="pick">
@@ -421,7 +403,7 @@ V.apply={
 </div>
 <details class="inv" id="b-inv-box" style="margin-top:18px" ${S.openInv?'open':''}><summary>查看器材一覽表（資源教室目前剩餘數量與借用期限）</summary><div id="b-inv"></div></details>`},
   deps:['config','myReq','catalog'],
-  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();V.borrow.qr();const iv=$('#b-inv');if(iv)iv.innerHTML=invHtml();if(S.openInv){S.openInv=false;const d=$('#b-inv-box');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),50)}}}
+  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();const iv=$('#b-inv');if(iv)iv.innerHTML=invHtml();if(S.openInv){S.openInv=false;const d=$('#b-inv-box');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),50)}}}
 };
 V.borrow={
   deps:['catalog','config','calendar'],
@@ -452,8 +434,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
   bind(){
     const roleSync=()=>{const staff=$('#a-role').value==='教職員';$('#a-no-wrap').hidden=staff};$('#a-role').addEventListener('change',roleSync);roleSync();
     if(S.preselect){const it=item(S.preselect);if(it){const t=it.cat==='leisure'?'leisure':it.cat==='space'?'space':'item';$('#a-type-'+t).checked=true}}
-    $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true);this.sum()});
-    $('#apply-form').addEventListener('change',()=>this.sum());$('#apply-form').addEventListener('click',()=>setTimeout(()=>this.sum(),0));
+    $('#a-types').addEventListener('change',()=>{S.preselect=null;this.detail(true)});
     $('#apply-form').addEventListener('submit',e=>{e.preventDefault();this.submit()});
     $('#apply-form').addEventListener('change',e=>{if(this.type()==='space'&&e.target.name==='a-code'){if(S.spSel&&S.spSel.code!==e.target.value)S.spSel=null;this.spPaint()}if(['a-date','a-code','a-start','a-end'].includes(e.target.id)||e.target.name==='a-code')this.slots()});
     $('#apply-form').addEventListener('click',e=>{const b=e.target.closest('.cell');
@@ -462,23 +443,13 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
       if(e.target.id==='sp-prev'){S.spWeek=addDays(S.spWeek,-7);this.spPaint()}
       if(e.target.id==='sp-next'){S.spWeek=addDays(S.spWeek,7);this.spPaint()}});
   },
-  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.detail(false);this.sum()},
-  sum(){const el=$('#a-count');if(!el)return;const t=this.type(),d=($('#a-date')||{}).value;let txt='';
-    if(t==='item'){const n=$$('input[name=a-code]:checked').length;txt=n?`已選 ${n} 項${d?`・${fmtDate(d)}`:'・請選日期'}`:'請先勾選要借的器材'}
-    else if(t==='space'){const sl=S.spSel;txt=sl&&sl.periods.size?`${h(item(sl.code)?.name||'')}・${fmtDate(sl.date)}・${sl.periods.size} 節`:'請在週表點選節次'}
-    else{const c=($('input[name=a-code]:checked')||$('#a-code')||{}).value;txt=c?`${h(item(c)?.name||'')}${d?`・${fmtDate(d)}`:'・請選日期'}`:'請先選擇器材'}
-    el.innerHTML=txt},
+  paint(){$('#a-gate').innerHTML=gateNotice()+pendingSurveyNote();this.detail(false)},
   spPaint(){const g=$('#sp-grid');if(!g)return;if(!S.spWeek)S.spWeek=thisWeek();
     const sel=($('input[name=a-code]:checked')||{}).value;const codes=S.catalog.filter(x=>x.cat==='space').map(x=>x.code).filter(c=>!sel||c===sel);
     $('#sp-wk').textContent=`${fmtDate(S.spWeek)} – ${fmtDate(addDays(S.spWeek,4))}`;$('#sp-prev').disabled=S.spWeek<=thisWeek();
     g.innerHTML=spaceGrid({codes,mon:S.spWeek,sel:S.spSel});
     const sl=S.spSel,has=sl&&sl.periods.size;$('#a-date').value=has?sl.date:'';
     $('#sp-sum').innerHTML=has?`<div class="note ok">已選：<b>${h(item(sl.code)?.name||'')}</b>・${fmtDate(sl.date)}・${[...sl.periods].sort(pSort).map(pLabel).join('、')}</div>`:'<p class="meta" style="margin:0">點選空白格子選擇節次，可以選多節，再點一次取消。灰色「已預約」表示已被借用。</p>'},
-  qr(){const box=$('#a-qr');if(!box)return;const u=(S.config.url||'').replace(/#.*$/,'');
-    if(!u){box.hidden=true;return}box.hidden=false;const url=u;if(box.dataset.url===url)return;box.dataset.url=url;
-    if(!window.qrcode){loadQR().then(()=>{box.dataset.url='';this.qr()}).catch(()=>{});box.hidden=true;return}
-    box.innerHTML=`<div class="qrbox">${qrSvg(url)}</div><b>手機掃描申請</b>${S.admin?'<button class="small" id="a-qr-dl">下載 PNG</button>':''}`;
-    const b=$('#a-qr-dl');if(b)b.onclick=async()=>saveFile('QR_apply_線上預借申請.png',await qrPng(url,'線上預借申請','掃描閱讀借用規定並申請'))},
   type(){return ($('input[name=a-type]:checked')||{}).value||'item'},
   detail(reset){
     const boxes=[$('#a-when'),$('#a-what')];if(!boxes[0])return;
@@ -545,8 +516,8 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     const ap={role:v('a-role'),no:staffRole?'':v('a-no').toUpperCase(),name:v('a-name'),dept:v('a-dept'),phone:v('a-phone')};
     const fail=m=>{err.textContent=m;return false};
     const idKey=staffRole?ap.name:ap.no;
-    if(S.gas&&idKey&&ap.phone){const before=S.uid;await setIdentity(idKey,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
-    if(!S.db||!S.uid)return fail(S.gas?(staffRole?'請先填寫姓名與聯絡電話。':'請先填寫學號與聯絡電話。'):'目前無法送出：請登入後從資源教室提供的連結開啟此頁。');
+    if(idKey&&ap.phone){const before=S.uid;await setIdentity(idKey,ap.phone,ap.name);if(before!==S.uid){const sn=await S.db.doc('requests/'+S.uid).get().catch(()=>null);S.myReq=sn&&sn.exists?(sn.data().list||[]):[]}}
+    if(!S.db||!S.uid)return fail(staffRole?'請先填寫姓名與聯絡電話。':'請先填寫學號與聯絡電話。');
     if(S.myReq.some(needSurvey))return fail('你有已歸還的借用尚未填寫滿意度問卷，請先到「學生/職員申請」填寫後再送出新的申請。');
     if((!staffRole&&!ap.no)||!ap.name||!ap.dept||!ap.phone)return fail(staffRole?'請填寫申請人的姓名、單位與聯絡電話。':'請填寫申請人的學號、姓名、系級與聯絡電話。');
     const purpose=v('a-purpose'),min=today();
@@ -592,13 +563,7 @@ ${[['item','一般性器材'],['leisure','休閒性器材'],['space','空間借�
     }
     const btn=$('#a-submit');btn.disabled=true;btn.textContent='送出中…';
     try{
-      if(S.db.arr)for(const r of reqs)await S.db.arr('requests/'+S.uid,'list',{add:r});
-      else await serial('req',async()=>{
-        const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();
-        const list=snap.exists?[...(snap.data().list||[])]:[];
-        list.push(...reqs);
-        await ref.set({list,updatedAt:nowStr()});
-      });
+      for(const r of reqs)await S.db.arr('requests/'+S.uid,'list',{add:r});
       S.preselect=null;S.spSel=null;
       toast(`已送出 ${reqs.length} 筆申請，請等候老師審核`);S.justSent=reqs.length;
       location.hash='mine';
@@ -618,13 +583,13 @@ V.mine={
   shell(){return `<div id="m-gate"></div><div id="m-list" class="list"></div>`},
   paint(){
     const id=(()=>{try{return JSON.parse(sess.get('rr-id')||'null')}catch(e){return null}})();
-    if(S.gas&&(!S.uid||!id||id.uid!==S.uid)){
+    if(!S.uid||!id||id.uid!==S.uid){
       $('#m-gate').innerHTML=gateNotice();
       $('#m-list').innerHTML=`<form id="m-find" class="card" style="max-width:520px" novalidate><h3>查詢我的申請</h3><p class="meta" style="margin:0">學生請輸入學號，教職員請輸入姓名，再加上申請時填寫的聯絡電話。</p><div class="grid"><label class="f">學號（教職員填姓名）<input id="mf-no" autocomplete="off"></label><label class="f">聯絡電話<input id="mf-phone" type="tel"></label></div><p class="err" id="mf-err"></p><button class="primary" type="submit">查詢</button></form>`;
       $('#m-find').onsubmit=async e=>{e.preventDefault();const no=$('#mf-no').value.trim(),ph=$('#mf-phone').value.trim();if(!no||!digits(ph)){$('#mf-err').textContent='請填寫學號（或教職員姓名）與電話。';return}await setIdentity(no,ph);this.paint()};
       return}
-    $('#m-gate').innerHTML=(S.justSent?`<div class="sent"><b>✓ 已送出 ${S.justSent} 筆申請</b><ol><li>老師審核後，結果會顯示在下方。</li><li>核准後，使用當天帶<b>學生證或教職員證</b>到資源教室領取。</li><li>用完按「確認歸還」，把器材帶回資源教室。</li></ol></div>`:'')+gateNotice()+(S.gas?`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> ${id.no!==id.name?`<span class="mono">${h(id.no)}</span>`:''}</span><button class="small" id="m-switch">不是你？切換身分</button></div>`:'')+pendingSurveyNote();
-    if(S.gas)$('#m-switch').onclick=()=>clearIdentity();
+    $('#m-gate').innerHTML=(S.justSent?`<div class="sent"><b>✓ 已送出 ${S.justSent} 筆申請</b><ol><li>老師審核後，結果會顯示在下方。</li><li>核准後，使用當天帶<b>學生證或教職員證</b>到資源教室領取。</li><li>用完按「確認歸還」，把器材帶回資源教室。</li></ol></div>`:'')+gateNotice()+(`<div class="spread note" style="margin-bottom:12px"><span>目前查詢：<b>${h(id.name||'')}</b> ${id.no!==id.name?`<span class="mono">${h(id.no)}</span>`:''}</span><button class="small" id="m-switch">不是你？切換身分</button></div>`)+pendingSurveyNote();
+    $('#m-switch').onclick=()=>clearIdentity();
     const list=[...S.myReq].sort((a,b)=>needSurvey(a)!==needSurvey(b)?(needSurvey(a)?-1:1):(a.createdAt<b.createdAt?1:-1));
     if(!S.got.myReq&&S.uid){$('#m-list').innerHTML='<p class="note">載入中…</p>';return}
     if(!list.length){$('#m-list').innerHTML=`<div class="empty">你還沒有送出任何申請。<br><a href="#apply">前往申請借用</a></div>`;return}
@@ -651,9 +616,7 @@ ${S.openSurvey===r.id?`<form class="sv-form" data-for="${h(r.id)}" novalidate>${
       const b=f.querySelector('button[type=submit]');b.disabled=true;if(await submitSurveyBlock(f,r,'sv')){S.openSurvey=null;toast('已收到問卷，謝謝你的回饋！')}else b.disabled=false};
   },
   async setStatus(id,patch,msg){
-    try{if(S.db.arr){await S.db.arr('requests/'+S.uid,'list',{id,patch});toast(msg);return}
-      await serial('req',async()=>{const ref=S.db.doc('requests/'+S.uid);const snap=await ref.get();if(!snap.exists)return;
-      const list=(snap.data().list||[]).map(r=>r.id===id?{...r,...patch}:r);await ref.set({list,updatedAt:nowStr()})});toast(msg)}
+    try{await S.db.arr('requests/'+S.uid,'list',{id,patch});toast(msg)}
     catch(e){toast('更新失敗，請稍後再試')}
   }
 };
@@ -719,12 +682,10 @@ V.usage={
     if(!e.dept||!e.name){err.textContent='請填寫科系與姓名。';return}
     if(!e.pc&&!e.print&&!e.copy&&!e.scan){err.textContent='請勾選至少一項使用的設備。';return}
     if(e.reason==='其他'&&!e.reasonNote){err.textContent='請填寫其他原因。';return}
-    if(S.gas&&!S.uid)S.uid=anonUid();
-    if(!S.db||!S.uid){err.textContent='目前無法登記：請從資源教室提供的連結開啟此頁。';return}
+    if(!S.uid)S.uid=anonUid();
     $('#u-ok').disabled=true;
     try{
-      await serial('use',async()=>{const ref=S.db.doc('usage/'+S.uid);if(S.gas){await ref.set({entries:[e],updatedAt:nowStr()});return}
-        const snap=await ref.get();const list=snap.exists?[...(snap.data().entries||[])]:[];list.push(e);await ref.set({entries:list,updatedAt:nowStr()})});
+      await S.db.doc('usage/'+S.uid).set({entries:[e],updatedAt:nowStr()});
       $('#u-form').hidden=true;$('#u-done').hidden=false;
       $('#u-done').innerHTML=`<div class="note ok" style="padding:20px"><b>已完成登記</b><br><span class="mono">${h(e.at)}</span>　${h(e.name)}　${h(devText(e))}　${h(reasonText(e))}</div><p class="row"><button id="u-again">再登記一筆</button><a href="#rules">回到首頁</a></p>`;
       $('#u-again').onclick=()=>route();
@@ -749,7 +710,7 @@ V.usagelog={
 <div class="tablewrap" style="max-height:70vh"><table><thead><tr><th>序號</th><th>日期時間</th><th>學制</th><th>科系</th><th>姓名</th><th>使用設備</th><th>使用原因</th><th></th></tr></thead><tbody>
 ${r.map((e,i)=>`<tr><td class="mono">${i+1}</td><td class="mono">${h(e.at)}</td><td>${h(e.shift)}</td><td>${h(e.dept)}</td><td>${h(e.name)}</td><td class="wrap">${h(devText(e))}</td><td>${h(reasonText(e))}</td><td><button class="small" data-del="${h(e.uid)}|${h(e.id)}">刪除</button></td></tr>`).join('')}</tbody></table></div>`;
     $('#ul-body').onclick=ev=>{const d=ev.target.dataset.del;if(!d)return;const [uid,id]=d.split('|');const e=(S.usage||[]).find(x=>x.id===id);
-      confirmBox('刪除這筆使用紀錄？',`${e.at}・${e.name}・${devText(e)}`,'刪除',async()=>{try{if(S.db.arr){await S.db.arr('usage/'+uid,'entries',{id,remove:true});toast('已刪除');return}await serial('use-'+uid,async()=>{const ref=S.db.doc('usage/'+uid);const sn=await ref.get();if(!sn.exists)return;await ref.set({...sn.data(),entries:(sn.data().entries||[]).filter(x=>x.id!==id)})});toast('已刪除')}catch(x){toast('刪除失敗，請重試')}})};
+      confirmBox('刪除這筆使用紀錄？',`${e.at}・${e.name}・${devText(e)}`,'刪除',async()=>{try{await S.db.arr('usage/'+uid,'entries',{id,remove:true});toast('已刪除')}catch(x){toast('刪除失敗，請重試')}})};
   }
 };
 
@@ -783,7 +744,7 @@ ${x.cat==='space'||x.cat==='leisure'?`<h2>近期已預約時段</h2>${upcoming.l
 
 /* ===== 滿意度問卷 ===== */
 async function saveSurvey(resp,fr){
-  await serial('srv',async()=>{const ref=S.db.doc('surveys/'+S.uid);if(S.gas){await ref.set({responses:[resp],updatedAt:nowStr()});return}/* 伺服器會自動接在舊回覆後面 */const snap=await ref.get();const list=snap.exists?[...(snap.data().responses||[])]:[];list.push(resp);await ref.set({responses:list,updatedAt:nowStr()})});
+  await S.db.doc('surveys/'+S.uid).set({responses:[resp],updatedAt:nowStr()});/* 伺服器會接在舊回覆後面 */
   if(fr)await V.mine.setStatus(fr.id,{surveyed:true,surveyedAt:nowStr()},'已收到問卷，謝謝');
 }
 function surveyBlock(px){return `${Q.map(([k,t])=>`<div class="q" role="radiogroup" aria-label="${t}"><p>${t}</p><div class="scale">${SCALE.map((sc,i)=>`<label><input type="radio" name="${px}${k}" value="${i+1}"><b>${i+1}</b>${sc}</label>`).join('')}</div></div>`).join('')}
@@ -846,8 +807,7 @@ ${fr?`<div class="note info" style="margin-bottom:16px">這份問卷對應你借
   async submit(){
     const target=($('input[name=s-target]:checked')||{}).value,res=collectSurvey($('#s-form'),'s',isSpaceTarget(target)),err=$('#s-err');err.textContent='';
     if(res.err){err.textContent=res.err;return}
-    if(S.gas&&!S.uid)S.uid=anonUid();
-    if(!S.db||!S.uid){err.textContent='目前無法送出：請從資源教室提供的連結開啟此頁。';return}
+    if(!S.uid)S.uid=anonUid();
     const fr=S.surveyFor&&S.myReq.find(r=>r.id===S.surveyFor);
     const resp={id:newId(),target,...res.data,at:nowStr(),...(fr?{reqId:fr.id,itemName:fr.itemName}:{})};
     $('#s-submit').disabled=true;
@@ -860,10 +820,7 @@ ${fr?`<div class="note info" style="margin-bottom:16px">這份問卷對應你借
 
 /* ===== 審核與點交 (admin) ===== */
 function reqFlags(r,all){
-  const f=[];const rm=rosterMap();
-  if(r.role==='學生'){
-    if(S.roster.length){const m=rm[r.no];if(!m)f.push(['學號不在借用名單','bad']);else f.push([m.name&&m.name!==r.name?`名單姓名為 ${m.name}`:'名單內',m.name&&m.name!==r.name?'warn':'ok'])}
-  }else f.push(['教職員業務需求','']);
+  const f=[];if(r.role==='教職員')f.push(['教職員業務需求','']);
   const ev=eventOn(r.date);if(ev)f.push([`活動日：${ev.label}`,'bad']);
   if(r.type==='leisure'&&leisureSlot(r.date)===false)f.push(['不在開放週次','warn']);
   if(r.type==='space'||r.type==='leisure'){const c=S.calendar.find(c=>c.id!==r.id&&c.code===r.code&&c.date===r.date&&(r.periods&&r.periods.length?r.periods.some(p=>calHit(c,p)):overlap(r.start,r.end,c.start,c.end)));if(c)f.push([`時段衝突 ${c.start}–${c.end}`,'bad'])}
@@ -873,12 +830,8 @@ function reqFlags(r,all){
   }
   return f.map(([t,c])=>`<span class="chip ${c}">${h(t)}</span>`).join('');
 }
-async function editReq(uid,id,patch){
-  if(S.db.arr)return S.db.arr('requests/'+uid,'list',{id,patch});
-  await serial('req-'+uid,async()=>{const ref=S.db.doc('requests/'+uid);const snap=await ref.get();if(!snap.exists)throw new Error('missing');
-    const list=(snap.data().list||[]).map(r=>r.id===id?{...r,...patch}:r);await ref.set({...snap.data(),list,updatedAt:nowStr()})});
-}
-async function bumpOut(code,d){const it=item(code);if(!it)return;await serial('cat-'+code,()=>S.db.doc('catalog/'+code).update({out:Math.max(0,(it.out||0)+d)}))}
+const editReq=(uid,id,patch)=>S.db.arr('requests/'+uid,'list',{id,patch});
+async function bumpOut(code,d){const it=item(code);if(!it)return;await S.db.doc('catalog/'+code).update({out:Math.max(0,(it.out||0)+d)})}
 function copyText(text,label){
   const done=()=>toast(`已複製${label}，可以貼到 LINE 或訊息`);
   const fallback=()=>openModal(`<h2 style="margin:0">${h(label)}</h2><p class="meta" style="margin:0">全選後複製。</p><textarea id="cp-t" style="min-height:240px" readonly>${h(text)}</textarea><div class="row"><button data-close>關閉</button></div>`,m=>{const t=m.querySelector('#cp-t');t.focus();t.select()});
@@ -886,7 +839,7 @@ function copyText(text,label){
 }
 const blocked=(r,all)=>/chip bad/.test(reqFlags(r,all));
 V.review={
-  deps:['allReq','loans','roster','calendar','catalog','config'],
+  deps:['allReq','loans','calendar','catalog','config'],
   shell(){return `<div class="spread"><h1>今日工作台</h1><button id="rv-walk">現場登記借出</button></div><div id="rv-body"><p class="note">載入中…</p></div>`},
   bind(){$('#rv-walk').onclick=()=>walkIn();
     $('#view').addEventListener('input',e=>{if(e.target.dataset.note)S.notes[e.target.dataset.note]=e.target.value})},
@@ -1035,8 +988,6 @@ function walkIn(){
 const LEDGER_COLS=[['applyDate','申請日'],['date','使用日期'],['name','借用人'],['no','學號'],['dept','系級'],['item','借用品項'],['assetNo','財產/物品編號'],['handler','經手人'],['outAt','出借時間'],['due','應還日期'],['returnedAt','歸還日期'],['receiver','簽收人'],['statusText','狀態'],['note','備註']];
 const LEDGER_ALIAS={applyDate:['申請日','申請日期'],date:['使用日期','日期','借用日期'],name:['借用人','姓名'],no:['學號','學號/員工編號','員工編號','學號／員工編號'],dept:['系級','系所','單位','系級/單位'],item:['借用品項','品項','器材','物品','借用物品'],
   assetNo:['財產/物品編號','財產編號','物品編號','財產／物品編號'],handler:['經手人'],due:['應還日期'],returnedAt:['歸還日期'],receiver:['簽收人'],note:['備註','說明']};
-const ROSTER_COLS=[['no','學號'],['name','姓名'],['dept','系級'],['category','類別'],['validUntil','證明有效期限'],['note','備註']];
-const ROSTER_ALIAS={no:['學號'],name:['姓名'],dept:['系級','系所','科系','班級','系級/單位'],category:['類別','障別','障礙類別','鑑輔會類別','身分類別'],validUntil:['證明有效期限','有效期限','鑑定有效期限'],note:['備註']};
 function mapRows(rows,alias){
   if(!rows.length)return {out:[],used:[],unused:[]};
   const heads=Object.keys(rows[0]),norm=s=>String(s).replace(/\s/g,'');const map={},used=[];
@@ -1053,35 +1004,28 @@ async function readSheet(file){
   const rows=[];for(const n of wb.SheetNames){const r=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:true});const valid=r.filter(o=>Object.values(o).some(v=>String(v).trim()));rows.push(...valid);if(valid.length)break}
   return rows.map(o=>{const n={};for(const [k,v] of Object.entries(o))n[k]=v instanceof Date?ymd(v):v;return n});
 }
-let DL=null;
 async function saveFile(filename,data){
-  if(!DL){toast('這個檢視無法下載檔案，請在 claude.ai 開啟此頁');return}
-  try{data=await data;await DL.save({filename,data});}catch(e){if(e&&e.code!=='declined')toast('下載失敗：'+(e.message||e.code))}
+  try{data=await data;const b=data instanceof Blob?data:new Blob([data]);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}catch(e){toast('下載失敗，請再試一次')}
 }
 async function xlsxBlob(sheets){await loadXLSX();const wb=XLSX.utils.book_new();for(const [name,aoa,widths] of sheets){const ws=XLSX.utils.aoa_to_sheet(aoa);if(widths)ws['!cols']=widths.map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,name)}return new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})])}
-async function batchWrite(docs,label,onProgress){let done=0;
-  if(S.db.batch){for(let i=0;i<docs.length;i+=100){await S.db.batch(docs.slice(i,i+100));done+=Math.min(100,docs.length-i);onProgress&&onProgress(done)}return}
-  for(let i=0;i<docs.length;i+=8){await Promise.all(docs.slice(i,i+8).map(([p,d])=>S.db.doc(p).set(d)));done+=Math.min(8,docs.length-i);onProgress&&onProgress(done)}}
-function importDialog(kind){
-  const L=kind==='ledger';const alias=L?LEDGER_ALIAS:ROSTER_ALIAS,cols=L?LEDGER_COLS.filter(c=>c[0]!=='outAt'&&c[0]!=='statusText'):ROSTER_COLS;
-  openModal(`<h2 style="margin:0">${L?'匯入設備借用紀錄':'匯入借用名單'}</h2>
-<p style="margin:0">${L?'可匯入過去紙本「物品借用登記本」謄打的 Excel 或 CSV。系統會辨識下列欄位名稱，有填「歸還日期」的列會標記為已歸還。':'匯入領有鑑輔會證明的學生名單。學號相同的資料會更新。名單只有資源教室（編輯者以上）看得到。'}</p>
+function importDialog(){
+  const cols=LEDGER_COLS.filter(c=>c[0]!=='outAt'&&c[0]!=='statusText');
+  openModal(`<h2 style="margin:0">匯入設備借用紀錄</h2>
+<p style="margin:0">可匯入過去紙本「物品借用登記本」謄打的 Excel 或 CSV。系統會辨識下列欄位名稱，有填「歸還日期」的列會標記為已歸還。</p>
 <p class="mono" style="margin:0;color:var(--muted);font-size:.8rem">${cols.map(c=>c[1]).join('、')}</p>
 <div class="row"><button class="small" id="im-tpl">下載空白範本 (.xlsx)</button></div>
 <label class="f">選擇檔案（.xlsx、.xls、.csv）<input type="file" id="im-file" accept=".xlsx,.xls,.csv"></label>
-${L?'':`<label class="choice"><input type="checkbox" id="im-replace"><span><b>先清空現有名單再匯入</b></span></label>`}
 <div id="im-prev"></div><p class="err" id="im-err"></p>
 <div class="row"><button class="primary" id="im-ok" disabled>確認匯入</button><button data-close>取消</button></div>`,m=>{
   let rows=[];
-  m.querySelector('#im-tpl').onclick=()=>saveFile(L?'設備借用紀錄範本.xlsx':'借用名單範本.xlsx',xlsxBlob([[L?'設備借用紀錄':'名單',[cols.map(c=>c[1])],cols.map(()=>14)]]));
+  m.querySelector('#im-tpl').onclick=()=>saveFile('設備借用紀錄範本.xlsx',xlsxBlob([['設備借用紀錄',[cols.map(c=>c[1])],cols.map(()=>14)]]));
   m.querySelector('#im-file').onchange=async e=>{
     const f=e.target.files[0];$('#im-err').textContent='';$('#im-prev').innerHTML='';$('#im-ok').disabled=true;if(!f)return;
     try{
-      const raw=await readSheet(f),r=mapRows(raw,alias);
-      rows=r.out.filter(o=>L?(o.name||o.item):o.no);
+      const r=mapRows(await readSheet(f),LEDGER_ALIAS);
       if(!r.used.length){$('#im-err').textContent='找不到可辨識的欄位名稱，請確認第一列是欄位標題（可參考範本）。';return}
-      if(L)rows.forEach(o=>{for(const k of ['applyDate','date','due','returnedAt'])o[k]=normDate(o[k])});
-      else rows.forEach(o=>{o.no=o.no.toUpperCase().replace(/\s/g,'');o.validUntil=normDate(o.validUntil)});
+      rows=r.out.filter(o=>o.name||o.item);rows.forEach(o=>{for(const k of ['applyDate','date','due','returnedAt'])o[k]=normDate(o[k])});
       const show=cols.filter(c=>r.map[c[0]]);
       $('#im-prev').innerHTML=`<div class="note ok">讀到 <b>${rows.length}</b> 筆資料。${r.unused.length?`未使用的欄位：${h(r.unused.join('、'))}`:''}</div>
 <div class="tablewrap" style="max-height:240px;margin-top:8px"><table><thead><tr>${show.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,8).map(o=>`<tr>${show.map(c=>`<td>${h(o[c[0]])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${rows.length>8?`<p class="meta">僅顯示前 8 筆</p>`:''}`;
@@ -1090,16 +1034,9 @@ ${L?'':`<label class="choice"><input type="checkbox" id="im-replace"><span><b>�
   };
   m.querySelector('#im-ok').onclick=async()=>{
     const btn=$('#im-ok');btn.disabled=true;
-    try{
-      if(L){const docs=rows.map(o=>{const id=newId();return ['loans/'+id,{...o,id,source:'import',status:o.returnedAt?'returned':'out',importedAt:nowStr()}]});
-        await batchWrite(docs,'',n=>btn.textContent=`匯入中 ${n}/${docs.length}`)}
-      else{
-        if($('#im-replace').checked){const old=S.roster.filter(x=>!rows.some(o=>o.no===x.no));for(let i=0;i<old.length;i+=8)await Promise.all(old.slice(i,i+8).map(x=>S.db.doc('roster/'+x.id).delete()))}
-        const docs=rows.filter(o=>/^[A-Za-z0-9_\-.]+$/.test(o.no)).map(o=>['roster/'+o.no,{...o,updatedAt:nowStr()}]);
-        await batchWrite(docs,'',n=>btn.textContent=`匯入中 ${n}/${docs.length}`);
-      }
-      closeModal();toast(`已匯入 ${rows.length} 筆`);
-    }catch(e){btn.disabled=false;btn.textContent='確認匯入';$('#im-err').textContent=e&&e.code==='quota_exceeded'?'資料量已達上限，請先刪除部分舊資料。':'匯入中斷，部分資料可能已寫入，請檢查後再試。'}
+    try{const docs=rows.map(o=>{const id=newId();return ['loans/'+id,{...o,id,source:'import',status:o.returnedAt?'returned':'out',importedAt:nowStr()}]});
+      await S.db.batch(docs);closeModal();toast(`已匯入 ${rows.length} 筆`)}
+    catch(e){btn.disabled=false;$('#im-err').textContent='匯入中斷，部分資料可能已寫入，請檢查後再試。'}
   }})
 }
 
@@ -1111,7 +1048,7 @@ V.ledger={
 <p class="lede">取代紙本「物品借用登記本」與「空間借用登記本」。線上申請點交、現場登記與匯入的舊紀錄都會集中在這裡。</p>
 <div class="row" style="margin-bottom:12px"><input id="lg-q" placeholder="搜尋姓名、學號、品項、財產編號" style="flex:2;min-width:200px" aria-label="搜尋"><select id="lg-st" style="flex:1;min-width:130px" aria-label="狀態"><option value="">全部狀態</option><option value="out">借出中</option><option value="over">逾期未還</option><option value="returned">已歸還</option><option value="abn">歸還異常</option></select><input type="month" id="lg-m" style="flex:1;min-width:150px" aria-label="月份"></div>
 <div id="lg-body"></div>`},
-  bind(){$('#lg-import').onclick=()=>importDialog('ledger');$('#lg-walk').onclick=()=>walkIn();$('#lg-export').onclick=()=>this.export();
+  bind(){$('#lg-import').onclick=()=>importDialog();$('#lg-walk').onclick=()=>walkIn();$('#lg-export').onclick=()=>this.export();
     ['lg-q','lg-st','lg-m'].forEach(id=>$('#'+id).addEventListener('input',()=>this.paint()))},
   rows(){const q=$('#lg-q').value.trim().toLowerCase(),st=$('#lg-st').value,m=$('#lg-m').value,t=today();
     return S.loans.filter(l=>{if(q&&![l.name,l.no,l.item,l.assetNo,l.dept].join(' ').toLowerCase().includes(q))return false;
@@ -1137,7 +1074,6 @@ V.roster={shell(){return ''},bind(){location.replace('#ledger')}};
 /* ===== 器材與 QR (admin) ===== */
 let qrP=null;
 function loadQR(){if(window.qrcode)return Promise.resolve();if(!qrP)qrP=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';sc.onload=ok;sc.onerror=()=>{qrP=null;no()};document.head.appendChild(sc)});return qrP}
-function qrSvg(text){const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}
 async function qrPng(text,title,sub){await loadQR();
   const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=10,m=4*cell,size=n*cell+m*2,W=size,H=size+110;
   const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);g.fillStyle='#111';
@@ -1211,7 +1147,7 @@ ${byT.length>1?`<h2>各項目回覆數</h2><div class="flags">${byT.map(([t,n])=
 };
 
 /* ===== 設定 (admin) ===== */
-async function saveConfig(patch){S.config={...S.config,...patch};await serial('cfg',()=>S.db.doc('config/site').set(S.config))}
+async function saveConfig(patch){S.config={...S.config,...patch};await S.db.doc('config/site').set(S.config)}
 V.setup={
   deps:['config','catalog'],
   shell(){this._filled=false;const c=S.config;return `<h1>設定</h1><p class="lede">學期週次與活動日會影響學生可以選的日期。</p>
@@ -1258,13 +1194,12 @@ async function diagnoseApi(){
     return '網頁送資料給 Google 時被擋下（CORS）。請把最新的 apps-script.gs 整份貼上、儲存，在函式選單執行一次「初始化」並完成授權，再「管理部署作業 → 編輯 → 版本：新版本 → 部署」。'}
 }
 /* ===== 資源教室登入 ===== */
-const PASS_HASH='9d6573f4edcc85a7d4693459d49732efd1539f14563508221b9b4e6d2572d985';
 const sess={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 let fails=0,lockUntil=0;
-function logout(){S.admin=false;sess.set('rr-unlock',null);sess.set('rr-pw',null);
+function logout(){S.admin=false;sess.set('rr-pw',null);
   adminUnsubs.forEach(u=>{try{u()}catch(e){}});adminUnsubs=[];adminStarted=false;
-  S.allReq=[];S.loans=[];S.roster=[];S.surveys=[];S.usage=[];['allReq','loans','roster','surveys','usage'].forEach(k=>delete S.got[k]);S.notes={};
+  S.allReq=[];S.loans=[];S.surveys=[];S.usage=[];['allReq','loans','surveys','usage'].forEach(k=>delete S.got[k]);S.notes={};
   closeModal();toast('已登出資源教室管理');
   if(location.hash==='#apply')route();else location.hash='apply'}
 V.login={
@@ -1275,12 +1210,11 @@ V.login={
   bind(){$('#lg-form').addEventListener('submit',async e=>{e.preventDefault();const err=$('#lg-err');err.textContent='';
     if(Date.now()<lockUntil){err.textContent=`嘗試次數過多，請 ${Math.ceil((lockUntil-Date.now())/1000)} 秒後再試。`;return}
     let ok=false;const pw=$('#lg-pw').value;
-    if(S.gas){try{ok=await S.db.login(pw)}catch(x){err.textContent='連不上資料庫，正在檢查原因…';err.textContent=await diagnoseApi();return}if(ok)sess.set('rr-pw',pw)}
-    else try{ok=(await sha('hk-resource-room:'+pw))===PASS_HASH}catch(x){err.textContent='這個瀏覽器無法驗證密碼，請改用最新版 Chrome、Edge 或 Safari。';return}
+    try{ok=await S.db.login(pw)}catch(x){err.textContent='連不上資料庫，正在檢查原因…';err.textContent=await diagnoseApi();return}
+    if(ok)sess.set('rr-pw',pw);
     if(!ok){fails++;$('#lg-pw').value='';if(fails>=5){lockUntil=Date.now()+30000;fails=0}err.textContent='密碼不正確。';return}
     fails=0;
-    if(!S.editor){err.textContent='密碼正確，但你的帳號在這個頁面沒有「編輯者」權限，無法讀取借用與使用紀錄。請請頁面擁有者在「分享」中把你設為編輯者。';return}
-    sess.set('rr-unlock',PASS_HASH);S.admin=true;startAdmin();toast('已登入資源教室管理');
+    S.admin=true;startAdmin();toast('已登入資源教室管理');
     const to=S.after&&S.after!=='login'?S.after:'review';S.after=null;if(location.hash==='#'+to)route();else location.hash=to})}
 };
 let adminStarted=false,adminUnsubs=[];
@@ -1292,31 +1226,6 @@ function startAdmin(){
   adminUnsubs.push(db.collection('usage').onSnapshot(s=>{S.usage=s.docs.flatMap(d=>(d.data().entries||[]).map(e=>({...e,uid:d.id})));done('usage')},fail('usage')));
   adminUnsubs.push(db.collection('surveys').onSnapshot(s=>{S.surveys=s.docs.flatMap(d=>d.data().responses||[]);done('surveys')},fail('surveys')));
 }
-
-/* ---------- 展示版（GitHub Pages）：沒有 Claude 平台時，資料存在這台電腦的瀏覽器 ---------- */
-const DEMO_CATALOG=[{"code": "g01", "name": "筆記型電腦", "cat": "general", "qty": 8, "out": 0, "note": "部分規格與機型老舊，116 年預計增購 2 台", "longOk": false, "sort": 1}, {"code": "g02", "name": "投影機", "cat": "general", "qty": 2, "out": 0, "note": "單槍投影機", "longOk": false, "sort": 2}, {"code": "g03", "name": "平板", "cat": "general", "qty": 7, "out": 0, "note": "", "longOk": false, "sort": 3}, {"code": "g05", "name": "數位相機／單眼相機", "cat": "general", "qty": 2, "out": 0, "note": "", "longOk": false, "sort": 5}, {"code": "g06", "name": "攝影機／數位攝影機", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 6}, {"code": "g07", "name": "擴視機（桌上型／可攜式）", "cat": "general", "qty": 3, "out": 0, "note": "", "longOk": false, "sort": 7}, {"code": "g08", "name": "簡報筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 8}, {"code": "g09", "name": "放大滑鼠", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 9}, {"code": "g10", "name": "錄音筆", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 10}, {"code": "g11", "name": "護貝機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 11}, {"code": "g12", "name": "計算機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 12}, {"code": "g13", "name": "吹風機", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 13}, {"code": "g14", "name": "裁紙刀（大）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 14}, {"code": "g15", "name": "裁紙刀（小）", "cat": "general", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 15}, {"code": "t01", "name": "電子翻譯機（學習翻譯機）", "cat": "general3", "qty": 2, "out": 0, "note": "", "longOk": true, "sort": 16}, {"code": "t02", "name": "延長線", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 17}, {"code": "t04", "name": "鍵盤", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 19}, {"code": "t05", "name": "耳機", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": true, "sort": 20}, {"code": "t06", "name": "彩色筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 21}, {"code": "t07", "name": "麥克筆", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 22}, {"code": "t08", "name": "熱熔膠槍", "cat": "general3", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 23}, {"code": "l01", "name": "牌卡", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 24}, {"code": "l02", "name": "桌遊", "cat": "leisure", "qty": 1, "out": 0, "note": "", "longOk": false, "sort": 25}, {"code": "l03", "name": "手眼協調訓練機", "cat": "leisure", "qty": 1, "out": 0, "note": "須配合家銘學長時間，以利協助架設器材", "longOk": false, "sort": 26}, {"code": "l04", "name": "投影設備（休閒用）", "cat": "leisure", "qty": 1, "out": 0, "note": "限觀賞、遊戲借用", "longOk": false, "sort": 27}, {"code": "s01", "name": "悅讀書房", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；使用後至資源教室告知完畢、領回證件並填寫滿意度問卷", "longOk": false, "sort": 28}, {"code": "s02", "name": "課輔室", "cat": "space", "qty": 1, "out": 0, "note": "該空間無人使用才可借用；借用當日由工讀生或老師協助開門", "longOk": false, "sort": 29}];
-function makeDemoDb(){
-  const KEY='rr-demo-db';let data=local.get(KEY);
-  if(!data){data={};DEMO_CATALOG.forEach(c=>data['catalog/'+c.code]={...c});data['config/site']={url:'',semesterStart:'',office:'',eventDays:[]}}
-  const L=new Set(),clone=o=>o===undefined?undefined:JSON.parse(JSON.stringify(o));
-  const save=()=>{local.set(KEY,data);setTimeout(()=>L.forEach(f=>f()),0)};
-  const meta={fromCache:false,hasPendingWrites:false};
-  const snap=p=>({id:p.split('/').pop(),exists:p in data,data:()=>clone(data[p]),metadata:meta});
-  const merge=(t,s)=>{for(const[k,v]of Object.entries(s)){if(v&&typeof v==='object'&&!Array.isArray(v)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))merge(t[k],v);else t[k]=clone(v)}};
-  const doc=p=>({id:p.split('/').pop(),path:p,get:async()=>snap(p),
-    set:async d=>{data[p]=clone(d);save()},
-    update:async d=>{if(!(p in data))throw{code:'invalid_argument',message:'missing'};merge(data[p],d);save()},
-    delete:async()=>{delete data[p];save()},
-    onSnapshot(next){const f=()=>next(snap(p));L.add(f);setTimeout(f,0);return()=>L.delete(f)},
-    collection:sub=>col(p+'/'+sub)});
-  const qs=p=>{const n=p.split('/').length+1;const docs=Object.keys(data).filter(k=>k.startsWith(p+'/')&&k.split('/').length===n).sort().map(snap);return{docs,size:docs.length,empty:!docs.length,metadata:meta,docChanges:()=>[]}};
-  const col=p=>({path:p,doc:id=>doc(p+'/'+(id||newId())),get:async()=>qs(p),add:async d=>{const r=doc(p+'/'+newId());await r.set(d);return r},
-    onSnapshot(next){const f=()=>next(qs(p));L.add(f);setTimeout(f,0);return()=>L.delete(f)}});
-  return{doc,collection:col,reset(){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}};
-}
-const demoDownloads={async save({filename,data}){const b=data instanceof Blob?data:new Blob([data]);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);return{status:'saved'}}};
-function demoBanner(db){const b=document.createElement('div');b.className='demo-bar';b.innerHTML=`<div class="wrap"><span><b>展示版</b>：資料只存在這台電腦的瀏覽器，換電腦或清除瀏覽資料就會消失；正式使用請改用 claude.ai 上的版本。老師端請按「資源教室登入」。</span><button class="small" id="demo-reset">清除展示資料</button></div>`;
-  document.querySelector('header.top').after(b);b.querySelector('#demo-reset').onclick=()=>confirmBox('清除所有展示資料？','申請、借用紀錄、使用紀錄與問卷都會清空，器材清單恢復預設。','清除',()=>db.reset())}
 
 /* ---------- Google 試算表資料庫（GitHub Pages 正式版） ---------- */
 /* 先用 POST；被瀏覽器擋（CORS）時改用 GET 傳送，之後同一分頁都用 GET */
@@ -1337,7 +1246,7 @@ async function apiSend(body){
   }
 }
 function makeGasDb(api){
-  const subs=new Set();let timer=null,inflight=false,again=false,saveT=null,pend=0,chain=Promise.resolve();
+  const subs=new Set();let lastKey='',lastRev='',timer=null,inflight=false,again=false,saveT=null,pend=0,chain=Promise.resolve();
   const meta={fromCache:false,hasPendingWrites:false},PUB=['catalog','config','calendar'];
   const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
   const cache={},loadedCols=new Set();
@@ -1357,12 +1266,15 @@ function makeGasDb(api){
   const emitAll=()=>subs.forEach(x=>emit(x));
   async function refresh(){
     if(pend>0)return;if(inflight){again=true;return}const list=[...subs];if(!list.length)return;inflight=true;
-    try{const j=await call({op:'read',reads:list.map(x=>({kind:x.kind,path:x.path}))});
+    const reads=list.map(x=>({kind:x.kind,path:x.path})),key=JSON.stringify(reads);
+    try{const j=await call({op:'read',reads,rev:key===lastKey?lastRev:undefined});
+      if(j.unchanged){if(S.offline){S.offline=false;repaint(['config','myReq'])}return}
+      if(pend>0){again=true;return}/* 有尚未送完的修改時，先不覆蓋畫面上的資料 */
+      lastKey=key;lastRev=j.rev||'';
       j.results.forEach((res,i)=>{const x=list[i];
         if(x.kind==='doc')cache[x.path]=res.data;
         else{const n=x.path.split('/').length+1,seen=new Set();(res.docs||[]).forEach(d=>{const k=x.path+'/'+d.id;cache[k]=d.data;seen.add(k)});
           Object.keys(cache).forEach(k=>{if(k.startsWith(x.path+'/')&&k.split('/').length===n&&!seen.has(k))delete cache[k]});loadedCols.add(x.path)}});
-      if(pend>0){again=true;return}
       persist();emitAll();
       if(S.offline){S.offline=false;repaint(['config','myReq'])}
     }catch(e){if(!S.offline){S.offline=true;repaint(['config','myReq'])}}
@@ -1423,18 +1335,9 @@ function subMine(){
 try{const c=JSON.parse(localStorage.getItem('rr-cache')||'null');if(c&&c.docs){Object.keys(c.docs).forEach(k=>{if(!/^(catalog|config|calendar)\//.test(k))delete c.docs[k]});localStorage.setItem('rr-cache',JSON.stringify(c))}}catch(e){}
 route();
 (async()=>{
-  const C=window.claude;let db,user,dl;
-  const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
-  if(!C||!C.use){
-    if(inFrame){S.noDb=true;S.ready=true;repaint(['config']);return}
-    if(API_URL){S.gas=true;db=makeGasDb(API_URL);dl=demoDownloads;const id=(()=>{try{return JSON.parse(sess.get('rr-id')||'null')}catch(e){return null}})();user={id:async()=>id&&id.uid||null,canEdit:async()=>true}}
-    else{S.demo=true;db=makeDemoDb();dl=demoDownloads;user={id:async()=>'demo-user',canEdit:async()=>true};demoBanner(db);
-    db.doc('config/site').get().then(sn=>{const c=sn.data()||{};if(!c.url)db.doc('config/site').set({...c,url:location.origin+location.pathname})})}
-  }else [db,user,dl]=await Promise.all([C.use('db'),C.use('user'),C.use('downloads')]);
-  DL=dl;S.db=db;S.user=user;
-  if(!db){S.noDb=true;S.ready=true;repaint(['config','myReq']);route();return}
-  if(user){try{S.uid=await user.id()}catch(e){} try{S.editor=!!(await user.canEdit())}catch(e){}}
-  S.admin=S.gas?!!sess.get('rr-pw'):S.editor&&sess.get('rr-unlock')===PASS_HASH;
+  const id=(()=>{try{return JSON.parse(sess.get('rr-id')||'null')}catch(e){return null}})();
+  const db=S.db=makeGasDb(API_URL);
+  S.uid=id&&id.uid||null;S.admin=!!sess.get('rr-pw');
   S.ready=true;
   const timer=setTimeout(()=>{if(!S.got.catalog){S.stale=true;repaint(['config','catalog','myReq'])}},10000);
   const done=k=>{S.got[k]=true;if(k==='catalog'){clearTimeout(timer);S.stale=false}repaint([k])};
