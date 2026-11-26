@@ -743,7 +743,7 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <header>
   <div class="hdr-actions"><button id="browseBtn" title="回到目前庫存瀏覽頁">目前庫存</button><button id="staffBtn" title="到工讀生登記">工讀生</button></div>
   <h1>資源教室宣導品倉庫管理</h1>
-  <div class="sub">114-2 學期庫存 ・ 115.01.22 統計基準 ・ 資＝悅讀書房(資源教室)、倉＝Q棟地下室倉庫</div>
+  <div class="sub">資＝悅讀書房（資源教室）、倉＝Q棟地下室倉庫</div>
   <nav class="tabs">
     <button data-tab="inv" data-group="promo" class="active">宣導品</button>
     <button data-tab="lib">圖書位置</button>
@@ -756,14 +756,6 @@ body.kiosk-mode{padding-bottom:0;background:#F3F5F4}
 <div class="adm-tools"><button class="k-tbtn" id="cloudBtn" title="雲端同步設定">雲端：未設定</button><span class="k-sp"></span><button class="k-tbtn" id="lockBtn" title="登出管理者，回到目前庫存">登出管理</button></div>
 <!-- ================= 庫存總覽 ================= -->
 <section class="panel show" id="panel-inv">
-  <div class="stbanner" id="stBanner" hidden>
-    <div><b>1142 暑假盤點數量還沒套用</b><span>依盤點表更新各品項在悅讀書房、Q棟倉庫的數量，並移除「資源教室服務及就業規劃四部曲 DM 簡介」（已整箱丟棄）。</span></div>
-    <button class="btn primary" id="stOpen">檢查並套用</button>
-  </div>
-  <div class="stbanner" id="newBanner" hidden>
-    <div><b>🆕 1151 學期新購宣導品還沒加入</b><span></span></div>
-    <button class="btn primary" id="newOpen">檢查並新增</button>
-  </div>
   <div class="stbanner pendbanner" id="pendBanner" hidden>
     <div><b>已訂購、尚未到貨</b><span></span></div>
     <button class="btn" id="pendOpen">到貨入庫</button>
@@ -1013,85 +1005,83 @@ const zoneName = id => (ZONES.find(z=>z.id===id)||{}).name || id;
 const audOf = it => it.aud || (it.cat === '宣導品' && !(+it.id >= 36 && +it.id <= 62) ? 'out' : 'in');   // 36–62 為盤點表「內部看」
 const AUD_NAME = {out:'給外部看（對外宣導品）', in:'內部看（內部用品）'};
 
-/* ============ 原始庫存資料（115.01.22 統計） ============ */
-const DEFAULT_ITEMS = [
-// ---- 宣導品（第一冊 序1–35）----
-{id:1, cat:'宣導品', name:'資源教室服務及就業規劃四部曲DM簡介', price:null, room:825, wh:0, loc:[]},
-{id:2, cat:'宣導品', name:'資源教室B5手札', price:233, room:33, wh:235, loc:['yd-lb']},
-{id:3, cat:'宣導品', name:'資源教室L資料匣', price:11, room:467, wh:0, loc:['yd-rb']},
-{id:4, cat:'宣導品', name:'襪子', price:53, room:26, wh:120, loc:['yd-lt','q-right']},
-{id:5, cat:'宣導品', name:'時尚皮紋林錢包', price:34, note:'粉:21、橘:28', room:28, wh:0, loc:[]},
-{id:6, cat:'宣導品', name:'客製化LED閃字風扇', price:58, room:169, wh:200, loc:['yd-shelf']},
-{id:7, cat:'宣導品', name:'炫彩迷你旋轉隨身碟', price:178, room:4, wh:0, loc:['yd-rb']},
-{id:8, cat:'宣導品', name:'不鏽鋼吸管組', price:78, room:21, wh:0, loc:['yd-rt']},
-{id:9, cat:'宣導品', name:'軟Q多功能名片手機架', price:25, room:647, wh:0, loc:['yd-rb']},
-{id:10, cat:'宣導品', name:'輕便摺疊後背包', price:124, room:50, wh:0, loc:['yd-lb']},
-{id:11, cat:'宣導品', name:'瑞可真空廣口瓶', price:240, room:24, wh:26, loc:['yd-shelf']},
-{id:12, cat:'宣導品', name:'卡通造型矽膠杯墊', price:15, note:'粉:61、獅:27、鴨:65', room:25, wh:0, loc:['yd-rt']},
-{id:13, cat:'宣導品', name:'卡通捲線器', price:13, room:170, wh:0, loc:['yd-rb']},
-{id:14, cat:'宣導品', name:'防滑三色筆', price:9, room:219, wh:0, loc:[]},
-{id:15, cat:'宣導品', name:'便攜手提飲料杯套', price:35, room:3, wh:0, loc:['yd-rb']},
-{id:16, cat:'宣導品', name:'百變怪獸造型卡套', price:42, room:57, wh:0, loc:['yd-rb']},
-{id:17, cat:'宣導品', name:'手提伸縮矽膠杯', price:150, room:20, wh:0, loc:[]},
-{id:18, cat:'宣導品', name:'彩樣兩用按摩器', price:30, room:8, wh:0, loc:['yd-rb']},
-{id:19, cat:'宣導品', name:'行李吊牌', price:null, room:62, wh:0, loc:[]},
-{id:20, cat:'宣導品', name:'記事本', price:null, room:40, wh:0, loc:['yd-rt']},
-{id:21, cat:'宣導品', name:'旅行收納六件套', price:155, room:0, wh:27, loc:['q-right']},
-{id:22, cat:'宣導品', name:'環保隨身筆記本', price:37, room:20, wh:0, loc:['yd-rt']},
-{id:23, cat:'宣導品', name:'伸縮摺疊手機架', price:110, room:42, wh:0, loc:['yd-rt']},
-{id:24, cat:'宣導品', name:'防疫包', price:75, room:66, wh:0, loc:[]},
-{id:25, cat:'宣導品', name:'甜心蝴蝶結擦手巾', price:54, room:22, wh:0, loc:[]},
-{id:26, cat:'宣導品', name:'仙鶴餐具三件組', price:null, room:11, wh:0, loc:['yd-rt']},
-{id:27, cat:'宣導品', name:'桌上型收納籃', price:64, room:31, wh:0, loc:[]},
-{id:28, cat:'宣導品', name:'日式幾何束口保溫袋', price:73, room:33, wh:0, loc:['yd-rt']},
-{id:29, cat:'宣導品', name:'手機架鑰匙圈', price:47, room:87, wh:0, loc:['yd-rt']},
-{id:30, cat:'宣導品', name:'塗鴉印花滌綸布購物袋', price:38, room:109, wh:0, loc:['yd-rt','yd-rb']},
-{id:31, cat:'宣導品', name:'畢業碗', price:null, room:5, wh:0, loc:[]},
-{id:32, cat:'宣導品', name:'A4拉鍊袋', price:43, room:143, wh:0, loc:['yd-lt']},
-{id:33, cat:'宣導品', name:'杯墊', price:47, room:10, wh:0, loc:['yd-rt']},
-{id:34, cat:'宣導品', name:'摺疊擴充行李袋', price:117, room:30, wh:32, loc:['yd-lt','q-right']},
-{id:35, cat:'宣導品', name:'氣囊手機支架', price:37, room:61, wh:0, loc:['yd-rt']},
-// ---- 宣導品（第二冊 序1–27）----
-{id:36, cat:'宣導品', name:'資源教室悠遊卡', price:150, room:87, wh:27, loc:['yd-rb']},
-{id:37, cat:'宣導品', name:'金屬翻轉隨身碟', price:163, room:77, wh:0, loc:['yd-rb']},
-{id:38, cat:'宣導品', name:'冰霸杯套', price:65, room:86, wh:0, loc:['yd-rt']},
-{id:39, cat:'宣導品', name:'環保飲料提袋', price:84, room:55, wh:0, loc:['yd-rt']},
-{id:40, cat:'宣導品', name:'積木', price:null, note:'40–200元', room:0, wh:106, loc:['q-left','q-cab']},
-{id:41, cat:'宣導品', name:'零錢包', price:90, room:94, wh:0, loc:['yd-rt']},
-{id:42, cat:'宣導品', name:'摺紙燈', price:149, room:96, wh:0, loc:['yd-rt']},
-{id:43, cat:'宣導品', name:'冰霸杯', price:500, note:'北極藍/白/粉/黑', room:115, wh:0, loc:['yd-shelf']},
-{id:44, cat:'宣導品', name:'警報器', price:176, room:54, wh:0, loc:['yd-rb']},
-{id:45, cat:'宣導品', name:'兩用式帆布袋', price:120, note:'實習/畢業包｜24(有裝東西)、25(空)', room:49, wh:0, loc:['q-right']},
-// ---- 宣導品（包袋類）----
-{id:55, cat:'宣導品', name:'垮包零錢包', price:null, room:94, wh:0, loc:[]},
-{id:56, cat:'宣導品', name:'識別證套', price:null, room:100, wh:0, loc:[]},
-{id:57, cat:'宣導品', name:'運動背包', price:null, room:28, wh:46, loc:[]},
-{id:58, cat:'宣導品', name:'畢業包', price:null, room:61, wh:40, loc:[]},
-{id:59, cat:'宣導品', name:'韓版三色零錢包', price:null, room:100, wh:0, loc:[]},
-{id:60, cat:'宣導品', name:'牛津健身包', price:null, room:37, wh:63, loc:[]},
-{id:61, cat:'宣導品', name:'茄芷袋仔', price:null, room:49, wh:98, loc:[]},
-{id:62, cat:'宣導品', name:'四格微波便當盒', price:null, room:50, wh:50, loc:[]},
-// ---- 文具 ----
-{id:46, cat:'文具', name:'筆袋', price:14, room:69, wh:0, loc:[]},
-{id:47, cat:'文具', name:'立可帶', price:45, room:69, wh:0, loc:[]},
-{id:48, cat:'文具', name:'剪刀', price:30, room:67, wh:0, loc:[]},
-{id:49, cat:'文具', name:'標籤貼', price:12, room:100, wh:0, loc:[]},
-{id:50, cat:'文具', name:'釘書機', price:45, room:69, wh:0, loc:[]},
-{id:51, cat:'文具', name:'原子筆－藍', price:9, room:69, wh:0, loc:[]},
-{id:52, cat:'文具', name:'原子筆－黑', price:9, room:69, wh:0, loc:[]},
-{id:53, cat:'文具', name:'原子筆－紅', price:9, room:69, wh:0, loc:[]},
-{id:54, cat:'文具', name:'螢光筆', price:11, room:69, wh:0, loc:[]},
-// ---- 團體服 ----
-{id:70, cat:'團體服', name:'團體服－藍色薄外套', price:460, loc:['yd-wall','q-left','q-right'],
-  sizes:[{s:'M',room:7,wh:0},{s:'L',room:7,wh:27},{s:'XL',room:7,wh:33},{s:'2XL',room:7,wh:18},{s:'3XL',room:7,wh:11},{s:'4XL',room:1,wh:2}]},
-{id:71, cat:'團體服', name:'團體服－黑色厚外套', price:550, loc:['yd-wall','q-left','q-right'],
-  sizes:[{s:'S',room:4,wh:10},{s:'M',room:5,wh:14},{s:'L',room:7,wh:8},{s:'XL',room:8,wh:10},{s:'2XL',room:3,wh:3}]},
-{id:72, cat:'團體服', name:'團體服－紅色上衣', price:200, loc:['yd-wall','q-left'],
-  sizes:[{s:'S',room:5,wh:6},{s:'M',room:3,wh:5},{s:'L',room:6,wh:5},{s:'XL',room:9,wh:10},{s:'2XL',room:3,wh:3},{s:'3XL',room:2,wh:2}]},
-{id:73, cat:'團體服', name:'團體服－老師黑色上衣', price:200, loc:['yd-wall'],
-  sizes:[{s:'S',room:2,wh:0},{s:'M',room:3,wh:0},{s:'L',room:6,wh:0},{s:'XL',room:5,wh:0},{s:'2XL',room:2,wh:0},{s:'3XL',room:1,wh:0}]},
-{id:74, cat:'團體服', name:'團體服－老師灰色外套', price:460, loc:['yd-wall'],
-  sizes:[{s:'L',room:2,wh:0},{s:'2XL',room:1,wh:0},{s:'3XL',room:1,wh:0}]},
+/* ============ 原始庫存資料（雲端第 17 版，115.11.26） ============ */
+const DEFAULT_ITEMS = [   // 雲端第 17 版（115.11.26）的庫存，連不上雲端時才會用到
+{"id": 2, "cat": "宣導品", "name": "資源教室B5手札", "price": 233, "room": 32, "wh": 235, "loc": ["yd-lb"], "aud": "out"},
+{"id": 3, "cat": "宣導品", "name": "資源教室L資料匣", "price": 11, "room": 350, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 4, "cat": "宣導品", "name": "襪子", "price": 53, "room": 27, "wh": 120, "loc": ["yd-lt", "q-right"], "aud": "out"},
+{"id": 5, "cat": "宣導品", "name": "時尚皮紋林錢包", "price": 34, "note": "粉:21、橘:28", "room": 28, "wh": 0, "loc": [], "aud": "out"},
+{"id": 6, "cat": "宣導品", "name": "客製化LED閃字風扇", "price": 58, "room": 169, "wh": 200, "loc": ["yd-shelf"], "aud": "out"},
+{"id": 7, "cat": "宣導品", "name": "炫彩迷你旋轉隨身碟", "price": 178, "room": 4, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 8, "cat": "宣導品", "name": "不鏽鋼吸管組", "price": 78, "room": 21, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 9, "cat": "宣導品", "name": "軟Q多功能名片手機架", "price": 25, "room": 648, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 10, "cat": "宣導品", "name": "輕便摺疊後背包", "price": 124, "room": 50, "wh": 0, "loc": ["yd-lb"], "aud": "out"},
+{"id": 11, "cat": "宣導品", "name": "瑞可真空廣口瓶", "price": 240, "room": 26, "wh": 24, "loc": ["yd-shelf"], "aud": "out"},
+{"id": 12, "cat": "宣導品", "name": "卡通造型矽膠杯墊", "price": 15, "note": "粉:61、獅:27、鴨:65", "room": 25, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 13, "cat": "宣導品", "name": "卡通捲線器", "price": 13, "room": 171, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 14, "cat": "宣導品", "name": "防滑三色筆", "price": 9, "room": 219, "wh": 0, "loc": [], "aud": "out"},
+{"id": 15, "cat": "宣導品", "name": "便攜手提飲料杯套", "price": 35, "room": 3, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 16, "cat": "宣導品", "name": "百變怪獸造型卡套", "price": 42, "room": 57, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 17, "cat": "宣導品", "name": "手提伸縮矽膠杯", "price": 150, "room": 20, "wh": 0, "loc": [], "aud": "out"},
+{"id": 18, "cat": "宣導品", "name": "彩樣兩用按摩器", "price": 30, "room": 8, "wh": 0, "loc": ["yd-rb"], "aud": "out"},
+{"id": 19, "cat": "宣導品", "name": "行李吊牌", "price": null, "room": 61, "wh": 0, "loc": [], "aud": "out"},
+{"id": 20, "cat": "宣導品", "name": "記事本", "price": null, "room": 0, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 21, "cat": "宣導品", "name": "旅行收納六件套", "price": 155, "room": 0, "wh": 27, "loc": ["q-right"], "aud": "out"},
+{"id": 22, "cat": "宣導品", "name": "環保隨身筆記本", "price": 37, "room": 0, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 23, "cat": "宣導品", "name": "伸縮摺疊手機架", "price": 110, "room": 42, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 24, "cat": "宣導品", "name": "防疫包", "price": 75, "room": 89, "wh": 0, "loc": [], "aud": "out"},
+{"id": 25, "cat": "宣導品", "name": "甜心蝴蝶結擦手巾", "price": 54, "room": 22, "wh": 0, "loc": [], "aud": "out"},
+{"id": 26, "cat": "宣導品", "name": "仙鶴餐具三件組", "price": null, "room": 12, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 27, "cat": "宣導品", "name": "桌上型收納籃", "price": 64, "room": 31, "wh": 0, "loc": [], "aud": "out"},
+{"id": 28, "cat": "宣導品", "name": "日式幾何束口保溫袋", "price": 73, "room": 33, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 29, "cat": "宣導品", "name": "手機架鑰匙圈", "price": 47, "room": 87, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 30, "cat": "宣導品", "name": "塗鴉印花滌綸布購物袋", "price": 38, "room": 89, "wh": 0, "loc": ["yd-rt", "yd-rb"], "aud": "out"},
+{"id": 31, "cat": "宣導品", "name": "畢業碗", "price": null, "room": 5, "wh": 0, "loc": [], "aud": "out"},
+{"id": 32, "cat": "宣導品", "name": "A4拉鍊袋", "price": 43, "room": 145, "wh": 0, "loc": ["yd-lt"], "aud": "out"},
+{"id": 33, "cat": "宣導品", "name": "杯墊", "price": 47, "room": 10, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 34, "cat": "宣導品", "name": "摺疊擴充行李袋", "price": 117, "room": 30, "wh": 33, "loc": ["yd-lt", "q-right"], "aud": "out"},
+{"id": 35, "cat": "宣導品", "name": "氣囊手機支架", "price": 37, "room": 61, "wh": 0, "loc": ["yd-rt"], "aud": "out"},
+{"id": 36, "cat": "宣導品", "name": "資源教室悠遊卡", "price": 150, "room": 87, "wh": 27, "loc": ["yd-rb"], "aud": "in"},
+{"id": 37, "cat": "宣導品", "name": "金屬翻轉隨身碟", "price": 163, "room": 66, "wh": 0, "loc": ["yd-rb"], "aud": "in"},
+{"id": 38, "cat": "宣導品", "name": "冰霸杯套", "price": 65, "room": 86, "wh": 0, "loc": ["yd-rt"], "aud": "in"},
+{"id": 39, "cat": "宣導品", "name": "環保飲料提袋", "price": 84, "room": 54, "wh": 0, "loc": ["yd-rt"], "aud": "in"},
+{"id": 40, "cat": "宣導品", "name": "積木", "price": null, "note": "40–200元", "room": 0, "wh": 98, "loc": ["q-left", "q-cab"], "aud": "in"},
+{"id": 41, "cat": "宣導品", "name": "零錢包", "price": 90, "room": 94, "wh": 0, "loc": ["yd-rt"], "aud": "in"},
+{"id": 42, "cat": "宣導品", "name": "摺紙燈", "price": 149, "room": 96, "wh": 0, "loc": ["yd-rt"], "aud": "in"},
+{"id": 43, "cat": "宣導品", "name": "冰霸杯", "price": 500, "note": "北極藍/白/粉/黑", "room": 15, "wh": 66, "loc": ["yd-shelf"], "aud": "in"},
+{"id": 44, "cat": "宣導品", "name": "警報器", "price": 176, "room": 24, "wh": 0, "loc": ["yd-rb"], "aud": "in"},
+{"id": 45, "cat": "宣導品", "name": "兩用式帆布袋", "price": 120, "note": "實習/畢業包｜24(有裝東西)、25(空)", "room": 5, "wh": 90, "loc": ["q-right"], "aud": "in"},
+{"id": 55, "cat": "宣導品", "name": "垮包零錢包", "price": null, "room": 93, "wh": 0, "loc": [], "aud": "in"},
+{"id": 56, "cat": "宣導品", "name": "識別證套", "price": null, "room": 13, "wh": 0, "loc": [], "aud": "in"},
+{"id": 57, "cat": "宣導品", "name": "運動背包", "price": null, "room": 29, "wh": 47, "loc": [], "aud": "in"},
+{"id": 58, "cat": "宣導品", "name": "畢業包", "price": null, "room": 14, "wh": 10, "loc": [], "aud": "in"},
+{"id": 59, "cat": "宣導品", "name": "韓版三色零錢包", "price": null, "room": 28, "wh": 0, "loc": [], "aud": "in"},
+{"id": 60, "cat": "宣導品", "name": "牛津健身包", "price": null, "room": 29, "wh": 47, "loc": [], "aud": "in"},
+{"id": 61, "cat": "宣導品", "name": "茄芷袋仔", "price": null, "room": 49, "wh": 98, "loc": [], "aud": "in"},
+{"id": 62, "cat": "宣導品", "name": "四格微波便當盒", "price": null, "room": 40, "wh": 50, "loc": [], "aud": "in"},
+{"id": 75, "cat": "宣導品", "name": "動物造型紓壓球", "price": 130, "note": "1151學期新購，已訂購 100 個，尚未到貨", "room": 0, "wh": 0, "loc": [], "aud": "out", "pending": true},
+{"id": 76, "cat": "宣導品", "name": "六角矽膠按摩球", "price": 45, "note": "1151學期新購", "room": 100, "wh": 0, "loc": [], "aud": "out", "arrived": true},
+{"id": 77, "cat": "宣導品", "name": "粉嫩可愛圖案筆記本", "price": 50, "note": "1151學期新購", "room": 100, "wh": 0, "loc": [], "aud": "out", "arrived": true},
+{"id": 78, "cat": "宣導品", "name": "炫彩磁吸手機架", "price": 70, "note": "1151學期新購", "room": 100, "wh": 0, "loc": [], "aud": "out", "arrived": true},
+{"id": 79, "cat": "宣導品", "name": "城市型走側背包", "price": 0, "note": "1151學期新購 100 個（共 41,895 元）", "room": 100, "wh": 0, "loc": [], "aud": "out"},
+{"id": 80, "cat": "宣導品", "name": "湯匙造型盒餐具", "price": 0, "note": "1151學期新購 100 個（共 12,500 元）", "room": 100, "wh": 0, "loc": [], "aud": "out"},
+{"id": 81, "cat": "宣導品", "name": "矽藻土吸水杯墊", "price": 0, "note": "1151學期新購 100 個（共 4,600 元）", "room": 100, "wh": 0, "loc": [], "aud": "out"},
+{"id": 82, "cat": "宣導品", "name": "壓克力鑰匙圈", "price": 0, "note": "1151學期新購 100 個（共 2,600 元）", "room": 100, "wh": 0, "loc": [], "aud": "out"},
+{"id": 83, "cat": "宣導品", "name": "素面茄芷零錢包", "price": 0, "note": "1151學期新購 100 個（共 2,900 元）", "room": 100, "wh": 0, "loc": [], "aud": "out"},
+{"id": 46, "cat": "文具", "name": "筆袋", "price": 14, "room": 12, "wh": 0, "loc": [], "aud": "in"},
+{"id": 47, "cat": "文具", "name": "立可帶", "price": 45, "room": 12, "wh": 0, "loc": [], "aud": "in"},
+{"id": 48, "cat": "文具", "name": "剪刀", "price": 30, "room": 12, "wh": 0, "loc": [], "aud": "in"},
+{"id": 49, "cat": "文具", "name": "標籤貼", "price": 12, "room": 100, "wh": 0, "loc": [], "aud": "in"},
+{"id": 50, "cat": "文具", "name": "釘書機", "price": 45, "room": 11, "wh": 0, "loc": [], "aud": "in"},
+{"id": 51, "cat": "文具", "name": "原子筆－藍", "price": 9, "room": 69, "wh": 0, "loc": [], "aud": "in"},
+{"id": 52, "cat": "文具", "name": "原子筆－黑", "price": 9, "room": 69, "wh": 0, "loc": [], "aud": "in"},
+{"id": 53, "cat": "文具", "name": "原子筆－紅", "price": 9, "room": 69, "wh": 0, "loc": [], "aud": "in"},
+{"id": 54, "cat": "文具", "name": "螢光筆", "price": 11, "room": 69, "wh": 0, "loc": [], "aud": "in"},
+{"id": 70, "cat": "團體服", "name": "團體服－藍色薄外套", "price": 460, "loc": ["yd-wall", "q-left", "q-right"], "sizes": [{"s": "M", "room": 7, "wh": 2}, {"s": "L", "room": 7, "wh": 17}, {"s": "XL", "room": 5, "wh": 23}, {"s": "2XL", "room": 4, "wh": 16}, {"s": "3XL", "room": 5, "wh": 11}, {"s": "4XL", "room": 0, "wh": 2}], "aud": "in"},
+{"id": 71, "cat": "團體服", "name": "團體服－黑色厚外套", "price": 550, "loc": ["yd-wall", "q-left", "q-right"], "sizes": [{"s": "S", "room": 6, "wh": 8}, {"s": "M", "room": 5, "wh": 14}, {"s": "L", "room": 10, "wh": 6}, {"s": "XL", "room": 10, "wh": 9}, {"s": "2XL", "room": 3, "wh": 3}], "aud": "in"},
+{"id": 72, "cat": "團體服", "name": "團體服－紅色上衣", "price": 200, "loc": ["yd-wall", "q-left"], "sizes": [{"s": "S", "room": 8, "wh": 7}, {"s": "M", "room": 5, "wh": 7}, {"s": "L", "room": 15, "wh": 6}, {"s": "XL", "room": 8, "wh": 11}, {"s": "2XL", "room": 4, "wh": 4}, {"s": "3XL", "room": 2, "wh": 1}], "aud": "in"},
+{"id": 73, "cat": "團體服", "name": "團體服－老師黑色上衣", "price": 200, "loc": ["yd-wall"], "sizes": [{"s": "S", "room": 2, "wh": 0}, {"s": "M", "room": 2, "wh": 0}, {"s": "L", "room": 5, "wh": 0}, {"s": "XL", "room": 3, "wh": 0}, {"s": "2XL", "room": 3, "wh": 0}, {"s": "3XL", "room": 1, "wh": 0}], "aud": "in"},
+{"id": 74, "cat": "團體服", "name": "團體服－老師灰色外套", "price": 460, "loc": ["yd-wall"], "sizes": [{"s": "L", "room": 2, "wh": 0}, {"s": "2XL", "room": 1, "wh": 0}, {"s": "3XL", "room": 1, "wh": 0}], "aud": "in"},
 ];
 
 // 歷史品項的較清楚照片（取自舊資料「資源教室歷年宣導品」Word 檔）
@@ -1470,7 +1460,7 @@ function pickPhoto(it){
 
 /* ============ 統計 ============ */
 function renderStats(){
-  try{ renderStBanner(); renderNewBanner(); renderPendBanner(); }catch(_){}
+  try{ renderPendBanner(); }catch(_){}
   let totalRoom=0,totalWh=0,low=0,value=0;
   for(const i of items){
     const r=roomQty(i), w=whQty(i), t=r+w;
@@ -1835,7 +1825,7 @@ document.getElementById('importFile').onchange=e=>{
   r.readAsText(f); e.target.value='';
 };
 document.getElementById('resetData').onclick=()=>{
-  if(confirm('將清除所有修改與領用紀錄，還原為 115.01.22 原始統計資料。確定嗎？')){
+  if(confirm('將清除所有修改與領用紀錄，還原為 115.11.26 的庫存資料。確定嗎？')){
     items = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
     log = [];
     scheduleSave(); invalidate('all'); toast('已還原原始資料');
@@ -3947,156 +3937,13 @@ document.getElementById('lockBtn').onclick = ()=>{ cloud.admin = false; saveClou
 document.getElementById('cloudBtn').onclick = openCloudSettings;
 
 
-/* ================= 1142 暑假盤點（一次性套用） ================= */
-// [悅讀書房, Q棟倉庫]；有尺寸的品項依尺寸列出。null＝盤點表沒填，維持原數量
-const STOCKTAKE_1142 = {
-  remove: [1],   // 資源教室服務及就業規劃四部曲DM簡介：已整箱丟棄
-  qty: {
-    2:[32,235], 3:[350,0], 4:[27,120], 5:[null,0], 6:[169,200], 7:[4,0], 8:[21,0], 9:[648,0], 10:[50,0],
-    11:[26,24], 12:[25,0], 13:[171,0], 14:[219,0], 15:[3,0], 16:[57,0], 17:[20,0], 18:[8,0], 19:[61,0], 20:[0,0],
-    21:[0,27], 22:[0,0], 23:[42,0], 24:[89,0], 25:[22,0], 26:[12,0], 27:[31,0], 28:[33,0], 29:[87,0], 30:[89,0],
-    31:[5,0], 32:[145,0], 33:[10,0], 34:[30,33], 35:[61,0], 36:[87,null], 37:[66,0], 38:[86,0], 39:[54,0], 40:[0,98],
-    42:[96,0], 43:[15,66], 44:[24,0], 45:[5,90],
-    55:[93,0], 56:[13,0], 57:[29,47], 58:[14,10], 59:[28,0], 60:[29,47], 61:[49,98], 62:[40,50],
-    46:[12,0], 47:[12,0], 48:[12,0], 49:[100,0], 50:[11,0]
-  },
-  sizes: {
-    70:{M:[7,2], L:[7,17], XL:[5,23], '2XL':[4,16], '3XL':[5,11], '4XL':[0,2]},
-    71:{S:[6,8], M:[5,14], L:[10,6], XL:[10,9], '2XL':[3,null]},
-    72:{S:[8,7], M:[5,7], L:[15,6], XL:[8,11], '2XL':[4,4], '3XL':[2,1]},
-    73:{S:[2,0], M:[2,0], L:[5,0], XL:[3,0], '2XL':[3,0], '3XL':[1,0]}
-  }
-};
-const ST_DONE = 'rc-stocktake-1142';
-function stPending(){ try{ if(localStorage.getItem(ST_DONE)) return false; }catch(_){} return STOCKTAKE_1142.remove.some(id=>byId(id)); }
-function stRows(){
-  const rows = [], T = STOCKTAKE_1142;
-  const add = (name, obj, nv) => {
-    const r0 = +obj.room||0, w0 = +obj.wh||0, r1 = nv[0] ?? r0, w1 = nv[1] ?? w0;
-    rows.push({name, obj, r0, w0, r1, w1, chg: r0!==r1 || w0!==w1});
-  };
-  for(const it of items){
-    if(T.remove.includes(+it.id)){ rows.push({name:it.name, del:it, r0:roomQty(it), w0:whQty(it), r1:0, w1:0, chg:true}); continue; }
-    if(it.sizes && T.sizes[it.id]) it.sizes.forEach(z=>{ const nv = T.sizes[it.id][z.s]; if(nv) add(`${it.name}（${z.s}）`, z, nv); });
-    else if(T.qty[it.id]) add(it.name, it, T.qty[it.id]);
-  }
-  return rows;
-}
-function renderStBanner(){ document.getElementById('stBanner').hidden = !stPending(); }
-document.getElementById('stOpen').onclick = ()=>{
-  const rows = stRows(), n = rows.filter(r=>r.chg).length;
-  const d = (a,b) => b===a ? `${b}` : `<span class="${b>a?'up':'dn'}">${b}</span>`;
-  openSheet(`<h2>套用 1142 暑假盤點</h2>
-    <div class="hint">依你上傳的盤點表照片整理。<b>${n}</b> 項會變動（黃色），紅色刪除線為移除的品項。盤點表上沒填的欄位維持原數量。</div>
-    <div class="stwrap"><table class="sttable"><thead><tr><th>品項</th><th>書房 原→新</th><th>倉庫 原→新</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr class="${r.del?'del':(r.chg?'chg':'')}"><td>${esc(r.name)}${r.del?'（移除）':''}</td>
-      <td>${r.r0} → ${r.del?'—':d(r.r0,r.r1)}</td><td>${r.w0} → ${r.del?'—':d(r.w0,r.w1)}</td></tr>`).join('')}
-    </tbody></table></div>
-    <div class="actions"><button class="btn" id="st-cancel">取消</button><button class="btn primary" id="st-ok">確認套用</button></div>`);
-  sheet.querySelector('#st-cancel').onclick = closeSheet;
-  sheet.querySelector('#st-ok').onclick = ()=>{
-    stApply(); closeSheet(); scheduleSave(); invalidate('all'); renderStBanner();
-    toast(`已套用盤點：更新 ${n} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
-  };
-};
-function stApply(){
-  const rows = stRows(), n = rows.filter(r=>r.chg).length;
-  for(const r of rows){ if(r.del) continue; r.obj.room = r.r1; r.obj.wh = r.w1; }
-  items = items.filter(it=>!STOCKTAKE_1142.remove.includes(+it.id));
-  try{ localStorage.setItem(ST_DONE, new Date().toISOString()); }catch(_){}
-  return n;
-}
-
-/* ================= 1151 學期新購宣導品（一次性新增，先不放照片） ================= */
-const NEW_1151 = [
-  {name:'動物造型紓壓球',     price:130, room:0, note:'1151學期新購 100 個', pending:true},
-  {name:'六角矽膠按摩球',     price:45,  room:0, note:'1151學期新購 100 個', pending:true},
-  {name:'粉嫩可愛圖案筆記本', price:50,  room:0, note:'1151學期新購 100 本', pending:true},
-  {name:'炫彩磁吸手機架',     price:70,  room:0, note:'1151學期新購 100 個', pending:true},
-  {name:'城市型走側背包',     price:0,   room:100, note:'1151學期新購 100 個（共 41,895 元）'},
-  {name:'湯匙造型盒餐具',     price:0,   room:100, note:'1151學期新購 100 個（共 12,500 元）'},
-  {name:'矽藻土吸水杯墊',     price:0,   room:100, note:'1151學期新購 100 個（共 4,600 元）'},
-  {name:'壓克力鑰匙圈',       price:0,   room:100, note:'1151學期新購 100 個（共 2,600 元）'},
-  {name:'素面茄芷零錢包',     price:0,   room:100, note:'1151學期新購 100 個（共 2,900 元）'},
-];
-const NEW_DONE = 'rc-new-1151';
-const newMissing = () => NEW_1151.filter(n=>!items.some(it=>it.name===n.name));
-function newPending(){ try{ if(localStorage.getItem(NEW_DONE)) return false; }catch(_){} return newMissing().length > 0; }
-function renderNewBanner(){
-  const b = document.getElementById('newBanner'); if(!b) return;
-  const m = newPending() ? newMissing() : [];
-  b.hidden = !m.length;
-  if(m.length) b.querySelector('span').textContent = `${m.map(x=>x.name).join('、')}（共 ${m.length} 項，暫不放照片）`;
-}
-document.getElementById('newOpen').onclick = ()=>{
-  const m = newMissing();
-  openSheet(`<h2>🆕 新增 1151 學期新購宣導品</h2>
-    <div class="hint">依付款單據整理。數量都先以 100 個填入悅讀書房，實際數量可在「編輯模式」修改。照片之後再加。</div>
-    <div class="stwrap"><table class="sttable"><thead><tr><th>品項</th><th>單價</th><th>書房</th><th>倉庫</th></tr></thead><tbody>
-    ${m.map(n=>`<tr class="chg"><td>${esc(n.name)}<div class="itemnote">${esc(n.note)}</div></td><td>${n.price?'$'+n.price:'—'}</td><td>${n.room}</td><td>0</td></tr>`).join('')}
-    </tbody></table></div>
-    <div class="actions"><button class="btn" id="nw-cancel">取消</button><button class="btn primary" id="nw-ok">確認新增 ${m.length} 項</button></div>`);
-  sheet.querySelector('#nw-cancel').onclick = closeSheet;
-  sheet.querySelector('#nw-ok').onclick = ()=>{
-    const k = newApply(); closeSheet(); scheduleSave(); invalidate('all'); renderNewBanner();
-    toast(`已新增 ${k} 項` + (adminCloud() ? '，正在同步到雲端' : ''));
-  };
-};
-function newApply(){
-  let id = Math.max(0, ...items.map(it=>+it.id||0));
-  let pos = -1; items.forEach((it,i)=>{ if(it.cat==='宣導品') pos = i; });   // 放在宣導品的最後面
-  const add = newMissing().map(n=>({id:++id, cat:'宣導品', name:n.name, price:n.price, note:n.note, room:n.room, wh:0, loc:[], ...(n.pending ? {pending:true} : {})}));
-  items.splice(pos<0 ? items.length : pos+1, 0, ...add);
-  try{ localStorage.setItem(NEW_DONE, new Date().toISOString()); }catch(_){}
-  return add.length;
-}
-// 管理者進入時自動套用（先拿到雲端最新資料再套用，避免蓋掉）
-const AUD_OUT_1142 = [...Array.from({length:34},(_,i)=>i+2), 75,76,77,78,79,80,81,82,83];
-function audPending(){ return items.some(it=>!it.aud); }
-function audApply(){ let n = 0; items.forEach(it=>{ if(!it.aud){ it.aud = AUD_OUT_1142.includes(+it.id) ? 'out' : 'in'; n++; } }); return n; }
-// 114-2 學期紙本「宣導品領用登記表」補登（暑假盤點已反映這些數量，所以只記紀錄、不再扣庫存）
-const PAPER_1142 = [
-  {d:'2026-07-14T10:00:00+08:00', id:41, name:'零錢包',             qty:7,  purpose:'寄給畢業生（登記表未填日期）', person:''},
-  {d:'2026-07-14T10:01:00+08:00', id:3,  name:'資源教室L資料匣',     qty:80, purpose:'錄取生（登記表未填日期）',     person:''},
-  {d:'2026-07-14T10:02:00+08:00', id:30, name:'塗鴉印花滌綸布購物袋', qty:22, purpose:'（登記表未填用途、日期；原寫「三折摺購物袋」）', person:''},
-  {d:'2026-07-14T10:03:00+08:00', id:2,  name:'資源教室B5手札',      qty:1,  purpose:'紀錄記事',                    person:'宋楠以'},
-];
-const PAPER_DONE = 'rc-paper-1142';
-function paperPending(){ try{ if(localStorage.getItem(PAPER_DONE)) return false; }catch(_){} return !log.some(e=>e.kind==='paper' && e.batch==='1142'); }
-function paperApply(){
-  PAPER_1142.forEach(p=>log.push({ts:new Date(p.d).toISOString(), itemId:p.id, name:p.name, size:null, from:'room', qty:p.qty, dir:-1,
-    kind:'paper', batch:'1142', person:p.person, purpose:p.purpose, by:'紙本登記表', src:'admin', remain:null}));
-  log.sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
-  try{ localStorage.setItem(PAPER_DONE, new Date().toISOString()); }catch(_){}
-  return PAPER_1142.length;
-}
-// 尚未到貨的 4 項（已付款訂購）：先從庫存拉出來，到貨後在庫存總覽按「到貨入庫」
-const PENDING_1151 = ['動物造型紓壓球','六角矽膠按摩球','粉嫩可愛圖案筆記本','炫彩磁吸手機架'];
-const pendApplyNeeded = () => items.some(it=>PENDING_1151.includes(it.name) && !it.pending && !it.arrived && /1151學期新購/.test(it.note||''));
-function pendApply(){ let n = 0; items.forEach(it=>{ if(PENDING_1151.includes(it.name) && !it.pending && !it.arrived){ it.pending = true; it.room = 0; it.wh = 0; it.note = '1151學期新購，已訂購 100 個，尚未到貨'; n++; } }); return n; }
-// 115.11.19 到貨：六角矽膠按摩球、粉嫩可愛圖案筆記本、炫彩磁吸手機架各 100 個入悅讀書房（動物造型紓壓球仍未到）
-const ARRIVED_1151 = ['六角矽膠按摩球','粉嫩可愛圖案筆記本','炫彩磁吸手機架'];
-const arriveNeeded = () => items.some(it=>ARRIVED_1151.includes(it.name) && it.pending);
-function arriveApply(){
-  const ts = new Date('2026-11-19T17:00:00+08:00').toISOString(); let n = 0;
-  items.forEach(it=>{ if(!ARRIVED_1151.includes(it.name) || !it.pending) return;
-    delete it.pending; it.arrived = true; it.room = 100; it.wh = it.wh || 0; it.note = '1151學期新購';
-    log.unshift({ts, itemId:it.id, name:it.name, size:null, from:'room', qty:100, dir:1, person:'', purpose:'到貨入庫', by:'管理者', src:'admin', remain:100}); n++; });
-  return n;
-}
 async function autoPatch(){
   const msg = [];
-  if(pendApplyNeeded()) msg.push(`${pendApply()} 項尚未到貨的品項先移出庫存`);
-  if(paperPending()) msg.push(`補登紙本領用 ${paperApply()} 筆`);
-  if(stPending()) msg.push(`盤點更新 ${stApply()} 項、移除四部曲`);
-  if(newPending()) msg.push(`新增 ${newApply()} 項新購宣導品`);
-  if(audPending()){ audApply(); msg.push('依盤點表分出對外／內部品項'); }
-  if(arriveNeeded()) msg.push(`${arriveApply()} 項新購宣導品到貨入庫（各 100 個）`);
   // 已經有清楚照片的品項，拿掉舊的 160px 小縮圖，雲端資料和前台載入會變小
   const slim = items.filter(it=>it.img && !it.imgHi && !it.imgId && (HIRES.has(+it.id) || GALLERY[it.id] || EXTRA[it.id]));
   if(slim.length){ slim.forEach(it=>{ delete it.img; }); scheduleSave(); }
   if(!msg.length) return;
-  scheduleSave(); invalidate('all'); renderStBanner(); renderNewBanner(); renderPendBanner();
+  scheduleSave(); invalidate('all'); renderPendBanner();
   toast('已自動套用：' + msg.join('；'));
 }
 
